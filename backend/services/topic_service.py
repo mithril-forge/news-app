@@ -31,7 +31,4 @@ class TopicService:
         topic_dict = topic_data.dict()
         # Create topic using repository
         topic = await self.topic_repo.add(topic_dict)
-        # Commit the transaction
-        async with self.topic_repo.transaction():
-            pass
         return orm_to_pydantic(topic, TopicResponse)

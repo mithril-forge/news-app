@@ -59,10 +59,6 @@ class NewsService:
         # Use repository to prepare news with tags (without committing)
         news = await self.news_repo.prepare_with_tags(news_dict, tag_texts)
 
-        # Commit the transaction
-        async with self.news_repo.transaction():
-            pass
-
         # Get the complete news item with tags loaded
         complete_news = await self.news_repo.get_with_tags(news.id)
 
