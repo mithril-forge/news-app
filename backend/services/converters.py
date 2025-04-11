@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlmodel import SQLModel
 
 from database.models import ParsedNews
-from schemas import NewsResponse, NewsWithTopicResponse
+from schemas import NewsResponse, NewsWithTopicResponse, TagResponse
 
 M = TypeVar('M', bound=SQLModel)
 P = TypeVar('P', bound=BaseModel)
@@ -104,6 +104,7 @@ def news_to_response(news: ParsedNews) -> NewsResponse:
     # Add topic_name if topic is available
     if news.topic:
         data["topic_name"] = news.topic.name
+    data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
 
     # Create response model from dict
     return NewsResponse(**data)
@@ -141,6 +142,7 @@ def news_to_detailed_response(news: ParsedNews) -> NewsWithTopicResponse:
     # Add topic_name if topic is available
     if news.topic:
         data["topic_name"] = news.topic.name
+    data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
 
     # Create response model from dict
     return NewsWithTopicResponse(**data)

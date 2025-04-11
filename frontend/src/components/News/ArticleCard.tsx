@@ -7,8 +7,8 @@ function ArticleCard({ item }) {
   return (
     <article key={item.id} className="bg-white rounded-lg shadow overflow-hidden flex flex-col">
       <div className="relative w-full h-48">
-        { item.image && (<Image
-          src={item.image}
+        { item.image_url && (<Image
+          src={item.image_url}
           alt={item.title}
           layout="fill"
           objectFit="cover"

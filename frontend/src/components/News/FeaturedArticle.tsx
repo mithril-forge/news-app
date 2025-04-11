@@ -11,8 +11,8 @@ function FeaturedArticle({ article }) {
       <div className="md:flex">
         <div className="md:w-1/2">
           <div className="relative w-full h-64 md:h-full">
-            {article.image && (<Image
-              src={article.image}
+            {article.image_url && (<Image
+              src={article.image_url}
               alt={article.title}
               layout="fill"
               objectFit="cover"

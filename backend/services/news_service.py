@@ -44,9 +44,11 @@ class NewsService:
 
         # Get news for this topic
         news_items = await self.news_repo.get_by_topic_id(topic_id)
+        sorted_news = sorted(news_items, key=lambda x: x.created_at, reverse=True)
+
 
         # Convert ORM models to response schemas with topic name
-        return news_list_to_response(news_items)
+        return news_list_to_response(sorted_news)
 
     async def create_news(self, news_data: NewsCreate) -> NewsResponse:
         """Create a new news item with tags"""

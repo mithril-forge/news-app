@@ -18,6 +18,9 @@ const nextConfig = {
            protocol: 'https',
            hostname: 't3.ftcdn.net',
         },
+        { protocol : 'https',
+          hostname : 'st2.depositphotos.com'
+        }
         // Add any other domains you might be using
       ],
     },

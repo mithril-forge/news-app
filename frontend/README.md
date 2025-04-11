@@ -30,8 +30,9 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 
 
 # TODO:
-1. Obrazky u clanku.
-2. Hezci tagy a date na detailu obrazku
 3. Problikavani pri zmene stranky -> moc kratky refresh cas
-4. Neupdatovani url pri zmene stranky
-5. Nefunkcni topic mapovani u clanku
+4. Neupdatuje se url pri zmene stranky
+5. Predelat na server side routering 
+6. Cache dat kdyz da uzivatel klik zpet
+7. Rozdelit funkcionalitu do souboru
+8. Dodelat cachovani dat

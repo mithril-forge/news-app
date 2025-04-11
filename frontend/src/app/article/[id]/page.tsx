@@ -150,8 +150,8 @@ function ArticlePage() {
 
           <div className="mb-8 relative w-full aspect-video bg-gray-200 rounded overflow-hidden">
              {/* Ensure article.image is a valid URL */}
-             {article.image && (<Image
-                src="blabla"
+             {article.image_url && (<Image
+                src={article.image_url}
                 alt={article.title}
                 fill={true}
                 style={{objectFit:"cover"}}
