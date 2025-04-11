@@ -57,6 +57,7 @@ services:
     environment:
       NODE_ENV: development
       NEXT_PUBLIC_API_URL: fastapi_backend:8000
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/app_db
     depends_on:
       - backend
     networks:

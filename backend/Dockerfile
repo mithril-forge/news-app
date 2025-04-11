@@ -34,6 +34,13 @@ COPY . ./app
 
 # Expose port
 EXPOSE 8000
+# Copy the entrypoint script into the container
+COPY entrypoint.sh /entrypoint.sh
+
+# Make the entrypoint script executable
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Run the application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

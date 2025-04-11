@@ -1,6 +1,7 @@
 from typing import List, Union
 
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 
 from services.dependencies import get_news_service, get_topic_service
 from services.news_service import NewsService
@@ -9,6 +10,20 @@ from schemas import TopicResponse, NewsResponse
 from database.engine import create_async_db_and_tables
 
 app = FastAPI()
+origins = [
+    "http://localhost:3000",  # Your Next.js frontend origin
+    "http://localhost",       # Sometimes needed depending on how requests are made
+    # Add any other origins if necessary (e.g., your deployed frontend URL)
+]
+
+# Add the CORSMiddleware to the application
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # List of origins allowed to make requests
+    allow_credentials=True, # Allow cookies/authorization headers
+    allow_methods=["*"],    # Allow all standard methods (GET, POST, etc.)
+    allow_headers=["*"],    # Allow all headers
+)
 
 
 # API endpoints
@@ -41,9 +56,3 @@ async def latest_news(latest_count: int, service: NewsService = Depends(get_news
 async def read_news(news_id: int, service: NewsService = Depends(get_news_service)):
     """Get a specific news item by ID"""
     return await service.get_news_by_id(news_id)
-
-
-@app.on_event("startup")
-async def on_startup():
-    # Create tables
-    await create_async_db_and_tables()

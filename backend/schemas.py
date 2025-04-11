@@ -52,6 +52,7 @@ class NewsCreate(NewsBase):
 class NewsResponse(NewsBase):
     id: int
     topic_id: Optional[int] = None
+    topic_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     tags: List[TagResponse] = []

@@ -19,7 +19,8 @@ class NewsService:
         news = await self.news_repo.get_all()
         # Sort by created_at in descending order (newest first)
         sorted_news = sorted(news, key=lambda x: x.created_at, reverse=True)
-        return sorted_news[:count]
+
+        return [NewsResponse(sorted_news[:count]
 
     async def get_news_by_id(self, news_id: int) -> Optional[ParsedNews]:
         """Get a specific news item by ID"""

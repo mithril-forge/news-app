@@ -7,12 +7,12 @@ function ArticleCard({ item }) {
   return (
     <article key={item.id} className="bg-white rounded-lg shadow overflow-hidden flex flex-col">
       <div className="relative w-full h-48">
-        <Image
+        { item.image && (<Image
           src={item.image}
           alt={item.title}
           layout="fill"
           objectFit="cover"
-        />
+        />)}
       </div>
       <div className="p-4 flex flex-col flex-grow">
         <h2 className="text-xl font-bold text-gray-800 mb-2">{item.title}</h2>
@@ -25,8 +25,8 @@ function ArticleCard({ item }) {
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           {item.tags.slice(0, 3).map(tag => (
-            <span key={tag} className="text-xs bg-gray-100 px-2 py-1 rounded">
-              {tag}
+            <span key={tag.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
+              {tag.text}
             </span>
           ))}
         </div>

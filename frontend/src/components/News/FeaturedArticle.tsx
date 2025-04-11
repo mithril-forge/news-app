@@ -5,19 +5,19 @@ import Link from 'next/link';
 
 function FeaturedArticle({ article }) {
   if (!article) return null; // Don't render if no article provided
-
+  console.log(article.tags)
   return (
     <div className="mb-8 bg-white rounded-lg shadow overflow-hidden">
       <div className="md:flex">
         <div className="md:w-1/2">
           <div className="relative w-full h-64 md:h-full">
-            <Image
+            {article.image && (<Image
               src={article.image}
               alt={article.title}
               layout="fill"
               objectFit="cover"
               priority // Add priority for LCP element
-            />
+            />)}
           </div>
         </div>
         <div className="md:w-1/2 p-6 flex flex-col">
@@ -31,8 +31,8 @@ function FeaturedArticle({ article }) {
           </div>
           <div className="flex flex-wrap gap-2 mb-6">
             {article.tags.map(tag => (
-              <span key={tag} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                {tag}
+              <span key={tag.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                {tag.text}
               </span>
             ))}
           </div>

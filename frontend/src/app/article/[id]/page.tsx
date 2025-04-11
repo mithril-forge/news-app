@@ -1,71 +1,114 @@
-// src/app/article/[id]/page.tsx  <- Correct path for App Router
-'use client' // Keep this because we use hooks (useState, useParams, useRouter)
+// src/app/article/[id]/page.tsx
+'use client' // Keep this because we use hooks
 
-import React from 'react';
+// Import React hooks
+import React, { useState, useEffect } from 'react';
 // Import hooks from 'next/navigation' for App Router Client Components
 import { useRouter, useParams } from 'next/navigation';
-// Remove Head from 'next/head' - not used in App Router
-// import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 
-// Adjust import paths relative to src/app/article/[id]/
-import { initialNews, categories } from '../../../data/newData'; // Assuming data is in src/data
-import Header from '../../../components/Layout/Header';       // Assuming components are in src/components
-import Footer from '../../../components/Layout/Footer';       // Assuming components are in src/component
+// Import API functions and types - Adjust path as needed
+import { fetchNewsById, NewsArticle } from '../../../services/api';
+// Assuming static categories are still used for Header/Footer
+import { categories } from '../../../data/newData'; // Assuming data is in src/data
+import Header from '../../../components/Layout/Header'; // Assuming components are in src/components
+import Footer from '../../../components/Layout/Footer'; // Assuming components are in src/components
+
 // Note: Metadata (title, description) should be handled via generateMetadata
-// export function generateMetadata({ params }: { params: { id: string } }) { ... }
-// This cannot be done directly within a Client Component.
+// This cannot be done directly within a Client Component like this.
 
 function ArticlePage() {
-  // Get router instance for navigation methods (like push)
   const router = useRouter();
-  // Get route parameters using useParams()
   const params = useParams();
-  // Extract the id. Ensure it's treated as a string. It might be string[] if using catch-all routes, but here it's string.
   const id = typeof params.id === 'string' ? params.id : undefined;
 
-  // State for category navigation (remains the same)
-  const [activeCategory, setActiveCategory] = React.useState("Vše");
+  // --- State Hooks for API Data ---
+  const [article, setArticle] = useState<NewsArticle | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  // -----------------------------
 
-  // Find the article - Now done after getting id from params
-  // No need for router.isReady check here, params are available earlier
-  const article = id
-    ? initialNews.find(item => item.id.toString() === id)
-    : null;
+  // State for category navigation (passed to Header/Footer)
+  const [activeCategory, setActiveCategory] = useState("Vše");
 
-  // Handler for category selection (remains the same)
-  const handleSelectCategory = (category: string) => { // Add type annotation
+  // --- Fetch Data Effect ---
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      setError(null);
+      fetchNewsById(id)
+        .then(data => {
+          setArticle(data); // API returns article object or null for 404
+        })
+        .catch(err => {
+          console.error("Failed to fetch article:", err);
+          setError(err.message || "Nastala chyba při načítání článku.");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } else {
+      // Handle case where ID is missing in params immediately
+      setError("Článek nelze načíst: Chybí ID v adrese.");
+      setLoading(false);
+    }
+  }, [id]); // Dependency array: re-fetch if id changes
+  // -------------------------
+
+
+  // --- Handler for category selection (unchanged) ---
+  const handleSelectCategory = (category: string) => {
     setActiveCategory(category);
-    router.push(`/?category=${category}`); // Use router for navigation
+    router.push(`/?category=${category}`);
   };
+  // -----------------------------------------------
 
-  // --- Loading state is less common this way, as params are usually ready ---
-  // If you were fetching data async based on id, you'd have a loading state here.
-  // With static data, the main check is if the article was found.
 
-   if (!id) {
-     // Handle case where ID might not be available yet (though useParams usually resolves faster)
-     // Or if the param wasn't a string.
+  // --- Render Loading State ---
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col">
+        <Header categories={categories} activeCategory={activeCategory} onSelectCategory={handleSelectCategory} />
+        <main className="max-w-3xl mx-auto px-4 py-12 flex-grow text-center">
+          <p className="text-gray-500">Načítání článku...</p>
+        </main>
+        <Footer categories={categories} onSelectCategory={handleSelectCategory} />
+      </div>
+    );
+  }
+  // --------------------------
+
+
+  // --- Render Error State ---
+  if (error) {
      return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             <Header categories={categories} activeCategory={activeCategory} onSelectCategory={handleSelectCategory} />
-            <main className="max-w-3xl mx-auto px-4 py-12 flex-grow text-center"><p>Načítání ID...</p></main>
+            <main className="max-w-3xl mx-auto px-4 py-12 flex-grow text-center">
+                <h1 className="text-2xl font-bold text-red-600">Chyba</h1>
+                <p className="text-gray-700 mt-4">{error}</p>
+                <Link href="/" className="mt-6 inline-block px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                    Zpět na hlavní stránku
+                </Link>
+            </main>
             <Footer categories={categories} onSelectCategory={handleSelectCategory} />
         </div>
      );
    }
+  // ------------------------
 
-   // Article Not Found Check
+
+   // --- Render Article Not Found State (API returned null or fetch succeeded without data) ---
+   // This check runs *after* loading is false and error is null
    if (!article) {
-      return ( // Not Found state
+      return (
             <div className="min-h-screen bg-gray-100 flex flex-col">
-                {/* Removed Head component */}
                 <Header categories={categories} activeCategory={activeCategory} onSelectCategory={handleSelectCategory} />
                 <main className="max-w-3xl mx-auto px-4 py-12 flex-grow text-center">
-                    {/* <Head><title>Článek nenalezen</title></Head> <-- Remove */}
                     <h1 className="text-2xl font-bold text-gray-700">404 - Článek nenalezen</h1>
-                    <p className="text-gray-500 mt-4">Omlouváme se, ale článek s ID '{id}' neexistuje.</p>
+                    {/* Provide the ID if available */}
+                    <p className="text-gray-500 mt-4">Omlouváme se, ale článek {id ? `s ID '${id}'` : ''} neexistuje nebo nemohl být načten.</p>
                     <Link href="/" className="mt-6 inline-block px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
                         Zpět na hlavní stránku
                     </Link>
@@ -74,17 +117,20 @@ function ArticlePage() {
            </div>
       );
   }
+  // -----------------------------------------------------------------------------------------
 
 
-  // --- Render the Article Page ---
+  // --- Render the Article Page using data from the 'article' state variable ---
+  // Set document title - less ideal for SEO than generateMetadata, but works on client-side
+  if (typeof window !== 'undefined') {
+      document.title = article.title;
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-       {/* Removed Head component - Title/Desc should be set via Metadata API */}
-      {/* <Head>...</Head> <-- Remove */}
-
       <Header
         categories={categories}
-        activeCategory={article.category} // Highlight article's category
+        activeCategory={article.category} // Highlight article's category from fetched data
         onSelectCategory={handleSelectCategory}
       />
 
@@ -94,37 +140,43 @@ function ArticlePage() {
             <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
               {article.category}
             </span>
-            <span>{article.date}</span>
+            {/* Format date if needed */}
+            <span>{new Date(article.updated_at).toLocaleDateString('cs-CZ')}</span>
           </div>
 
-          {/* Use article title for H1 - okay here */}
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
             {article.title}
           </h1>
 
           <div className="mb-8 relative w-full aspect-video bg-gray-200 rounded overflow-hidden">
-             <Image
-                src={article.image}
+             {/* Ensure article.image is a valid URL */}
+             {article.image && (<Image
+                src="blabla"
                 alt={article.title}
-                fill={true} // Use fill instead of layout="fill" in newer Next.js
-                style={{objectFit:"cover"}} // Use style object for objectFit
-                priority
-             />
+                fill={true}
+                style={{objectFit:"cover"}}
+                priority // Keep if LCP element
+             />)}
           </div>
 
+          {/* Adjust rendering based on content format (plain text shown) */}
           <div className="prose prose-lg max-w-none text-gray-700 whitespace-pre-wrap">
             {article.content}
+            {/* Or: <div dangerouslySetInnerHTML={{ __html: article.content }} /> if HTML */}
           </div>
 
+          {/* Render tags only if they exist */}
+          {article.tags && article.tags.length > 0 && (
+              <div className="mt-8 pt-4 border-t border-gray-200">
+                <span className="text-gray-500 text-sm mr-2">Štítky:</span>
+                {article.tags.map(tag => (
+                <span key={tag.id} className="inline-block text-xs bg-gray-100 px-2 py-1 rounded mr-2 mb-2">
+                    {tag.text}
+                </span>
+                ))}
+             </div>
+          )}
 
-          <div className="mt-8 pt-4 border-t border-gray-200">
-            <span className="text-gray-500 text-sm mr-2">Štítky:</span>
-            {article.tags.map(tag => (
-              <span key={tag} className="inline-block text-xs bg-gray-100 px-2 py-1 rounded mr-2 mb-2">
-                {tag}
-              </span>
-            ))}
-          </div>
 
             <div className="mt-8">
                 <Link href="/" className="text-red-600 hover:text-red-800">
