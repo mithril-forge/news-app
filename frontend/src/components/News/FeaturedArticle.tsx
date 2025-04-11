@@ -26,7 +26,7 @@ function FeaturedArticle({ article }) {
           <div className="flex justify-between items-center mb-4">
             <span className="text-sm text-gray-500">{article.date}</span>
             <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
-              {article.category}
+              {article.topic_name}
             </span>
           </div>
           <div className="flex flex-wrap gap-2 mb-6">
