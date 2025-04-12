@@ -1,13 +1,11 @@
 # async_repositories.py
-from typing import List, Optional, TypeVar, Generic, Type, Any, Dict, Union, AsyncContextManager, \
-    Callable
-from datetime import datetime
 from contextlib import asynccontextmanager
-
-from sqlmodel import select, SQLModel
-from sqlmodel.ext.asyncio.session import AsyncSession
+from datetime import datetime
+from typing import List, Optional, TypeVar, Generic, Type, Any, Dict, Union, AsyncContextManager
 
 from database.models import Topic, ParsedNews, Tag, InputNews, ParsedNewsTagLink
+from sqlmodel import select, SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 T = TypeVar('T', bound=SQLModel)
 

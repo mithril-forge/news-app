@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any  # Import Dict and Any for raw_data
 
-from sqlmodel import Field, Relationship, SQLModel, Column  # Import Column
 from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL
 from sqlalchemy.orm import Mapped, relationship
+from sqlmodel import Field, Relationship, SQLModel, Column  # Import Column
 
 
 class Topic(SQLModel, table=True):

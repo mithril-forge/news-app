@@ -130,7 +130,7 @@ function ArticlePage() {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header
         categories={categories}
-        activeCategory={article.topic_name} // Highlight article's category from fetched data
+        activeCategory={article.topic.name} // Highlight article's category from fetched data
         onSelectCategory={handleSelectCategory}
       />
 
@@ -138,7 +138,7 @@ function ArticlePage() {
         <article>
           <div className="mb-4 text-sm text-gray-600">
             <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
-              {article.topic_name}
+              {article.topic.name}
             </span>
             {/* Format date if needed */}
             <span>{new Date(article.updated_at).toLocaleDateString('cs-CZ')}</span>

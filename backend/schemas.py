@@ -1,16 +1,15 @@
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
 
 
-# Topic schemas
 class TopicBase(BaseModel):
     name: str
-    description: Optional[str] = None
 
 
 class TopicCreate(TopicBase):
-    pass
+    description: Optional[str] = None
 
 
 class TopicResponse(TopicBase):
@@ -20,7 +19,6 @@ class TopicResponse(TopicBase):
         orm_mode = True
 
 
-# Tag schemas
 class TagBase(BaseModel):
     text: str
 
@@ -36,23 +34,21 @@ class TagResponse(TagBase):
         orm_mode = True
 
 
-# News schemas
 class NewsBase(BaseModel):
     title: str
     description: str
-    content: str
-    image_url: Optional[str] = None
+    image_url: str
 
 
 class NewsCreate(NewsBase):
-    topic_id: Optional[int] = None
-    tags: Optional[List[str]] = []
+    topic_id: int # topics are stabls
+    tags: List[str] # new tags can be created
+    content: str
 
 
-class NewsResponse(NewsBase):
+class NewsResponseBasic(NewsBase):
     id: int
-    topic_id: Optional[int] = None
-    topic_name: Optional[str] = None
+    topic: TopicResponse
     created_at: datetime
     updated_at: datetime
     tags: List[TagResponse] = []
@@ -61,29 +57,5 @@ class NewsResponse(NewsBase):
         orm_mode = True
 
 
-class NewsWithTopicResponse(NewsResponse):
-    topic: Optional[TopicResponse] = None
-
-    class Config:
-        orm_mode = True
-
-
-# Input News schemas
-class InputNewsBase(BaseModel):
-    source: str
-    description: str
-    raw_metadata: Dict[str, Any] = Field(default_factory=dict)
-
-
-class InputNewsCreate(InputNewsBase):
-    pass
-
-
-class InputNewsResponse(InputNewsBase):
-    id: int
-    received_at: datetime
-    processed_at: Optional[datetime] = None
-    parsed_news: Optional[int] = None
-
-    class Config:
-        orm_mode = True
+class NewsResponseDetailed(NewsResponseBasic):
+    content: str

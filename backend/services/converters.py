@@ -4,12 +4,12 @@ These functions are not strictly necessary since Pydantic's orm_mode handles con
 but they can be useful for more complex transformations.
 """
 
-from typing import List, TypeVar, Type, Any, Dict, Callable, Optional
-from pydantic import BaseModel
-from sqlmodel import SQLModel
+from typing import List, TypeVar, Type, Optional
 
 from database.models import ParsedNews
-from schemas import NewsResponse, NewsWithTopicResponse, TagResponse
+from pydantic import BaseModel
+from schemas import NewsResponseBasic, NewsResponseDetailed, TagResponse, TopicResponse
+from sqlmodel import SQLModel
 
 M = TypeVar('M', bound=SQLModel)
 P = TypeVar('P', bound=BaseModel)
@@ -85,7 +85,7 @@ def pydantic_to_orm(pydantic_obj: P, orm_class: Type[M],
     return orm_class(**data)
 
 
-def news_to_response(news: ParsedNews) -> NewsResponse:
+def news_to_response(news: ParsedNews) -> NewsResponseBasic:
     """
     Convert a ParsedNews ORM model to NewsResponse schema with topic_name populated.
 
@@ -102,15 +102,14 @@ def news_to_response(news: ParsedNews) -> NewsResponse:
     data = news.dict()
 
     # Add topic_name if topic is available
-    if news.topic:
-        data["topic_name"] = news.topic.name
+    data["topic"] = orm_to_pydantic(news.topic, TopicResponse)
     data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
 
     # Create response model from dict
-    return NewsResponse(**data)
+    return NewsResponseBasic(**data)
 
 
-def news_list_to_response(news_list: List[ParsedNews]) -> List[NewsResponse]:
+def news_list_to_response(news_list: List[ParsedNews]) -> List[NewsResponseBasic]:
     """
     Convert a list of ParsedNews ORM models to NewsResponse schemas with topic_name populated.
 
@@ -123,7 +122,7 @@ def news_list_to_response(news_list: List[ParsedNews]) -> List[NewsResponse]:
     return [news_to_response(news) for news in news_list]
 
 
-def news_to_detailed_response(news: ParsedNews) -> NewsWithTopicResponse:
+def news_to_detailed_response(news: ParsedNews) -> NewsResponseDetailed:
     """
     Convert a ParsedNews ORM model to NewsWithTopicResponse schema with topic relationship.
 
@@ -140,9 +139,8 @@ def news_to_detailed_response(news: ParsedNews) -> NewsWithTopicResponse:
     data = news.dict()
 
     # Add topic_name if topic is available
-    if news.topic:
-        data["topic_name"] = news.topic.name
+    data["topic"] = orm_to_pydantic(news.topic, TopicResponse)
     data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
 
     # Create response model from dict
-    return NewsWithTopicResponse(**data)
+    return NewsResponseDetailed(**data)

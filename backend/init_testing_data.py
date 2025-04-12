@@ -1,12 +1,12 @@
 # TODO: Fix relative imports and place under database
 import asyncio
-from typing import List, Dict, Any
 from datetime import datetime
+from typing import List, Dict
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from database.engine import create_async_db_and_tables, get_async_session
-from database.models import Topic, Tag, ParsedNews, InputNews
+from database.models import Topic, Tag, ParsedNews
 from database.repository import AsyncTopicRepository, AsyncTagRepository, AsyncParsedNewsRepository, \
     AsyncInputNewsRepository
 

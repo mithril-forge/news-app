@@ -1,13 +1,13 @@
-from typing import List, Union
+from typing import List
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from database.engine import get_session
+from schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
 from services.news_service import NewsService
 from services.topic_service import TopicService
-from schemas import TopicResponse, NewsResponse
-from database.engine import create_async_db_and_tables, get_session
 
 app = FastAPI()
 origins = [
@@ -42,21 +42,21 @@ async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_sess
 
 
 # Route order matters - more specific routes first
-@app.get("/news/topics/{topic_id}", response_model=List[NewsResponse])
+@app.get("/news/topics/{topic_id}", response_model=List[NewsResponseBasic])
 async def news_by_topic(topic_id: int, session: AsyncSession = Depends(get_session)):
     """Get all news for a specific topic"""
     service = NewsService(session)
     return await service.get_news_by_topic(topic_id)
 
 
-@app.get("/news/latest/{latest_count}", response_model=List[NewsResponse])
+@app.get("/news/latest/{latest_count}", response_model=List[NewsResponseBasic])
 async def latest_news(latest_count: int, session: AsyncSession = Depends(get_session)):
     """Get the latest N news items"""
     service = NewsService(session)
     return await service.get_latest_news(latest_count)
 
 
-@app.get("/news/{news_id}", response_model=NewsResponse)
+@app.get("/news/{news_id}", response_model=NewsResponseDetailed)
 async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
     """Get a specific news item by ID"""
     service = NewsService(session)

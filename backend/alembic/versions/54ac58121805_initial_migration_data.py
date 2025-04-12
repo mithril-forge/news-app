@@ -6,11 +6,12 @@ Create Date: 2025-04-09 15:43:41.793850
 
 """
 import json
-from typing import Sequence, Union
 from datetime import datetime
 from datetime import timedelta
-from alembic import op
+from typing import Sequence, Union
+
 import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '54ac58121805'
@@ -100,7 +101,7 @@ def upgrade() -> None:
             'title': 'Výsledky voleb přinesly překvapení',
             'description': 'Krátký souhrn volebních výsledků v ČR.',
             'content': 'Podrobný obsah článku o volebních výsledcích, analýzy, komentáře...',
-            'image_url': 'https://via.placeholder.com/150/FF0000/FFFFFF?text=VolbyCR',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(days=1),
             'updated_at': now - timedelta(days=1),
             'topic_id': topic_id_map['Politika']
@@ -109,7 +110,7 @@ def upgrade() -> None:
             'title': 'Nový AI model od Google mění pravidla hry',
             'description': 'Google představil pokročilý model umělé inteligence Gemini Pro 2.0.',
             'content': 'Technické detaily a možnosti nového AI modelu, srovnání s konkurencí...',
-            'image_url': 'https://via.placeholder.com/150/0000FF/FFFFFF?text=AI_Google',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(hours=5),
             'updated_at': now - timedelta(hours=4),
             'topic_id': topic_id_map['Technologie']
@@ -118,7 +119,7 @@ def upgrade() -> None:
             'title': 'Mistrovství světa ve fotbale: Finále',
             'description': 'Reportáž z napínavého finálového utkání mezi Brazílií a Německem.',
             'content': 'Průběh zápasu, klíčové momenty, rozhovory s hráči...',
-            'image_url': 'https://via.placeholder.com/150/00FF00/000000?text=FotbalWC',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(days=3),
             'updated_at': now - timedelta(days=3, hours=2),
             'topic_id': topic_id_map['Sport']
@@ -127,7 +128,7 @@ def upgrade() -> None:
             'title': 'Premiéra nového českého filmu "Osamělí běžci"',
             'description': 'Recenze očekávaného snímku od režiséra Jana Nováka.',
             'content': 'Hodnocení filmu, hereckých výkonů, kamery a hudby...',
-            'image_url': 'https://via.placeholder.com/150/FFFF00/000000?text=FilmCZ',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(days=2),
             'updated_at': now - timedelta(days=2),
             'topic_id': topic_id_map['Kultura']
@@ -136,7 +137,7 @@ def upgrade() -> None:
             'title': 'ČNB překvapivě zvýšila úrokové sazby o 0.5 procentního bodu',
             'description': 'Reakce finančních trhů na nečekaný krok centrální banky.',
             'content': 'Důvody rozhodnutí ČNB, dopady na hypotéky a ekonomiku...',
-            'image_url': 'https://via.placeholder.com/150/FF00FF/FFFFFF?text=CNB_Sazby',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(hours=12),
             'updated_at': now - timedelta(hours=11),
             'topic_id': topic_id_map['Ekonomika']
@@ -145,7 +146,7 @@ def upgrade() -> None:
             'title': 'Objev nové exoplanety v obyvatelné zóně',
             'description': 'Vědci oznámili nález planety Kepler-452g podobné Zemi u vzdálené hvězdy.',
             'content': 'Parametry planety, podmínky pro život, další výzkum...',
-            'image_url': 'https://via.placeholder.com/150/00FFFF/000000?text=Exoplaneta',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(days=5),
             'updated_at': now - timedelta(days=4),
             'topic_id': topic_id_map['Věda']
@@ -154,7 +155,7 @@ def upgrade() -> None:
             'title': 'Tipy na víkendový výlet do Českého Švýcarska',
             'description': 'Kam vyrazit za krásnými výhledy a unikátními skalními útvary.',
             'content': 'Popis tras, zajímavá místa, doporučení na ubytování...',
-            'image_url': 'https://via.placeholder.com/150/FFA500/000000?text=CeskeSvyc',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(days=6),
             'updated_at': now - timedelta(days=6),
             'topic_id': topic_id_map['Cestování']
@@ -163,7 +164,7 @@ def upgrade() -> None:
             'title': 'Studie potvrzuje výhody středomořské diety pro prevenci kardiovaskulárních chorob',
             'description': 'Rozsáhlý výzkum ukázal, jaký vliv má strava na zdraví srdce a cév.',
             'content': 'Detailní výsledky studie, doporučení pro jídelníček...',
-            'image_url': 'https://via.placeholder.com/150/800080/FFFFFF?text=DietaZdravi',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(days=7),
             'updated_at': now - timedelta(days=7, hours=1),
             'topic_id': topic_id_map['Zdraví']
@@ -172,7 +173,7 @@ def upgrade() -> None:
             'title': 'Jednání vlády o reformě důchodového systému',
             'description': 'Ministři projednávali klíčové body navrhované důchodové reformy.',
             'content': 'Hlavní návrhy, sporné body, očekávaný další postup...',
-            'image_url': 'https://via.placeholder.com/150/FFC0CB/000000?text=VladaDuchody',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(hours=3),
             'updated_at': now - timedelta(hours=2),
             'topic_id': topic_id_map['Politika']
@@ -181,7 +182,7 @@ def upgrade() -> None:
             'title': 'Český startup \'DataFriends\' získal investici 5 milionů EUR',
             'description': 'Brněnská technologická firma zaměřená na analýzu dat uspěla u zahraničních investorů.',
             'content': 'Podrobnosti o investici, plány firmy na expanzi, technologie...',
-            'image_url': 'https://via.placeholder.com/150/008000/FFFFFF?text=StartupData',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(hours=8),
             'updated_at': now - timedelta(hours=8),
             'topic_id': topic_id_map['Technologie']
@@ -190,7 +191,7 @@ def upgrade() -> None:
             'title': 'Nové album kapely \'Naděje\' trhá rekordy',
             'description': 'Recenze a první ohlasy na dlouho očekávanou desku.',
             'content': 'Rozbor jednotlivých skladeb, srovnání s předchozí tvorbou...',
-            'image_url': 'https://via.placeholder.com/150/808080/FFFFFF?text=HudbaNadeje',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(days=4),
             'updated_at': now - timedelta(days=4),
             'topic_id': topic_id_map['Kultura']
@@ -199,7 +200,7 @@ def upgrade() -> None:
             'title': 'Jak vybrat správný hardware pro AI vývoj',
             'description': 'Průvodce výběrem grafických karet a procesorů pro trénování modelů.',
             'content': 'Srovnání Nvidia vs AMD, doporučené konfigurace, cloudové alternativy...',
-            'image_url': 'https://via.placeholder.com/150/A52A2A/FFFFFF?text=AIHardware',
+            'image_url': 'https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg',
             'created_at': now - timedelta(hours=6),
             'updated_at': now - timedelta(hours=6),
             'topic_id': topic_id_map['Technologie']

@@ -20,7 +20,7 @@ function ArticleCard({ item }) {
         <div className="flex justify-between items-center mt-2">
           <span className="text-sm text-gray-500">{item.date}</span>
           <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
-            {item.topic_name}
+            {item.topic.name}
           </span>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">

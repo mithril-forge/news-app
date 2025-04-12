@@ -1,11 +1,11 @@
-from typing import List, Optional
-from fastapi import HTTPException
-from sqlmodel.ext.asyncio.session import AsyncSession
+from typing import List
 
-from database.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
 from database.models import ParsedNews
-from schemas import NewsCreate, NewsResponse, NewsWithTopicResponse
+from database.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
+from fastapi import HTTPException
+from schemas import NewsCreate, NewsResponseBasic, NewsResponseDetailed
 from services.converters import news_to_response, news_list_to_response, news_to_detailed_response
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 class NewsService:
@@ -15,7 +15,7 @@ class NewsService:
         self.topic_repo = AsyncTopicRepository(session)
         self.tag_repo = AsyncTagRepository(session)
 
-    async def get_latest_news(self, count: int) -> List[NewsResponse]:
+    async def get_latest_news(self, count: int) -> List[NewsResponseBasic]:
         """Get the latest N news items"""
         news = await self.news_repo.get_all()
         # Sort by created_at in descending order (newest first)
@@ -26,7 +26,7 @@ class NewsService:
         # Convert ORM models to response schemas with topic name
         return news_list_to_response(latest_news)
 
-    async def get_news_by_id(self, news_id: int) -> NewsWithTopicResponse:
+    async def get_news_by_id(self, news_id: int) -> NewsResponseDetailed:
         """Get a specific news item by ID"""
         news = await self.news_repo.get_with_tags(news_id)
         if not news:
@@ -35,7 +35,7 @@ class NewsService:
         # Convert ORM model to detailed response schema
         return news_to_detailed_response(news)
 
-    async def get_news_by_topic(self, topic_id: int) -> List[NewsResponse]:
+    async def get_news_by_topic(self, topic_id: int) -> List[NewsResponseBasic]:
         """Get all news for a specific topic"""
         # First verify the topic exists
         topic = await self.topic_repo.get_by_id(topic_id)
@@ -50,7 +50,7 @@ class NewsService:
         # Convert ORM models to response schemas with topic name
         return news_list_to_response(sorted_news)
 
-    async def create_news(self, news_data: NewsCreate) -> NewsResponse:
+    async def create_news(self, news_data: NewsCreate) -> NewsResponseDetailed:
         """Create a new news item with tags"""
         # Extract tags from the request
         tag_texts = news_data.tags or []
