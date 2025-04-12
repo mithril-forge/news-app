@@ -3,10 +3,10 @@ from logging.config import fileConfig
 
 from alembic import context
 from database import models
-from sqlalchemy import engine_from_config
+from sqlalchemy import engine_from_config, inspect, schema
 from sqlalchemy import pool
 from sqlmodel import SQLModel
-
+SCHEMA_USED = "public"
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -22,7 +22,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 target_metadata = SQLModel.metadata
-target_metadata.schema = "public"
+target_metadata.schema = SCHEMA_USED
 
 
 
@@ -64,6 +64,10 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        inspector = inspect(connection)
+        if SCHEMA_USED not in inspector.get_schema_names():
+            connection.execute(schema.CreateSchema(SCHEMA_USED))
+            connection.commit()
         context.configure(
             connection=connection, target_metadata=target_metadata
         )
