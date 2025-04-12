@@ -1,28 +1,33 @@
+import os
 from typing import List, Optional
 
 from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from config import Environment
 from database.engine import get_session
 from schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
 from services.news_service import NewsService
 from services.topic_service import TopicService
 
 app = FastAPI()
-origins = [
-    "http://localhost:3000",  # Your Next.js frontend origin
-    "http://localhost",       # Sometimes needed depending on how requests are made
-    # Add any other origins if necessary (e.g., your deployed frontend URL)
-]
+environment = os.getenv("ENVIRONMENT")
+origins = []
+if environment == Environment.DEVELOPMENT.value:
+    origins = [
+        "http://localhost",
+    ]
+    frontend_url = os.getenv("FRONTEND_URL")
+    if frontend_url:
+        origins.append(frontend_url)
 
-# Add the CORSMiddleware to the application
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # List of origins allowed to make requests
-    allow_credentials=True, # Allow cookies/authorization headers
-    allow_methods=["*"],    # Allow all standard methods (GET, POST, etc.)
-    allow_headers=["*"],    # Allow all headers
+    allow_credentials=True,  # Allow cookies/authorization headers
+    allow_methods=["*"],  # Allow all standard methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
 )
 
 
@@ -43,10 +48,10 @@ async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_sess
 
 @app.get("/news/topics/{topic_id}", response_model=List[NewsResponseBasic])
 async def news_by_topic(
-    topic_id: int,
-    skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
-    limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
-    session: AsyncSession = Depends(get_session)
+        topic_id: int,
+        skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
+        limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
+        session: AsyncSession = Depends(get_session)
 ):
     """Get news for a specific topic with pagination"""
     service = NewsService(session)
@@ -55,9 +60,9 @@ async def news_by_topic(
 
 @app.get("/news/latest", response_model=List[NewsResponseBasic])
 async def latest_news(
-    skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
-    limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
-    session: AsyncSession = Depends(get_session)
+        skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
+        limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
+        session: AsyncSession = Depends(get_session)
 ):
     """Get the latest news items with pagination"""
     service = NewsService(session)

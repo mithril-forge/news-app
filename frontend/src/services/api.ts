@@ -1,8 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export const fetchTopics = async () => {
   try {
-    const response = await fetch(`http://0.0.0.0:8000/topics`);
+    console.log(API_URL)
+
+    const response = await fetch(`${API_URL}/topics`);
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
     }
@@ -15,7 +17,7 @@ export const fetchTopics = async () => {
 
 export const fetchNewsByTopic = async (topicId) => {
   try {
-    const response = await fetch(`http://0.0.0.0:8000/news/topics/${topicId}`);
+    const response = await fetch(`${API_URL}/news/topics/${topicId}`);
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
     }
@@ -28,7 +30,7 @@ export const fetchNewsByTopic = async (topicId) => {
 
 export const fetchLatestNews = async (count = 10) => {
   try {
-    const response = await fetch(`http://0.0.0.0:8000/news/latest?limit=${count}`);
+    const response = await fetch(`${API_URL}/news/latest?limit=${count}`);
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
     }
@@ -42,7 +44,7 @@ export const fetchLatestNews = async (count = 10) => {
 export const fetchNewsById = async (newsId) => {
   console.log("Fectching article")
   try {
-    const response = await fetch(`http://0.0.0.0:8000/news/${newsId}`);
+    const response = await fetch(`${API_URL}/news/${newsId}`);
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
     }

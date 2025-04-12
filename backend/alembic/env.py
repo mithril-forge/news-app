@@ -10,7 +10,7 @@ SCHEMA_USED = "public"
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-db_url_from_env = os.getenv('DATABASE_URL') # Use the exact env var name (case-sensitive on Linux)
+db_url_from_env = os.getenv('DATABASE_CONNECTION_STR') # Use the exact env var name (case-sensitive on Linux)
 
 # If the environment variable is set, override the sqlalchemy.url from alembic.ini
 if db_url_from_env:
