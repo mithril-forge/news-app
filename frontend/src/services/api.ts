@@ -28,7 +28,7 @@ export const fetchNewsByTopic = async (topicId) => {
 
 export const fetchLatestNews = async (count = 10) => {
   try {
-    const response = await fetch(`http://0.0.0.0:8000/news/latest/${count}`);
+    const response = await fetch(`http://0.0.0.0:8000/news/latest?limit=${count}`);
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
     }

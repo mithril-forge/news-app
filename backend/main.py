@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -41,19 +41,27 @@ async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_sess
     return await service.get_topic_by_id(topic_id)
 
 
-# Route order matters - more specific routes first
 @app.get("/news/topics/{topic_id}", response_model=List[NewsResponseBasic])
-async def news_by_topic(topic_id: int, session: AsyncSession = Depends(get_session)):
-    """Get all news for a specific topic"""
+async def news_by_topic(
+    topic_id: int,
+    skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
+    limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get news for a specific topic with pagination"""
     service = NewsService(session)
-    return await service.get_news_by_topic(topic_id)
+    return await service.get_news_by_topic(topic_id, skip=skip, limit=limit)
 
 
-@app.get("/news/latest/{latest_count}", response_model=List[NewsResponseBasic])
-async def latest_news(latest_count: int, session: AsyncSession = Depends(get_session)):
-    """Get the latest N news items"""
+@app.get("/news/latest", response_model=List[NewsResponseBasic])
+async def latest_news(
+    skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
+    limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get the latest news items with pagination"""
     service = NewsService(session)
-    return await service.get_latest_news(latest_count)
+    return await service.get_latest_news(skip=skip, limit=limit)
 
 
 @app.get("/news/{news_id}", response_model=NewsResponseDetailed)

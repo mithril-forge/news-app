@@ -67,6 +67,14 @@ class AsyncBaseRepository(Generic[T]):
             await self.session.flush()
         return obj
 
+    async def get_latest(self, skip: int, limit: int) -> List[T]:
+        """
+        Fetch latest with pagination
+        """
+        query = select(self.model_class).order_by(self.model_class.created_at.desc()).offset(skip).limit(limit)
+        result = await self.session.execute(query)
+        return result.scalars().all()
+
 
 class AsyncTopicRepository(AsyncBaseRepository[Topic]):
     """Async repository for Topic model."""
@@ -113,9 +121,18 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         result = await self.session.execute(statement)
         return result.scalars().first()
 
-    async def get_by_topic_id(self, topic_id: int) -> List[ParsedNews]:
-        """Get all news for a specific topic."""
-        statement = select(ParsedNews).where(ParsedNews.topic_id == topic_id)
+    async def get_by_topic_id(self, topic_id: int, skip: int, limit: int) \
+            -> List[ParsedNews]:
+        """
+        Get news for a specific topic with pagination
+        """
+        statement = (
+            select(ParsedNews)
+            .where(ParsedNews.topic_id == topic_id)
+            .order_by(ParsedNews.created_at.desc())  # Assuming you want newest first
+            .offset(skip)
+            .limit(limit)
+        )
         result = await self.session.execute(statement)
         return result.scalars().all()
 
