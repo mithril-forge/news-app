@@ -14,6 +14,7 @@ import Footer from '@/components/layout/Footer';
 import ArticleContent from '@/components/news/ArticleContent';
 import Loading from '@/components/common/Loading';
 import { fetchNewsById, fetchTopics } from '@/services/api';
+import { NewsDetailed } from '@/types';
 
 interface ArticlePageProps {
   params: {
@@ -62,9 +63,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
   
+  // Ensure article is treated as NewsDetailed type
+  const fullArticle = article as NewsDetailed;
+  
   // Prepare categories for header/footer
   const categories = ["Vše", ...topicsData.map(topic => topic.name)];
-  const activeCategory = article.topic.name;
+  const activeCategory = fullArticle.topic.name;
   
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -79,22 +83,22 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             {/* Category and date */}
             <div className="mb-4 text-sm text-gray-600">
               <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
-                {article.topic.name}
+                {fullArticle.topic.name}
               </span>
-              <span>{new Date(article.updated_at).toLocaleDateString('cs-CZ')}</span>
+              <span>{new Date(fullArticle.updated_at).toLocaleDateString('cs-CZ')}</span>
             </div>
 
             {/* Article title */}
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-              {article.title}
+              {fullArticle.title}
             </h1>
 
             {/* Featured image */}
             <div className="mb-8 relative w-full aspect-video bg-gray-200 rounded overflow-hidden">
-              {article.image_url && (
+              {fullArticle.image_url && (
                 <Image
-                  src={article.image_url}
-                  alt={article.title}
+                  src={fullArticle.image_url}
+                  alt={fullArticle.title}
                   fill
                   sizes="(max-width: 768px) 100vw, 768px"
                   className="object-cover"
@@ -104,13 +108,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
 
             {/* Article content */}
-            <ArticleContent content={article.content} />
+            <ArticleContent content={fullArticle.content} />
             
             {/* Tags section */}
-            {article.tags && article.tags.length > 0 && (
+            {fullArticle.tags && fullArticle.tags.length > 0 && (
               <div className="mt-8 pt-4 border-t border-gray-200">
                 <span className="text-gray-500 text-sm mr-2">Štítky:</span>
-                {article.tags.map(tag => (
+                {fullArticle.tags.map(tag => (
                   <span key={tag.id} className="inline-block text-xs bg-gray-100 px-2 py-1 rounded mr-2 mb-2">
                     {tag.text}
                   </span>
@@ -118,10 +122,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
             )}
 
-            {/* Back to home link */}
-            <div className="mt-8">
-              <Link href="/" className="text-red-600 hover:text-red-800">
+            {/* Navigation links with proper alignment */}
+            <div className="mt-8 flex justify-between items-center">
+              <Link 
+                href="/" 
+                className="text-red-600 hover:text-red-800"
+              >
                 &larr; Zpět na přehled zpráv
+              </Link>
+              
+              {/* Link to category-specific page - now right-aligned */}
+              <Link 
+                href={`/?category=${encodeURIComponent(fullArticle.topic.name)}`}
+                className="text-red-600 hover:text-red-800"
+              >
+                Zobrazit více z kategorie {fullArticle.topic.name} &rarr;
               </Link>
             </div>
           </article>

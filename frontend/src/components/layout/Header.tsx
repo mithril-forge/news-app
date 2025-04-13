@@ -10,14 +10,14 @@ interface HeaderProps {
   categories: string[];
   /** Currently selected category */
   activeCategory: string;
-  /** Callback function when a category is selected */
+  /** Optional callback function when a category is selected */
   onSelectCategory?: (category: string) => void;
 }
 
 export default function Header({ 
   categories, 
   activeCategory, 
-  onSelectCategory = () => {} 
+  onSelectCategory 
 }: HeaderProps) {
   return (
     <header className="bg-white border-b border-gray-200">

@@ -39,6 +39,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     }
   }
 
+  // Note: The onSelectCategory callback is not needed here since the client-side 
+  // navigation is handled directly in the CategoryNav component with the useRouter hook.
+  // This is a server component, so it will re-render with the new searchParams when the URL changes.
+  
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header 

@@ -3,6 +3,7 @@
 /**
  * Site footer component with categories and contact information
  */
+import { useRouter } from 'next/navigation';
 
 interface FooterProps {
   /** List of all available categories */
@@ -13,16 +14,29 @@ interface FooterProps {
 
 export default function Footer({ 
   categories, 
-  onSelectCategory = () => {} 
+  onSelectCategory 
 }: FooterProps) {
+  const router = useRouter();
+
   /**
    * Handles category selection with scroll to top
    * @param category - Selected category name
    */
   const handleCategoryClick = (category: string) => {
-    // Scroll to top before category change for better UX
+    // Scroll to top for better UX
     window.scrollTo(0, 0);
-    onSelectCategory(category);
+    
+    // Always navigate to home with the selected category
+    if (category === 'Vše') {
+      router.push('/');
+    } else {
+      router.push(`/?category=${encodeURIComponent(category)}`);
+    }
+    
+    // Call callback if provided
+    if (onSelectCategory) {
+      onSelectCategory(category);
+    }
   };
 
   return (
