@@ -26,13 +26,8 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-limiter = Limiter(key_func=get_remote_address, default_limits=["5/minute"])
-app = FastAPI(middleware=[Middleware(SlowAPIMiddleware)])
-app.add_middleware(GZipMiddleware, minimum_size=4000)
-app.state.limiter = limiter
 environment = os.getenv("ENVIRONMENT")
-origins = []
+default_limits = []
 if environment == Environment.DEVELOPMENT.value:
     origins = [
         "http://localhost",
@@ -40,6 +35,14 @@ if environment == Environment.DEVELOPMENT.value:
     frontend_url = os.getenv("FRONTEND_URL")
     if frontend_url:
         origins.append(frontend_url)
+elif environment == Environment.PRODUCTION.value:
+    default_limits = ["5/minute"]
+limiter = Limiter(key_func=get_remote_address, default_limits=default_limits)
+app = FastAPI(middleware=[Middleware(SlowAPIMiddleware)])
+app.add_middleware(GZipMiddleware, minimum_size=4000)
+app.state.limiter = limiter
+environment = os.getenv("ENVIRONMENT")
+origins = []
 
 app.add_middleware(
     CORSMiddleware,
