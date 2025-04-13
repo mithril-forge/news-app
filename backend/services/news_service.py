@@ -58,4 +58,4 @@ class NewsService:
 
         complete_news = await self.news_repo.get_with_tags(news.id)
 
-        return news_to_response(complete_news)
+        return news_to_detailed_response(complete_news)
