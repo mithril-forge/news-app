@@ -1,7 +1,9 @@
 import os
+import logging
+import time
 from typing import List, Optional
 
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -14,6 +16,13 @@ from fastapi.middleware import Middleware
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["5/minute"])
 app = FastAPI(middleware=[Middleware(SlowAPIMiddleware)])
@@ -35,6 +44,19 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all standard methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
 )
+
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """ Add basic logging to the request."""
+    start_time = time.time()
+    logger.info(f"Request: {request.method} {request.url.path} {request.query_params}")
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    logger.info(f"{request.method} {request.url.path} took {process_time:.2f}s")
+    logger.debug(f"Response for the request: {response}")
+    return response
 
 
 # API endpoints
