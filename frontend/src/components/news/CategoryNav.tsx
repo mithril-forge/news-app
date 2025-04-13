@@ -1,7 +1,24 @@
-// src/components/News/CategoryNav.js
-import React from 'react';
+'use client'
 
-function CategoryNav({ categories, activeCategory, onSelectCategory }) {
+/**
+ * Navigation component for category/topic selection
+ * Client component to handle user interactions
+ */
+
+interface CategoryNavProps {
+  /** List of all available categories */
+  categories: string[];
+  /** Currently selected category */
+  activeCategory: string;
+  /** Callback function when a category is selected */
+  onSelectCategory: (category: string) => void;
+}
+
+export default function CategoryNav({ 
+  categories, 
+  activeCategory, 
+  onSelectCategory 
+}: CategoryNavProps) {
   return (
     <nav className="overflow-x-auto pb-2">
       <ul className="flex space-x-6 whitespace-nowrap">
@@ -14,6 +31,7 @@ function CategoryNav({ categories, activeCategory, onSelectCategory }) {
                   ? "text-red-600 border-b-2 border-red-600 pb-1"
                   : "text-gray-700 hover:text-red-600 pb-1"
               }`}
+              aria-current={activeCategory === category ? 'page' : undefined}
             >
               {category}
             </button>
@@ -23,5 +41,3 @@ function CategoryNav({ categories, activeCategory, onSelectCategory }) {
     </nav>
   );
 }
-
-export default CategoryNav;

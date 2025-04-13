@@ -30,7 +30,9 @@ environment = os.getenv("ENVIRONMENT")
 default_limits = []
 if environment == Environment.DEVELOPMENT.value:
     origins = [
-        "http://localhost",
+        "http://localhost:3000",
+        "http://nextjs_frontend:3000"
+        "http://localhost:1"
     ]
     frontend_url = os.getenv("FRONTEND_URL")
     if frontend_url:

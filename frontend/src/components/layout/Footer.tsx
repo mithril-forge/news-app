@@ -1,12 +1,28 @@
-// src/components/Layout/Footer.js
-import React from 'react';
+'use client'
 
-function Footer({ categories, onSelectCategory }) {
-  // Function to potentially handle category clicks from footer if needed
-  const handleCategoryClick = (category) => {
-      // Example: Scroll to top and filter
-      window.scrollTo(0, 0);
-      onSelectCategory(category);
+/**
+ * Site footer component with categories and contact information
+ */
+
+interface FooterProps {
+  /** List of all available categories */
+  categories: string[];
+  /** Optional callback for category selection */
+  onSelectCategory?: (category: string) => void;
+}
+
+export default function Footer({ 
+  categories, 
+  onSelectCategory = () => {} 
+}: FooterProps) {
+  /**
+   * Handles category selection with scroll to top
+   * @param category - Selected category name
+   */
+  const handleCategoryClick = (category: string) => {
+    // Scroll to top before category change for better UX
+    window.scrollTo(0, 0);
+    onSelectCategory(category);
   };
 
   return (
@@ -25,8 +41,8 @@ function Footer({ categories, onSelectCategory }) {
               {categories.slice(1, 6).map(category => ( // Show first 5 categories except "Vše"
                 <li key={category}>
                   <button
-                    onClick={() => handleCategoryClick(category)} // Use handler
-                    className="text-gray-300 hover:text-white text-sm text-left" // Added text-left
+                    onClick={() => handleCategoryClick(category)}
+                    className="text-gray-300 hover:text-white text-sm text-left"
                   >
                     {category}
                   </button>
@@ -50,5 +66,3 @@ function Footer({ categories, onSelectCategory }) {
     </footer>
   );
 }
-
-export default Footer;
