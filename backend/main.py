@@ -3,8 +3,12 @@ import logging
 import time
 from typing import List, Optional
 
-from fastapi import FastAPI, Depends, Query, Request
+from fastapi import FastAPI, Depends, Query, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware import Middleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config import Environment
@@ -12,7 +16,6 @@ from database.engine import get_session
 from schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
 from services.news_service import NewsService
 from services.topic_service import TopicService
-from fastapi.middleware import Middleware
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
@@ -26,6 +29,7 @@ logger = logging.getLogger(__name__)
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["5/minute"])
 app = FastAPI(middleware=[Middleware(SlowAPIMiddleware)])
+app.add_middleware(GZipMiddleware, minimum_size=4000)
 app.state.limiter = limiter
 environment = os.getenv("ENVIRONMENT")
 origins = []
@@ -46,15 +50,37 @@ app.add_middleware(
 )
 
 
-# Add request logging middleware
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={"message": "Validation error", "details": exc.errors()},
+    )
+
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """ Add basic logging to the request."""
+    """ Add basic logging to the request with user tracking."""
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "unknown")
+
     start_time = time.time()
-    logger.info(f"Request: {request.method} {request.url.path} {request.query_params}")
+
     response = await call_next(request)
+
     process_time = time.time() - start_time
-    logger.info(f"{request.method} {request.url.path} took {process_time:.2f}s")
+    logger.info(f"Request: {request.method} {request.url.path} {request.query_params} "
+                f"| IP: {client_ip} | UA: {user_agent[:50]}... "
+                f"| Params: {request.query_params} took {process_time:.2f}s")
+
     logger.debug(f"Response for the request: {response}")
     return response
 
@@ -102,3 +128,8 @@ async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
     """Get a specific news item by ID"""
     service = NewsService(session)
     return await service.get_news_by_id(news_id)
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
