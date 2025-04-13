@@ -1,2 +1,1 @@
-2. Dodelat spravne devops -> lokalni nasazeni s passnutymi parametry
-2. Dodelat nasazeni na Beanstalk -> podivat se jak navrhnout spolecne prostredi, co je potreba nasadit kam a dodelat pipeline pravdepodobne
+1. Dodelat nasazeni na Beanstalk -> podivat se jak navrhnout spolecne prostredi, co je potreba nasadit kam a dodelat pipeline pravdepodobne

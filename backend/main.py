@@ -10,8 +10,14 @@ from database.engine import get_session
 from schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
 from services.news_service import NewsService
 from services.topic_service import TopicService
+from fastapi.middleware import Middleware
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.middleware import SlowAPIMiddleware
 
-app = FastAPI()
+limiter = Limiter(key_func=get_remote_address, default_limits=["5/minute"])
+app = FastAPI(middleware=[Middleware(SlowAPIMiddleware)])
+app.state.limiter = limiter
 environment = os.getenv("ENVIRONMENT")
 origins = []
 if environment == Environment.DEVELOPMENT.value:
