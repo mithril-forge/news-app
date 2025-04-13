@@ -27,16 +27,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 environment = os.getenv("ENVIRONMENT")
+logger.info(f"Environment: {environment}")
 default_limits = []
+origins = []
 if environment == Environment.DEVELOPMENT.value:
     origins = [
-        "http://localhost:3000",
-        "http://nextjs_frontend:3000"
-        "http://localhost:1"
+        "*",
     ]
-    frontend_url = os.getenv("FRONTEND_URL")
-    if frontend_url:
-        origins.append(frontend_url)
+
 elif environment == Environment.PRODUCTION.value:
     default_limits = ["5/minute"]
 limiter = Limiter(key_func=get_remote_address, default_limits=default_limits)
@@ -44,7 +42,6 @@ app = FastAPI(middleware=[Middleware(SlowAPIMiddleware)])
 app.add_middleware(GZipMiddleware, minimum_size=4000)
 app.state.limiter = limiter
 environment = os.getenv("ENVIRONMENT")
-origins = []
 
 app.add_middleware(
     CORSMiddleware,

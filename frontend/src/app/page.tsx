@@ -28,21 +28,22 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   
   // Fetch the appropriate news data based on selected category
   let newsData;
+  let selectedTopicId;
+  
   if (activeCategory === "Vše") {
-    newsData = await fetchLatestNews(20);
+    // For "All" category, fetch latest news
+    newsData = await fetchLatestNews(10);
   } else {
+    // For specific category, find topic ID and fetch related news
     const selectedTopic = topicsData.find(topic => topic.name === activeCategory);
     if (selectedTopic) {
-      newsData = await fetchNewsByTopic(selectedTopic.id);
+      selectedTopicId = selectedTopic.id;
+      newsData = await fetchNewsByTopic(selectedTopicId, 10);
     } else {
       newsData = [];
     }
   }
 
-  // Note: The onSelectCategory callback is not needed here since the client-side 
-  // navigation is handled directly in the CategoryNav component with the useRouter hook.
-  // This is a server component, so it will re-render with the new searchParams when the URL changes.
-  
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <Header 
@@ -54,7 +55,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-grow">
           <NewsContent 
             news={newsData} 
-            activeCategory={activeCategory} 
+            activeCategory={activeCategory}
+            topicId={selectedTopicId}
           />
         </main>
       </Suspense>

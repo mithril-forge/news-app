@@ -1,19 +1,26 @@
 /**
- * Container component for displaying all news content
- * Handles the featured article and grid of remaining articles
+ * Server component for displaying all news content
+ * With proper grid layout for article cards
  */
 import { NewsArticle } from '@/types';
 import FeaturedArticle from './FeaturedArticle';
 import ArticleCard from './ArticleCard';
+import LoadMoreNews from './LoadMoreNews';
 
 interface NewsContentProps {
   /** Array of news articles to display */
   news: NewsArticle[];
   /** Currently active category for context */
   activeCategory: string;
+  /** Optional topic ID for category-specific news */
+  topicId?: string;
 }
 
-export default function NewsContent({ news, activeCategory }: NewsContentProps) {
+export default function NewsContent({ 
+  news, 
+  activeCategory,
+  topicId 
+}: NewsContentProps) {
   // Handle empty state
   if (news.length === 0) {
     return (
@@ -31,23 +38,22 @@ export default function NewsContent({ news, activeCategory }: NewsContentProps) 
 
   return (
     <>
+      {/* Featured article - rendered on server */}
       <FeaturedArticle article={featuredArticle} />
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {remainingArticles.length > 0 ? (
-          remainingArticles.map(item => (
-            <ArticleCard key={item.id} item={item} />
-          ))
-        ) : (
-          activeCategory !== "Vše" && (
-            <div className="md:col-span-3 text-center py-12">
-              <p className="text-gray-500">
-                Žádné další články v kategorii '{activeCategory}'
-              </p>
-            </div>
-          )
-        )}
+      {/* Article grid with proper responsive layout */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {remainingArticles.map(item => (
+          <ArticleCard key={item.id} item={item} />
+        ))}
       </div>
+      
+      {/* Client component for loading more articles */}
+      <LoadMoreNews
+        activeCategory={activeCategory}
+        topicId={topicId}
+        initialCount={news.length}
+      />
     </>
   );
 }

@@ -30,9 +30,7 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 
 
 # TODO:
-3. Problikavani pri zmene stranky -> moc kratky refresh cas
-4. Neupdatuje se url pri zmene stranky
-5. Predelat na server side routering 
-6. Cache dat kdyz da uzivatel klik zpet
-7. Rozdelit funkcionalitu do souboru
-8. Dodelat cachovani dat
+1. Problikavani pri zmene stranky -> moc kratky refresh cas
+2. Cache dat kdyz da uzivatel klik zpet
+3. Dodelat cachovani dat
+4. Button funguje jen na hlavni strance, u kategorii se zobrazuji jen 2 itemy v row a button tam funguje jen z hlavni stranky
