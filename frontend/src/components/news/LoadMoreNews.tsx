@@ -2,8 +2,9 @@
 
 /**
  * Client component for loading and displaying additional news articles
+ * With state reset when category changes
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NewsArticle } from '@/types';
 import { fetchLatestNews, fetchNewsByTopic } from '@/services/api';
 import ArticleCard from './ArticleCard';
@@ -29,6 +30,14 @@ export default function LoadMoreNews({
   // Number of items to load per page
   const pageSize = 9;
 
+  // Reset state when category or topic changes
+  useEffect(() => {
+    console.log('Category or topic changed, resetting loaded articles');
+    setAdditionalArticles([]);
+    setHasMore(true);
+    setIsLoading(false);
+  }, [activeCategory, topicId]);
+
   /**
    * Handles loading more news articles
    */
@@ -41,6 +50,8 @@ export default function LoadMoreNews({
       const currentOffset = initialCount + additionalArticles.length;
       let moreNews;
       
+      console.log(`Loading more for: ${activeCategory}, topicId: ${topicId}, offset: ${currentOffset}`);
+      
       if (activeCategory === "Vše") {
         moreNews = await fetchLatestNews(pageSize, currentOffset);
       } else if (topicId) {
@@ -50,19 +61,22 @@ export default function LoadMoreNews({
         return;
       }
       
+      console.log(`Loaded ${moreNews?.length || 0} additional articles`);
+      
       // If we received fewer items than requested, we've reached the end
-      if (moreNews.length < pageSize) {
+      if (!moreNews || moreNews.length < pageSize) {
         setHasMore(false);
       }
       
       // Add new articles to the local state
-      if (moreNews.length > 0) {
+      if (moreNews && moreNews.length > 0) {
         setAdditionalArticles(prev => [...prev, ...moreNews]);
       } else {
         setHasMore(false);
       }
     } catch (error) {
       console.error('Error loading more news:', error);
+      setHasMore(false);
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +86,7 @@ export default function LoadMoreNews({
     <>
       {/* Additional articles loaded client-side */}
       {additionalArticles.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {additionalArticles.map(item => (
             <ArticleCard key={item.id} item={item} />
           ))}
