@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Site header component with title and category navigation
  */

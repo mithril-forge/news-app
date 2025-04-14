@@ -30,8 +30,6 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 
 
 # TODO:
-1. Problikavani pri zmene stranky -> moc kratky refresh cas
 2. Cache dat kdyz da uzivatel klik zpet
 3. Dodelat cachovani dat
-4. Button funguje jen poprve, potom rozbiji vysledky u jednotlivych kategorii, to se musi fixnout
 5. Tlacitko nacist dalsi ma byt, jen pokud opravdu dalsi existuji
