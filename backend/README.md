@@ -1,1 +1,2 @@
-1. Dodelat nasazeni na Beanstalk -> podivat se jak navrhnout spolecne prostredi, co je potreba nasadit kam a dodelat pipeline pravdepodobne
+1. Upravit model InputNews aby odpovidal vecem, ktere tam chceme. Nemusi tam byt zadna raw data, respektive muzou byt teda zatim nevyuzita.
+2. Implementovat logiku parsovani novych input news

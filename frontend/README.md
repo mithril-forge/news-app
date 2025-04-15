@@ -32,4 +32,3 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 # TODO:
 2. Cache dat kdyz da uzivatel klik zpet
 3. Dodelat cachovani dat
-5. Tlacitko nacist dalsi ma byt, jen pokud opravdu dalsi existuji
