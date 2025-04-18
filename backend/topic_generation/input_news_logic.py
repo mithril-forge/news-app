@@ -1,13 +1,12 @@
 import asyncio
 from datetime import datetime
 
-from database.engine import get_session
+from database.engine import get_session, get_session_context
 from services.input_news_service import InputNewsService
 from topic_generation.input_news_schema import InputNewsSchema
 from topic_generation.testing_data.additional_input_news import ADDITIONAL_ARTICLES
 from topic_generation.testing_data.common import load_testing_input_news_data
 from topic_generation.testing_data.initial_input_news import INITIAL_INPUT_ARTICLES
-
 
 _mock_data = iter([
     load_testing_input_news_data(INITIAL_INPUT_ARTICLES),
@@ -17,9 +16,9 @@ _mock_data = iter([
 async def parse_news(from_date: datetime, to_date: datetime) -> None:
     # 1. Call function to get the data, for now mocked
     input_news: list[InputNewsSchema] = next(_mock_data, [])
-    session_gen = get_session()
-    input_news_service = InputNewsService(session=await anext(session_gen))
-    await input_news_service.add_input_news_batch(input_news_list=input_news)
+    async with get_session_context() as session:
+        input_news_service = InputNewsService(session=session)
+        await input_news_service.add_input_news_batch(input_news_list=input_news)
 
 
 def creates_new_articles(from_date: datetime) -> None:
@@ -35,6 +34,7 @@ def creates_new_articles(from_date: datetime) -> None:
     # 3. Output should be as Pydantic model defined in input_news_schema.py -> clearly connect ID of parsed news then content and needed things
     # 4. Saves new/updated parsed news to DB and connect properly the input news
     pass
+
 
 def clear_old_input_news() -> None:
     # 1. Archive old input news from relational DB to same file dump or data lake. The threshold should be something like 1-2 months.
