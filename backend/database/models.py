@@ -5,8 +5,16 @@ from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel, Column  # Import Column
 
+class BaseModel(SQLModel):
+    """Base model with common utility methods."""
 
-class Topic(SQLModel, table=True):
+    @classmethod
+    def schema_name(cls) -> str:
+        """Return the table name for the model."""
+        return cls.__tablename__
+
+
+class Topic(BaseModel, table=True):
     __tablename__ = "topics"
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -18,7 +26,7 @@ class Topic(SQLModel, table=True):
 
 
 
-class ParsedNewsTagLink(SQLModel, table=True):
+class ParsedNewsTagLink(BaseModel, table=True):
     __tablename__ = "parsed_news_tag_link"
 
     news_item_id: Optional[int] = Field(
@@ -29,7 +37,7 @@ class ParsedNewsTagLink(SQLModel, table=True):
     )
 
 
-class Tag(SQLModel, table=True):
+class Tag(BaseModel, table=True):
     __tablename__ = "tags"
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -39,7 +47,7 @@ class Tag(SQLModel, table=True):
 
 
 
-class ParsedNews(SQLModel, table=True):
+class ParsedNews(BaseModel, table=True):
     __tablename__ = "parsed_news"
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -58,7 +66,7 @@ class ParsedNews(SQLModel, table=True):
 
 
 
-class InputNews(SQLModel, table=True):
+class InputNews(BaseModel, table=True):
     __tablename__ = "input_news"
 
     id: Optional[int] = Field(default=None, primary_key=True)

@@ -2,10 +2,11 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from database import models
 from sqlalchemy import engine_from_config, inspect, schema
 from sqlalchemy import pool
-from sqlmodel import SQLModel
+
+from database.models import BaseModel
+
 SCHEMA_USED = "public"
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -21,7 +22,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
-target_metadata = SQLModel.metadata
+target_metadata = BaseModel.metadata
 target_metadata.schema = SCHEMA_USED
 
 
@@ -74,7 +75,7 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
-
+    print("Ending sucessfully online mode")
 
 if context.is_offline_mode():
     run_migrations_offline()
