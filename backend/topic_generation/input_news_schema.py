@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-class InputNewsMetadata(BaseModel):
+class InputNewsSchema(BaseModel):
     tags: list[str]
     category: str
     publication_date: datetime

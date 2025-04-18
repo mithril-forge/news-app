@@ -194,3 +194,11 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
             self.session.add(input_news)
             await self.session.flush()
         return input_news
+
+    async def get_by_source_url(self, source_url: str) -> Optional[InputNews]:
+        """
+        Get input news by source URL.
+        """
+        statement = select(InputNews).where(InputNews.source_url == source_url)
+        result = await self.session.execute(statement)
+        return result.scalars().first()

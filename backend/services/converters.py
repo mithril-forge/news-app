@@ -6,10 +6,13 @@ but they can be useful for more complex transformations.
 
 from typing import List, TypeVar, Type, Optional
 
-from database.models import ParsedNews
+from database.models import ParsedNews, InputNews
 from pydantic import BaseModel
 from schemas import NewsResponseBasic, NewsResponseDetailed, TagResponse, TopicResponse
 from sqlmodel import SQLModel
+
+from topic_generation.input_news_schema import InputNewsSchema
+from topic_generation.testing_data.additional_input_news import InputNewsMetadata
 
 M = TypeVar('M', bound=SQLModel)
 P = TypeVar('P', bound=BaseModel)
@@ -144,3 +147,46 @@ def news_to_detailed_response(news: ParsedNews) -> NewsResponseDetailed:
 
     # Create response model from dict
     return NewsResponseDetailed(**data)
+
+
+def input_metadata_to_orm(input_metadata: InputNewsMetadata) -> InputNews:
+    """
+    Convert an InputNewsMetadata Pydantic model to InputNews SQLModel instance.
+
+    Args:
+        input_metadata: An InputNewsMetadata Pydantic model instance
+
+    Returns:
+        An InputNews SQLModel instance ready to be added to the database
+    """
+    if not input_metadata:
+        return None
+
+    # Convert tags list to string representation (comma-separated)
+    tags_str = ",".join(input_metadata.tags) if input_metadata.tags else None
+
+    # Create InputNews instance
+    return InputNews(
+        tags=tags_str,
+        category=input_metadata.category,
+        source_url=input_metadata.source_url,
+        source_site=input_metadata.source_site,
+        summary=input_metadata.summary,
+        author=input_metadata.author,
+        content=input_metadata.content,
+        title=input_metadata.title,
+        publication_date=input_metadata.publication_date,
+    )
+
+
+def input_metadata_list_to_orm(input_metadata_list: List[InputNewsSchema]) -> List[InputNews]:
+    """
+    Convert a list of InputNewsMetadata Pydantic models to InputNews SQLModel instances.
+
+    Args:
+        input_metadata_list: List of InputNewsMetadata Pydantic model instances
+
+    Returns:
+        List of InputNews SQLModel instances ready to be added to the database
+    """
+    return [input_metadata_to_orm(item) for item in input_metadata_list]

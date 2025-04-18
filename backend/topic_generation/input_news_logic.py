@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from database.engine import get_session
+from services.input_news_service import InputNewsService
 from topic_generation.input_news_schema import InputNewsMetadata
 from topic_generation.testing_data.additional_input_news import ADDITIONAL_ARTICLES
 from topic_generation.testing_data.common import load_testing_input_news_data
@@ -14,7 +16,9 @@ _mock_data = iter([
 def parse_news(from_date: datetime, to_date: datetime) -> None:
     # 1. Call function to get the data, for now mocked
     input_news: list[InputNewsMetadata] = next(_mock_data, [])
-    # 2. Push data to the DB -> check is done by source_url -> if same then just updates the article
+    session = get_session()
+    input_news_service = InputNewsService(session=session)
+    input_news_service.add_input_news_batch(input_news_list=input_news)
 
 
 def creates_new_articles(from_date: datetime) -> None:
