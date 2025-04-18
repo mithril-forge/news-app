@@ -62,13 +62,15 @@ class InputNews(SQLModel, table=True):
     __tablename__ = "input_news"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    source: str = Field()
-    description: str = Field()
-
-    raw_metadata: Optional[Dict[str, Any]] = Field(
-        default_factory=dict, sa_column=Column(JSONB)
-    )
+    tags: Optional[str] = Field(default=None)
+    category: str = Field()
+    source_url: str = Field()
+    source_site: str = Field()
+    summary: str = Field()
+    author: str = Field()
+    content: str = Field()
+    title: str = Field()
     parsed_news: Optional[int] = Field(foreign_key="parsed_news.id",
                                         nullable=True)  # Fixed foreign key reference
     received_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    processed_at: Optional[datetime] = Field(default=None)  # Made optional with default=None
+    publication_date: Optional[datetime] = Field(default=None)  # Made optional with default=None

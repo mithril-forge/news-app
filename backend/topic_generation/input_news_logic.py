@@ -1,11 +1,19 @@
 from datetime import datetime
 
 from topic_generation.input_news_schema import InputNewsMetadata
+from topic_generation.testing_data.additional_input_news import ADDITIONAL_ARTICLES
+from topic_generation.testing_data.common import load_testing_input_news_data
+from topic_generation.testing_data.initial_input_news import INITIAL_INPUT_ARTICLES
 
+
+_mock_data = iter([
+    load_testing_input_news_data(INITIAL_INPUT_ARTICLES),
+    load_testing_input_news_data(ADDITIONAL_ARTICLES)
+])
 
 def parse_news(from_date: datetime, to_date: datetime) -> None:
-    # TODO: 1. Calls function to get all the parsed news -> we don't care about return value, the result will be list of pydantic models
-    models: list[InputNewsMetadata] = []
+    # 1. Call function to get the data, for now mocked
+    input_news: list[InputNewsMetadata] = next(_mock_data, [])
     # 2. Push data to the DB -> check is done by source_url -> if same then just updates the article
 
 

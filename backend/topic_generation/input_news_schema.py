@@ -5,8 +5,10 @@ from pydantic import BaseModel
 class InputNewsMetadata(BaseModel):
     tags: list[str]
     category: str
-    post_date: datetime
+    publication_date: datetime
+    author: str
     source_site: str
     source_url: str
-    content: str # maybe separated
-    title: str # maybe separated
+    content: str
+    title: str
+    summary: str
