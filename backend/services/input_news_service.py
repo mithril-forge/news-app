@@ -4,7 +4,7 @@ from datetime import datetime
 
 from database.repository import AsyncInputNewsRepository
 from fastapi import HTTPException
-from schemas import InputNewsSchema
+from topic_generation.input_news_schema import InputNewsSchema
 from services.converters import input_metadata_list_to_orm
 from sqlmodel.ext.asyncio.session import AsyncSession
 

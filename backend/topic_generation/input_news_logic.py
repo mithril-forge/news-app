@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 from database.engine import get_session
@@ -13,12 +14,12 @@ _mock_data = iter([
     load_testing_input_news_data(ADDITIONAL_ARTICLES)
 ])
 
-def parse_news(from_date: datetime, to_date: datetime) -> None:
+async def parse_news(from_date: datetime, to_date: datetime) -> None:
     # 1. Call function to get the data, for now mocked
     input_news: list[InputNewsSchema] = next(_mock_data, [])
-    session = get_session()
-    input_news_service = InputNewsService(session=session)
-    input_news_service.add_input_news_batch(input_news_list=input_news)
+    session_gen = get_session()
+    input_news_service = InputNewsService(session=await anext(session_gen))
+    await input_news_service.add_input_news_batch(input_news_list=input_news)
 
 
 def creates_new_articles(from_date: datetime) -> None:
@@ -40,3 +41,9 @@ def clear_old_input_news() -> None:
     pass
 
 
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    result = loop.run_until_complete(parse_news(0, 0))
+    print(result)
+
+    loop.close()
