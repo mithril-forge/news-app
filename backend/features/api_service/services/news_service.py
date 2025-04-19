@@ -6,7 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from features.api_service.converters import news_list_to_response, news_to_detailed_response
 from features.api_service.database.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
-from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic
+from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate
 
 # Configure module logger
 logger = logging.getLogger(__name__)

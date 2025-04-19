@@ -12,13 +12,14 @@ from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config import Environment
-from database.engine import get_session
-from schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
-from services.news_service import NewsService
-from services.topic_service import TopicService
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
+
+from core.engine import get_session
+from features.api_service.services.news_service import NewsService
+from features.api_service.services.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
+from features.api_service.services.topic_service import TopicService
 
 # Configure logging
 logging.basicConfig(

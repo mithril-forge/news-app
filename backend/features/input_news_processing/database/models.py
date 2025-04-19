@@ -21,6 +21,6 @@ class InputNews(BaseModel, table=True):
     content: str = Field()
     title: str = Field()
     parsed_news: Optional[int] = Field(foreign_key="parsed_news.id",
-                                        nullable=True)  # Fixed foreign key reference
+                                        nullable=True)
     received_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    publication_date: Optional[datetime] = Field(default=None)  # Made optional with default=None
+    publication_date: Optional[datetime] = Field(default=None)
