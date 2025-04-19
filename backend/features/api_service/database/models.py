@@ -1,17 +1,11 @@
 from datetime import datetime
-from typing import List, Optional, Dict, Any  # Import Dict and Any for raw_data
+from typing import List, Optional
 
-from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, relationship
-from sqlmodel import Field, Relationship, SQLModel, Column  # Import Column
+from sqlmodel import Field, Relationship, SQLModel, Column
 
-class BaseModel(SQLModel):
-    """Base model with common utility methods."""
-
-    @classmethod
-    def schema_name(cls) -> str:
-        """Return the table name for the model."""
-        return cls.__tablename__
+from core.models import BaseModel
 
 
 class Topic(BaseModel, table=True):
@@ -62,23 +56,3 @@ class ParsedNews(BaseModel, table=True):
     topic_id: Optional[int] = Field(default=None, foreign_key="topics.id")
 
     topic: Mapped[Optional[Topic]] = Relationship(sa_relationship=relationship(back_populates="news_items", lazy='selectin'), )
-
-
-
-
-class InputNews(BaseModel, table=True):
-    __tablename__ = "input_news"
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    tags: Optional[str] = Field(default=None)
-    category: str = Field()
-    source_url: str = Field()
-    source_site: str = Field()
-    summary: str = Field()
-    author: str = Field()
-    content: str = Field()
-    title: str = Field()
-    parsed_news: Optional[int] = Field(foreign_key="parsed_news.id",
-                                        nullable=True)  # Fixed foreign key reference
-    received_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    publication_date: Optional[datetime] = Field(default=None)  # Made optional with default=None

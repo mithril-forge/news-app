@@ -1,12 +1,12 @@
 import logging
 from typing import List
 
-from database.models import Topic
-from database.repository import AsyncTopicRepository
 from fastapi import HTTPException
-from schemas import TopicResponse, TopicCreate
-from services.converters import orm_to_pydantic, orm_list_to_pydantic
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from core.converters import orm_list_to_pydantic, orm_to_pydantic
+from features.api_service.repository import AsyncTopicRepository
+from features.api_service.services.schemas import TopicResponse, TopicCreate
 
 logger = logging.getLogger(__name__)
 

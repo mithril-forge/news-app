@@ -1,20 +1,19 @@
 import logging
-from typing import List
 from datetime import datetime
+from typing import List
 
-from database.repository import AsyncInputNewsRepository
-from fastapi import HTTPException
-from topic_generation.input_news_schema import InputNewsSchema
+from features.input_news_processing.repository import AsyncInputNewsRepository
+from features.input_news_processing.schemas import InputNewsSchema
+from features.input_news_processing.testing_data.common import mock_data
 from services.converters import input_metadata_list_to_orm
-from sqlmodel.ext.asyncio.session import AsyncSession
 
-# Configure module logger
 logger = logging.getLogger(__name__)
 
 
 class InputNewsService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session):
         self.session = session
+
         self.input_news_repo = AsyncInputNewsRepository(session)
         logger.debug("InputNewsService initialized")
 
@@ -55,3 +54,16 @@ class InputNewsService:
         logger.info(f"Successfully processed {len(result_ids)} out of {len(input_news_list)} input news items")
         return result_ids
 
+    async def parse_input_news(self, from_date: datetime, to_date: datetime) -> None:
+        # Logic to fetch and store input news
+        input_news = await self._fetch_raw_news(from_date, to_date)
+        await self.add_input_news_batch(input_news_list=input_news)
+
+    async def clear_old_input_news(self, older_than: datetime) -> None:
+        # Logic to archive old input news
+        pass
+
+    async def _fetch_raw_news(self, from_date: datetime, to_date: datetime) -> list[InputNewsSchema]:
+        # Implementation to get news data, currently mocked
+        # In a real implementation, this might call an external API or data source
+        return next(mock_data, [])

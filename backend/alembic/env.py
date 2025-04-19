@@ -5,7 +5,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, inspect, schema
 from sqlalchemy import pool
 
-from database.models import BaseModel
+from core.models import BaseModel
 
 SCHEMA_USED = "public"
 # this is the Alembic Config object, which provides
