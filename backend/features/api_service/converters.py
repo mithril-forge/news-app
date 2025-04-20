@@ -1,11 +1,9 @@
 from typing import List
 
-from pydantic import BaseModel
 
 from core.converters import orm_to_pydantic, orm_list_to_pydantic
-from sqlmodel import SQLModel
+from core.models import ParsedNews
 
-from features.api_service.database.models import ParsedNews
 from features.api_service.services.schemas import NewsResponseBasic, TopicResponse, TagResponse, NewsResponseDetailed
 
 

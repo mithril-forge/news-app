@@ -1,12 +1,15 @@
+from datetime import timedelta, datetime
 from typing import List, Optional, TypeVar, Any, Dict
 
-from sqlmodel import select, SQLModel
+from sqlmodel import select, SQLModel, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from core.models import InputNews
 from core.repository import AsyncBaseRepository
-from features.api_service.database.models import Topic, Tag, ParsedNews, ParsedNewsTagLink
+from core.models import Topic, Tag, ParsedNews, ParsedNewsTagLink
 
 T = TypeVar('T', bound=SQLModel)
+
 
 class AsyncTopicRepository(AsyncBaseRepository[Topic]):
     """Async repository for Topic model."""
@@ -103,3 +106,17 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         # DON'T try to assign to news.tags directly
         # Instead, just return the news object without manually loading the tags
         return news
+
+    async def get_by_time_delta(
+            self,
+            delta: timedelta
+    ) -> List[ParsedNews]:
+        """
+        """
+        from_date = datetime.utcnow() - delta
+
+        conditions = [ParsedNews.updated_at >= from_date]
+
+        statement = select(ParsedNews).where(and_(*conditions))
+        result = await self.session.execute(statement)
+        return result.scalars().all()

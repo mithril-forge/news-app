@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from features.input_news_processing.schemas import InputNewsSchema
+from features.input_news_processing.services.schemas import InputNewsSchema
 from features.input_news_processing.testing_data.additional_input_news import ADDITIONAL_ARTICLES
 from features.input_news_processing.testing_data.initial_input_news import INITIAL_INPUT_ARTICLES
 

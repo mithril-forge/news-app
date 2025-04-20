@@ -1,8 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List
 
-from database.repository import AsyncBaseRepository
-from features.input_news_processing.models import InputNews
+from sqlmodel import select, and_
+
+from core.models import InputNews
+from core.repository import AsyncBaseRepository
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 
 class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
@@ -34,3 +37,34 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         statement = select(InputNews).where(InputNews.source_url == source_url)
         result = await self.session.execute(statement)
         return result.scalars().first()
+
+
+    async def get_by_time_delta(
+            self,
+            delta: timedelta,
+            has_parsed_news: Optional[bool] = None
+    ) -> List[InputNews]:
+        """
+        Get input news published within a time delta from now.
+
+        Args:
+            delta: Time delta to look back from current time
+            has_parsed_news: If True, only return news with parsed_news link.
+                            If False, only return news without parsed_news link.
+                            If None, return all news regardless of parsed_news status.
+
+        Returns:
+            List of InputNews within the time delta
+        """
+        from_date = datetime.utcnow() - delta
+
+        conditions = [InputNews.publication_date >= from_date]
+
+        if has_parsed_news is True:
+            conditions.append(InputNews.parsed_news_id != None)
+        elif has_parsed_news is False:
+            conditions.append(InputNews.parsed_news_id == None)
+
+        statement = select(InputNews).where(and_(*conditions))
+        result = await self.session.execute(statement)
+        return result.scalars().all()

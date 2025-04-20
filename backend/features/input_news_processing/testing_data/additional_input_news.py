@@ -1,22 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel
-import json
-from typing import List
 
-from topic_generation.testing_data.common_testing_data import sources
-
-
-class InputNewsMetadata(BaseModel):
-    tags: List[str]
-    category: str
-    publication_date: datetime
-    author: str
-    source_site: str
-    source_url: str
-    content: str
-    title: str
-    summary: str
-
+from features.input_news_processing.testing_data.common_testing_data import sources
 
 ADDITIONAL_ARTICLES = [
     {

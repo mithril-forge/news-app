@@ -1,11 +1,14 @@
 import logging
-from datetime import datetime
-from typing import List
+from datetime import datetime, timedelta
+from typing import List, Optional
 
-from features.input_news_processing.repository import AsyncInputNewsRepository
-from features.input_news_processing.schemas import InputNewsSchema
+from features.input_news_processing.database.repository import AsyncInputNewsRepository
+
+from features.api_service.database.repository import AsyncParsedNewsRepository
+from features.input_news_processing.converters import parsed_news_list_with_input, input_news_list_to_schema, \
+    input_schema_list_to_orm
+from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsSchema
 from features.input_news_processing.testing_data.common import mock_data
-from services.converters import input_metadata_list_to_orm
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +17,8 @@ class InputNewsService:
     def __init__(self, session):
         self.session = session
 
-        self.input_news_repo = AsyncInputNewsRepository(session)
+        self.input_news_repo = AsyncInputNewsRepository(session=session)
+        self.parsed_news_repo = AsyncParsedNewsRepository(session=session)
         logger.debug("InputNewsService initialized")
 
     async def add_input_news_batch(self, input_news_list: List[InputNewsSchema]) -> List[int]:
@@ -28,7 +32,7 @@ class InputNewsService:
             List of IDs of the added/updated news items
         """
         logger.info(f"Adding batch of {len(input_news_list)} input news items")
-        orm_models = input_metadata_list_to_orm(input_news_list)
+        orm_models = input_schema_list_to_orm(input_news_list)
         result_ids = []
         for model in orm_models:
             try:
@@ -67,3 +71,11 @@ class InputNewsService:
         # Implementation to get news data, currently mocked
         # In a real implementation, this might call an external API or data source
         return next(mock_data, [])
+
+    async def get_input_news_from_time(self, delta: timedelta, has_parsed_news: Optional[bool] = None) -> list[InputNewsSchema]:
+        result = await self.input_news_repo.get_by_time_delta(delta=delta, has_parsed_news=has_parsed_news)
+        return input_news_list_to_schema(input_news_list=result)
+
+    async def get_parsed_with_input_news(self, delta: timedelta) -> list[ParsedNewsWithInputNews]:
+        result = await self.parsed_news_repo.get_by_time_delta(delta=delta)
+        return parsed_news_list_with_input(parsed_news_list=result)

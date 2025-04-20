@@ -41,7 +41,7 @@ class NewsBase(BaseModel):
 
 
 class NewsCreate(NewsBase):
-    topic_id: int # topics are stabls
+    topic_id: int # topics are stable
     tags: List[str] # new tags can be created
     content: str
 

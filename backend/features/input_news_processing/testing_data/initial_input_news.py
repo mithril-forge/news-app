@@ -2,15 +2,15 @@ from datetime import datetime
 from pydantic import BaseModel
 import json
 
-from topic_generation.input_news_schema import InputNewsSchema
-from topic_generation.testing_data.common_testing_data import sources
+from features.input_news_processing.services.schemas import InputNewsSchema
+from features.input_news_processing.testing_data.common_testing_data import sources
 
 INITIAL_INPUT_ARTICLES = [
     # Group 1: Three articles about the same event - Significant flooding in Moravia
     {
         "tags": ["povodně", "Morava", "počasí", "krizová situace"],
         "category": "Domácí",
-        "publication_date": datetime(2023, 10, 5, 8, 30),
+        "publication_date": datetime(2024, 10, 5, 8, 30),
         "author": "Jan Novák",
         "source_site": sources[0]["name"],
         "source_url": f"{sources[0]['domain']}/zpravy/domaci/povoden-morava-evakuace",
@@ -27,7 +27,7 @@ V některých oblastech spadlo za posledních 48 hodin až 150 mm srážek, což
     {
         "tags": ["záplavy", "Jihomoravský kraj", "evakuace", "počasí", "hasiči"],
         "category": "Zprávy z regionů",
-        "publication_date": datetime(2023, 10, 5, 9, 45),
+        "publication_date": datetime(2024, 10, 5, 9, 45),
         "author": "Petra Svobodová",
         "source_site": sources[1]["name"],
         "source_url": f"{sources[1]['domain']}/clanek/povoden-jizni-morava-zachranne-prace",
@@ -44,7 +44,7 @@ Podle meteorologů v následujících 24 hodinách může spadnout dalších 30 
     {
         "tags": ["povodeň", "Morava", "škody", "pomoc", "krizový štáb"],
         "category": "Zpravodajství",
-        "publication_date": datetime(2023, 10, 5, 12, 15),
+        "publication_date": datetime(2024, 10, 5, 12, 15),
         "author": "Martin Procházka",
         "source_site": sources[2]["name"],
         "source_url": f"{sources[2]['domain']}/zpravy/povoden-morava-skody-pomoc",
@@ -65,7 +65,7 @@ Dobrovolníci z celé republiky se hlásí k pomoci. Humanitární organizace vy
     {
         "tags": ["ekonomika", "průmysl", "automobilový průmysl", "investice"],
         "category": "Ekonomika",
-        "publication_date": datetime(2023, 10, 6, 10, 0),
+        "publication_date": datetime(2024, 10, 6, 10, 0),
         "author": "Karel Veselý",
         "source_site": sources[0]["name"],
         "source_url": f"{sources[0]['domain']}/ekonomika/tovarna-elektromobily-investice",
@@ -82,7 +82,7 @@ Hyundai plánuje v nové továrně vyrábět dva modely elektromobilů určené 
     {
         "tags": ["Hyundai", "elektromobily", "Ostrava", "pracovní místa", "zelená ekonomika"],
         "category": "Byznys",
-        "publication_date": datetime(2023, 10, 6, 11, 30),
+        "publication_date": datetime(2024, 10, 6, 11, 30),
         "author": "Lucie Novotná",
         "source_site": sources[2]["name"],
         "source_url": f"{sources[2]['domain']}/byznys/hyundai-investice-elektromobily-ostrava",
@@ -103,7 +103,7 @@ Automobilka už v České republice provozuje závod v Nošovicích, kde vyráb�
     {
         "tags": ["kultura", "festival", "Praha", "umění", "mezinárodní"],
         "category": "Kultura",
-        "publication_date": datetime(2023, 10, 7, 15, 0),
+        "publication_date": datetime(2024, 10, 7, 15, 0),
         "author": "Eva Dvořáková",
         "source_site": sources[1]["name"],
         "source_url": f"{sources[1]['domain']}/kultura/festival-signal-praha-svetelne-instalace",
@@ -120,7 +120,7 @@ Festival potrvá do neděle a podle organizátorů by mohl přilákat až 500 ti
     {
         "tags": ["Signal festival", "světelné umění", "Praha", "videomapping", "kultura"],
         "category": "Události",
-        "publication_date": datetime(2023, 10, 7, 17, 45),
+        "publication_date": datetime(2024, 10, 7, 17, 45),
         "author": "Tomáš Černý",
         "source_site": sources[0]["name"],
         "source_url": f"{sources[0]['domain']}/kultura/festival-signal-zahajeni-praha",
@@ -141,7 +141,7 @@ Kvůli velkému zájmu byly posíleny linky MHD a centrum města je dočasně uz
     {
         "tags": ["sport", "fotbal", "reprezentace", "kvalifikace", "EURO"],
         "category": "Sport",
-        "publication_date": datetime(2023, 10, 8, 22, 30),
+        "publication_date": datetime(2024, 10, 8, 22, 30),
         "author": "Jakub Horák",
         "source_site": sources[1]["name"],
         "source_url": f"{sources[1]['domain']}/sport/fotbal-cesko-polsko-kvalifikace",
@@ -158,7 +158,7 @@ Zápas se hrál před vyprodanou Eden Arénou v Praze a čeští fotbalisté př
     {
         "tags": ["zdraví", "medicína", "výzkum", "Parkinsonova choroba", "neurologie"],
         "category": "Věda a zdraví",
-        "publication_date": datetime(2023, 10, 9, 14, 15),
+        "publication_date": datetime(2024, 10, 9, 14, 15),
         "author": "MUDr. Jana Králová",
         "source_site": sources[2]["name"],
         "source_url": f"{sources[2]['domain']}/veda-a-zdravi/parkinsonova-choroba-novy-lek-vyzkum",
@@ -175,7 +175,7 @@ Klinické testy na lidských pacientech by měly začít příští rok. "Pokud 
     {
         "tags": ["počasí", "klimatická změna", "meteorologie", "rekordy", "sucho"],
         "category": "Domácí zprávy",
-        "publication_date": datetime(2023, 10, 10, 9, 0),
+        "publication_date": datetime(2024, 10, 10, 9, 0),
         "author": "Michal Žák",
         "source_site": sources[0]["name"],
         "source_url": f"{sources[0]['domain']}/zpravy/domaci/leto-2023-nejteplejsi-sucho",
