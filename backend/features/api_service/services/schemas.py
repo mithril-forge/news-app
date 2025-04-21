@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class TopicBase(BaseModel):
@@ -41,9 +41,13 @@ class NewsBase(BaseModel):
 
 
 class NewsCreate(NewsBase):
-    topic_id: int # topics are stable
-    tags: List[str] # new tags can be created
+    topic_id: Optional[int]  # topics are stable
+    tags: List[str]  # new tags can be created
     content: str
+
+
+class NewsUpdate(NewsCreate):
+    id: int
 
 
 class NewsResponseBasic(NewsBase):

@@ -6,7 +6,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from features.api_service.converters import news_list_to_response, news_to_detailed_response
 from features.api_service.database.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
-from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate
+from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate, NewsUpdate
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -60,3 +60,7 @@ class NewsService:
         complete_news = await self.news_repo.get_with_tags(news.id)
 
         return news_to_detailed_response(complete_news)
+
+    async def update_news(self, news_data: NewsUpdate) -> NewsResponseDetailed:
+        """ Updates the existing DB record"""
+        raise NotImplementedError("")

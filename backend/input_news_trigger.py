@@ -10,26 +10,50 @@ from features.input_news_processing.testing_data.common import load_testing_inpu
 from features.input_news_processing.testing_data.initial_input_news import INITIAL_INPUT_ARTICLES
 
 
-_mock_data = iter([
-    load_testing_input_news_data(INITIAL_INPUT_ARTICLES),
-    load_testing_input_news_data(ADDITIONAL_ARTICLES)
-])
-
-
-async def parse_news():
+async def get_input_news_and_parse():
+    """ Official scenario that will be used to parse new input news and generates the parsed ones from them"""
+    # TODO: Load external input news in separate transaction and solve duplicates/record timedelta that is already parsed
+    delta = timedelta(days=7)
     async with get_session_context() as session:
         input_news_service = InputNewsService(session=session)
-        session.flush()
         article_generation_service = ArticleGenerationService(session=session)
-        await input_news_service.parse_input_news(0, 0)
-        await article_generation_service.creates_new_articles(timedelta_back=timedelta(days=360))
-        await input_news_service.parse_input_news(0, 0)
-        await article_generation_service.creates_new_articles(timedelta_back=timedelta(days=7))
+        await input_news_service.scrap_and_save_input_news(delta=delta)
+        session.flush()
+        await article_generation_service.connect_existing_news(delta=delta)
+        session.flush()
+        await article_generation_service.creates_new_news(delta=delta)
+
+
+async def test_parse_news():
+    """ Testing workflow, change commit transaction to True if you want to check generated news on page or in DB """
+    delta = timedelta(days=365)
+    # TODO: Try to add some similar tags to the created one, so we see if the AI matches the existing ones and don't create new ones. It also appends 4 tags instead of 3.
+    # TODO: Add assertions for the cases above, also assertion to the content length
+    async with get_session_context(commit_transaction=False) as session:
+        input_news_service = InputNewsService(session=session)
+        article_generation_service = ArticleGenerationService(session=session)
+        print("Loading initial data")
+        input_news = await input_news_service.scrap_and_save_input_news(delta=delta)
+        print(f"Input news loaded: {input_news}")
+        session.flush()
+        generated_news = await article_generation_service.connect_existing_news(delta=delta)
+        assert len(generated_news) == 0, f"The testing workflow shouldn't add any connected news. {generated_news=}"
+        generated_news = await article_generation_service.creates_new_news(delta=delta)
+        assert len(generated_news) == 3, f"Service should generate exactly 3 news. {generated_news=}"
+        session.flush()
+        print("Loading additional news.")
+        input_news = await input_news_service.scrap_and_save_input_news(delta=delta)
+        print(f"Input news loaded: {input_news}")
+        generated_news = await article_generation_service.connect_existing_news(delta=delta)
+        assert len(generated_news) == 1, f"The testing workflow should add exactly 1 connected news. {generated_news=}"
+        generated_news = await article_generation_service.creates_new_news(delta=delta)
+        assert len(generated_news) == 1, f"Service should generate exactly 1 news. {generated_news=}"
+        session.flush()
 
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(parse_news())
+    result = loop.run_until_complete(test_parse_news())
     print(result)
 
     loop.close()

@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from sqlmodel import select, and_
 
-from core.models import InputNews
+from core.models import InputNews, ParsedNews
 from core.repository import AsyncBaseRepository
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -14,21 +14,6 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, InputNews)
 
-    async def get_unprocessed(self) -> List[InputNews]:
-        """Get all unprocessed input news."""
-        statement = select(InputNews).where(InputNews.processed_at == None)
-        result = await self.session.execute(statement)
-        return result.scalars().all()
-
-    async def mark_as_processed(self, input_id: int, parsed_news_id: int) -> InputNews:
-        """Mark input news as processed and link to its parsed version without committing."""
-        input_news = await self.get_by_id(input_id)
-        if input_news:
-            input_news.processed_at = datetime.utcnow()
-            input_news.parsed_news = parsed_news_id
-            self.session.add(input_news)
-            await self.session.flush()
-        return input_news
 
     async def get_by_source_url(self, source_url: str) -> Optional[InputNews]:
         """
@@ -37,7 +22,6 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         statement = select(InputNews).where(InputNews.source_url == source_url)
         result = await self.session.execute(statement)
         return result.scalars().first()
-
 
     async def get_by_time_delta(
             self,
@@ -68,3 +52,30 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         statement = select(InputNews).where(and_(*conditions))
         result = await self.session.execute(statement)
         return result.scalars().all()
+
+    async def update_parsed_news_id(self, input_id: int, parsed_news_id: int) -> InputNews:
+        """
+        Update the parsed_news_id for an input news item and update the ParsedNews updated_at timestamp.
+
+        Args:
+            input_id: ID of the InputNews to update
+            parsed_news_id: ID of the ParsedNews to link
+
+        Returns:
+            Updated InputNews object or None if not found
+        """
+        input_news = await self.get_by_id(input_id)
+        if input_news:
+            input_news.parsed_news_id = parsed_news_id
+            self.session.add(input_news)
+            statement = select(ParsedNews).where(ParsedNews.id == parsed_news_id)
+            result = await self.session.execute(statement)
+            parsed_news = result.scalars().first()
+            if parsed_news:
+                parsed_news.updated_at = datetime.utcnow()
+                self.session.add(parsed_news)
+
+            await self.session.flush()
+        else:
+            raise ValueError(f"Didn't find input_news record with {input_id=}")
+        return input_news

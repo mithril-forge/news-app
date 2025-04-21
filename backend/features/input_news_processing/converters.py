@@ -83,8 +83,6 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsSchema:
         content=input_news.content,
         title=input_news.title,
         publication_date=input_news.publication_date,
-        received_at=input_news.received_at,
-        parsed_news_id=input_news.parsed_news_id
     )
 
 
@@ -102,12 +100,12 @@ def input_news_list_to_schema(input_news_list: List[InputNews]) -> List[InputNew
 
 
 def parsed_news_with_input(parsed_news: ParsedNews) -> ParsedNewsWithInputNews:
-    """ """
+    """ Connects also input news schema to the parsed news one"""
     detailed_response = news_to_detailed_response(parsed_news)
     input_news = input_news_list_to_schema(input_news_list=parsed_news.input_news)
     return ParsedNewsWithInputNews(**detailed_response.dict(), input_news=input_news)
 
 
 def parsed_news_list_with_input(parsed_news_list: List[ParsedNews]) -> List[ParsedNewsWithInputNews]:
-    """ """
+    """ Converts a lit of parsed_news_list with input news also"""
     return [parsed_news_with_input(item) for item in parsed_news_list if item]
