@@ -9,10 +9,10 @@ from typing import List
 
 from core.models import ParsedNews, InputNews
 from features.api_service.converters import news_to_detailed_response
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsSchema
+from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsBase, InputNewsWithID
 
 
-def input_schema_to_orm(input_metadata: InputNewsSchema) -> InputNews:
+def input_schema_to_orm(input_metadata: InputNewsBase) -> InputNews:
     """
     Convert an InputNewsMetadata Pydantic model to InputNews SQLModel instance.
 
@@ -42,7 +42,7 @@ def input_schema_to_orm(input_metadata: InputNewsSchema) -> InputNews:
     )
 
 
-def input_schema_list_to_orm(input_metadata_list: List[InputNewsSchema]) -> List[InputNews]:
+def input_schema_list_to_orm(input_metadata_list: List[InputNewsBase]) -> List[InputNews]:
     """
     Convert a list of InputNewsMetadata Pydantic models to InputNews SQLModel instances.
 
@@ -55,15 +55,15 @@ def input_schema_list_to_orm(input_metadata_list: List[InputNewsSchema]) -> List
     return [input_schema_to_orm(item) for item in input_metadata_list]
 
 
-def input_news_to_schema(input_news: InputNews) -> InputNewsSchema:
+def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
     """
-    Convert an InputNews SQLModel instance to InputNewsSchema Pydantic model.
+    Convert an InputNews SQLModel instance to InputNewsWithID Pydantic model.
 
     Args:
         input_news: An InputNews SQLModel instance from the database
 
     Returns:
-        An InputNewsSchema Pydantic model instance
+        An InputNewsWithID Pydantic model instance
     """
     if not input_news:
         return None
@@ -71,8 +71,7 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsSchema:
     # Convert tags string to list
     tags_list = input_news.tags.split(",") if input_news.tags else []
 
-    # Create InputNewsSchema instance
-    return InputNewsSchema(
+    return InputNewsWithID(
         id=input_news.id,
         tags=tags_list,
         category=input_news.category,
@@ -86,15 +85,15 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsSchema:
     )
 
 
-def input_news_list_to_schema(input_news_list: List[InputNews]) -> List[InputNewsSchema]:
+def input_news_list_to_schema(input_news_list: List[InputNews]) -> List[InputNewsWithID]:
     """
-    Convert a list of InputNews SQLModel instances to InputNewsSchema Pydantic models.
+    Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
 
     Args:
         input_news_list: List of InputNews SQLModel instances from the database
 
     Returns:
-        List of InputNewsSchema Pydantic model instances
+        List of InputNewsWithID Pydantic model instances
     """
     return [input_news_to_schema(item) for item in input_news_list if item]
 

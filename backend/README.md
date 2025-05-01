@@ -1,4 +1,5 @@
-1. Implement NotImplementedErrors 
-2. Fix problems with await/async and DB -> problems when assigning tags to the parsed news in AI flow.
-3. Work on TODOs
-4. Make clear structure design and depedencies within parts of the APP
+1. Implement TODOs
+2. Update README and docs
+3. Parametrize tests and parsing app logic from container -> CLI parametrization of the file execution
+4. Add support for multiple AI models -> composition and abstract class
+5. Implement image generation/handling -> design and implementation

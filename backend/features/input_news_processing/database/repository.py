@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, List
 
+from sqlalchemy import func
 from sqlmodel import select, and_
 
 from core.models import InputNews, ParsedNews
@@ -14,7 +15,6 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, InputNews)
 
-
     async def get_by_source_url(self, source_url: str) -> Optional[InputNews]:
         """
         Get input news by source URL.
@@ -27,7 +27,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
             self,
             delta: timedelta,
             has_parsed_news: Optional[bool] = None,
-            newer: bool= True
+            newer: bool = True
     ) -> List[InputNews]:
         """
         Get input news published within a time delta from now.
@@ -45,7 +45,6 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         from_date = datetime.utcnow() - delta
 
         conditions = [InputNews.publication_date >= from_date if newer else InputNews.publication_date <= from_date]
-
 
         if has_parsed_news is True:
             conditions.append(InputNews.parsed_news_id != None)
@@ -82,3 +81,16 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         else:
             raise ValueError(f"Didn't find input_news record with {input_id=}")
         return input_news
+
+    async def get_latest_received_timestamp(self) -> Optional[datetime]:
+        """
+        Get the most recent received_at timestamp.
+
+        Returns:
+            The latest timestamp or None if no records exist
+        """
+        statement = select(func.max(InputNews.received_at))
+        result = await self.session.execute(statement)
+        latest_timestamp = result.scalar_one_or_none()
+
+        return latest_timestamp

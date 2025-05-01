@@ -12,7 +12,8 @@ from features.input_news_processing.database.repository import AsyncInputNewsRep
 from features.api_service.database.repository import AsyncParsedNewsRepository
 from features.input_news_processing.converters import parsed_news_list_with_input, input_news_list_to_schema, \
     input_schema_list_to_orm, input_news_to_schema
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsSchema
+from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsBase, \
+    InputNewsWithID
 from features.input_news_processing.testing_data.common import mock_data
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class InputNewsService:
         self.archive = archive
         logger.debug("InputNewsService initialized")
 
-    async def add_or_update_input_news_batch(self, input_news_list: List[InputNewsSchema]) -> List[InputNewsSchema]:
+    async def add_or_update_input_news_batch(self, input_news_list: List[InputNewsBase]) -> List[InputNewsWithID]:
         """
         Add a batch of input news items to the database.
 
@@ -58,7 +59,7 @@ class InputNewsService:
         logger.info(f"Successfully processed {len(result_models)} input news items")
         return input_news_list_to_schema(result_models)
 
-    async def scrap_and_save_input_news(self, delta: timedelta) -> list[InputNewsSchema]:
+    async def scrap_and_save_input_news(self, delta: timedelta) -> list[InputNewsWithID]:
         """ Query latest news from the corresponding websites by delta and update them in DB or create news ones"""
         input_news = await self.scrap_input_news(delta=delta)
         return await self.add_or_update_input_news_batch(input_news_list=input_news)
@@ -80,7 +81,7 @@ class InputNewsService:
         for input_news in old_input_news:
             await self.input_news_repo.remove(id=input_news.id)
 
-    async def scrap_input_news(self, delta: timedelta) -> list[InputNewsSchema]:
+    async def scrap_input_news(self, delta: timedelta) -> list[InputNewsBase]:
         """
         Function that will call external function to scrap input news from websites by delta and return them.
         Right now implemented with mock testing data.
@@ -88,7 +89,7 @@ class InputNewsService:
         return next(mock_data, [])
 
     async def get_input_news_by_delta(self, delta: timedelta, has_parsed_news: Optional[bool] = None) -> list[
-        InputNewsSchema]:
+        InputNewsWithID]:
         """
         Retrieves input news within a specified time period.
         Args:
@@ -105,9 +106,15 @@ class InputNewsService:
         result = await self.parsed_news_repo.get_by_time_delta(delta=delta)
         return parsed_news_list_with_input(parsed_news_list=result)
 
-    async def connect_input_with_parsed(self, parsed_id: int, input_id: int) -> InputNewsSchema:
+    async def connect_input_with_parsed(self, parsed_id: int, input_id: int) -> InputNewsWithID:
         """
         Links a parsed news entry with its original input news entry.
         """
         db_result = await self.input_news_repo.update_parsed_news_id(input_id=input_id, parsed_news_id=parsed_id)
         return input_news_to_schema(db_result)
+
+    async def get_latest_timestamp(self) -> Optional[datetime]:
+        """
+        Returns latest timestamp of the input news
+        """
+        return await self.input_news_repo.get_latest_received_timestamp()

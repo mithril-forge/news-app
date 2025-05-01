@@ -6,9 +6,7 @@ from pydantic import BaseModel, field_validator, model_validator
 from features.api_service.services.schemas import NewsResponseDetailed, NewsCreate, NewsUpdate
 
 
-# TODO: Split usages with ID and without
-class InputNewsSchema(BaseModel):
-    id: Optional[int] = None
+class InputNewsBase(BaseModel):
     tags: list[str]
     category: str
     publication_date: datetime
@@ -19,9 +17,11 @@ class InputNewsSchema(BaseModel):
     title: str
     summary: str
 
+class InputNewsWithID(InputNewsBase):
+    id: int
 
 class ParsedNewsWithInputNews(NewsResponseDetailed):
-    input_news: list[InputNewsSchema]
+    input_news: list[InputNewsWithID]
 
 
 # TODO: Check encoding of the answers, sometimes they are in unicode, we need to tackle it in that case

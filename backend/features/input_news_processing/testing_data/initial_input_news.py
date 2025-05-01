@@ -2,7 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel
 import json
 
-from features.input_news_processing.services.schemas import InputNewsSchema
+from features.input_news_processing.services.schemas import InputNewsBase
 from features.input_news_processing.testing_data.common_testing_data import sources
 
 INITIAL_INPUT_ARTICLES = [
@@ -198,7 +198,7 @@ Ministerstvo zemědělství již oznámilo, že připravuje kompenzace pro země
 
 
 
-def load_initial_input_news_data() -> list[InputNewsSchema]:
+def load_initial_input_news_data() -> list[InputNewsBase]:
     # Convert the data back to Pydantic models
     articles = []
     for article_dict in INITIAL_INPUT_ARTICLES:
@@ -206,7 +206,7 @@ def load_initial_input_news_data() -> list[InputNewsSchema]:
         article_dict["publication_date"] = datetime.fromisoformat(article_dict["publication_date"])
 
         # Create Pydantic model
-        article = InputNewsSchema(**article_dict)
+        article = InputNewsBase(**article_dict)
         articles.append(article)
 
     return articles

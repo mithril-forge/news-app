@@ -81,11 +81,7 @@ class NewsService:
             HTTPException: If news item not found
         """
         logger.info(f"Updating news item with ID: {news_data.id}")
-        # TODO: Split update and create model
-        if news_data.id is None:
-            raise ValueError("Cannot update news_data without id.")
         existing_news = await self.news_repo.get_by_id(news_data.id)
-        # TODO: Handling of nonexisting structure both in service and repository, decide the solution
         if not existing_news:
             logger.warning(f"News with ID {news_data.id} not found for update")
             return None

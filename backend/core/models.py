@@ -1,11 +1,7 @@
-from sqlalchemy.dialects.postgresql import JSONB  # Import JSONB for PostgreSQL
-from sqlalchemy.orm import Mapped, relationship
-from sqlmodel import Field, Relationship, SQLModel, Column  # Import Column
-
+# TODO: Implement cascade on_delete also in DB itself not only in SQLModel logic
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel, Column
 
@@ -48,7 +44,9 @@ class Tag(BaseModel, table=True):
     text: str = Field()
 
     news_items: Mapped[List["ParsedNews"]] = Relationship(link_model=ParsedNewsTagLink, back_populates="tags",
-                                                          sa_relationship_kwargs={'lazy': 'selectin'})
+                                                          sa_relationship_kwargs={'lazy': 'selectin',
+                                                                                  'cascade': "all, delete",
+                                                                                  'passive_deletes': True})
 
 
 class ParsedNews(BaseModel, table=True):
@@ -65,7 +63,8 @@ class ParsedNews(BaseModel, table=True):
     tags: Mapped[List["Tag"]] = Relationship(
         back_populates="news_items",
         link_model=ParsedNewsTagLink,
-        sa_relationship_kwargs={'lazy': 'selectin'}
+        sa_relationship_kwargs={'lazy': 'selectin', 'cascade': "all, delete",
+                                'passive_deletes': True}
     )
 
     topic_id: Optional[int] = Field(default=None, foreign_key="topics.id")

@@ -18,8 +18,8 @@ from features.api_service.services.topic_service import TopicService
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, CONNECTION_PROMPT
 from features.input_news_processing.services.input_news_service import InputNewsService
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsSchema, ConnectionResult, \
-    CreationResult
+from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, ConnectionResult, \
+    CreationResult, InputNewsWithID
 
 
 class TempFileStorage(BaseModel):
@@ -40,7 +40,7 @@ class ArticleGenerationService:
     @staticmethod
     def save_pydantic_lists_as_files(tags_list: list[TagResponse], topics_list: list[TopicResponse],
                                      recent_parsed_news: list[ParsedNewsWithInputNews],
-                                     recent_input_news: list[InputNewsSchema]) -> TempFileStorage:
+                                     recent_input_news: list[InputNewsWithID]) -> TempFileStorage:
         """
         Dumps data to the files and returns their paths, this is step to convert data from Pydantic models
         to files that are supported by Gemini and other AI models
@@ -154,5 +154,5 @@ class ArticleGenerationService:
                 continue
             for input_id in news_data.input_news_ids:
                 await self.input_news_service.connect_input_with_parsed(input_id=input_id, parsed_id=saved_news.id)
-            updated_news_list.append(updated_news_list)
+            updated_news_list.append(saved_news)
         return updated_news_list

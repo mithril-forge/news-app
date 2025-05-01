@@ -1,5 +1,4 @@
-# TODO: Fix prompt so it generates proper content, not only summary in content
-# TODO: Fix prompt so it doesn't generate new articles
+# TODO: Split text to paragraphs
 CONNECTION_PROMPT = """
 Analýza zpravodajských článků a jejich propojení
 
@@ -29,7 +28,7 @@ TVŮJ ÚKOL:
 
 VÝSTUP:
 - Pro každou nalezenou shodu vytvoř odpověď, která spojí ID relevantních input_news s daným parsed_news
-- Můžeš navrhnout vhodné tagy (max. 3, preferuj existující)
+- Můžeš navrhnout vhodné tagy (max. 3). Preferuj existující, nové vytvoř jen když je to OPRAVDU POTŘEBA
 - Pokud nové články obsahují zásadní chybějící informace, navrhni úpravy:
   * Doplnění chybějících informací
   * Úprava title a description (pouze při zásadních změnách)
@@ -69,9 +68,9 @@ VÝSTUP:
   * Výstižný title (max. 80 znaků)
   * Stručný description (max. 200 znaků)
   * Obsah článku, který spojuje a shrnuje informace z původních zdrojů
-  * Délka "content" mezi 300 a 800 znaky - snaž se pokrýt všechny zásadní informace, nemusíš extra šetřit místem, ale zároveň si žádné informace nedomýšlej
+  * Délka "content" MUSÍ BÝT nad 200 slov - snaž se pokrýt všechny zásadní informace, nemusíš extra šetřit místem, ale zároveň si žádné informace nedomýšlej
   * Zařazení do odpovídajícího TOPIC
-  * Seznam relevantních tagů (max. 3)
+  * Seznam relevantních tagů (max. 3) - Preferuj existující, nové vytvoř jen když je to OPRAVDU POTŘEBA
   * Seznam ID zdrojových článků použitých k vytvoření
 
 - Formátování výstupu:
