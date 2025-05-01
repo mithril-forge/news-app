@@ -3,8 +3,10 @@ import pathlib
 import uuid
 from typing import Optional
 
+from features.input_news_processing.archive.abstract_archive import AbstractArchive
 
-class LocalArchive:
+
+class LocalArchive(AbstractArchive):
     """Class for handling local file storage operations."""
 
     def __init__(self, target_location: pathlib.Path) -> None:
@@ -18,7 +20,7 @@ class LocalArchive:
         # Ensure the target directory exists
         self.target_location.mkdir(parents=True, exist_ok=True)
 
-    def save_file(self, file_content: bytes, suffix: Optional[str] = None, name: Optional[str] = None) -> str:
+    def save_file(self, file_content: bytes, suffix: Optional[str] = None, name: Optional[str] = None) -> pathlib.Path:
         """
         Save file content to the local storage.
 
@@ -44,7 +46,7 @@ class LocalArchive:
 
         file_path = self.target_location / filename
         file_path.write_bytes(file_content)
-        return str(file_path.absolute())
+        return file_path.absolute()
 
     def get_file(self, path: pathlib.Path) -> bytes:
         """
