@@ -1,7 +1,11 @@
+import io
+import json
 import logging
+import zipfile
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.database.repository import AsyncInputNewsRepository
 
 from features.api_service.database.repository import AsyncParsedNewsRepository
@@ -14,10 +18,11 @@ logger = logging.getLogger(__name__)
 
 
 class InputNewsService:
-    def __init__(self, session):
+    def __init__(self, session, archive: LocalArchive):
         self.session = session
         self.input_news_repo = AsyncInputNewsRepository(session=session)
         self.parsed_news_repo = AsyncParsedNewsRepository(session=session)
+        self.archive = archive
         logger.debug("InputNewsService initialized")
 
     async def add_or_update_input_news_batch(self, input_news_list: List[InputNewsSchema]) -> List[int]:
@@ -57,12 +62,22 @@ class InputNewsService:
         input_news = await self.scrap_input_news(delta=delta)
         await self.add_or_update_input_news_batch(input_news_list=input_news)
 
-    async def clear_old_input_news(self, delta: datetime) -> None:
+    async def clear_old_input_news(self, delta: timedelta) -> None:
         """
         Function that will archive older input news from DB that weren't used for any parsed news.
         The implementation would be probably by some JSON dump.
         """
-        raise NotImplementedError("")
+        old_input_news = await self.input_news_repo.get_by_time_delta(delta=delta, newer=False, has_parsed_news=False)
+        snapshot = self.input_news_repo.create_snapshot(old_input_news)
+        json_str = json.dumps(snapshot, indent=2, default=str)
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr("input_news.json", json_str)
+        zip_buffer.seek(0)
+        zip_bytes = zip_buffer.getvalue()
+        self.archive.save_file(file_content=zip_bytes, suffix=".zip")
+        for input_news in old_input_news:
+            await self.input_news_repo.remove(id=input_news.id)
 
     async def scrap_input_news(self, delta: timedelta) -> list[InputNewsSchema]:
         """
@@ -71,7 +86,8 @@ class InputNewsService:
         """
         return next(mock_data, [])
 
-    async def get_input_news_by_delta(self, delta: timedelta, has_parsed_news: Optional[bool] = None) -> list[InputNewsSchema]:
+    async def get_input_news_by_delta(self, delta: timedelta, has_parsed_news: Optional[bool] = None) -> list[
+        InputNewsSchema]:
         """
         Retrieves input news within a specified time period.
         Args:

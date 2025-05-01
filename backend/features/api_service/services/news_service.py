@@ -62,5 +62,42 @@ class NewsService:
         return news_to_detailed_response(complete_news)
 
     async def update_news(self, news_data: NewsUpdate) -> NewsResponseDetailed:
-        """ Updates the existing DB record"""
-        raise NotImplementedError("")
+        """
+        Update an existing news item including its tags
+
+        Args:
+            news_data: News data with updated fields and tags
+
+        Returns:
+            Updated news item with detailed information
+
+        Raises:
+            HTTPException: If news item not found
+        """
+        logger.info(f"Updating news item with ID: {news_data.id}")
+        # TODO: Split update and create model
+        if news_data.id is None:
+            raise ValueError("Cannot update news_data without id.")
+        existing_news = await self.news_repo.get_by_id(news_data.id)
+        # TODO: Handling of nonexisting structure both in service and repository, decide the solution
+        if not existing_news:
+            logger.warning(f"News with ID {news_data.id} not found for update")
+            raise HTTPException(status_code=404, detail="News not found")
+
+        update_data = news_data.dict(exclude={"tags", "id"})
+
+        tag_texts = news_data.tags or []
+        logger.debug(f"Updating news tags to: {', '.join(tag_texts) if tag_texts else 'None'}")
+
+        # Call repository method to handle the update and tag linking
+        await self.news_repo.update_with_tags(
+            news_id=news_data.id,
+            news_data=update_data,
+            tag_texts=tag_texts
+        )
+
+        # Get the completely updated news with tags
+        complete_news = await self.news_repo.get_with_tags(news_data.id)
+        logger.info(f"Successfully updated news item with ID: {news_data.id}")
+
+        return news_to_detailed_response(complete_news)

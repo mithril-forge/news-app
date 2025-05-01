@@ -26,7 +26,8 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
     async def get_by_time_delta(
             self,
             delta: timedelta,
-            has_parsed_news: Optional[bool] = None
+            has_parsed_news: Optional[bool] = None,
+            newer: bool= True
     ) -> List[InputNews]:
         """
         Get input news published within a time delta from now.
@@ -36,13 +37,15 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
             has_parsed_news: If True, only return news with parsed_news link.
                             If False, only return news without parsed_news link.
                             If None, return all news regardless of parsed_news status.
+            newer: if True than newer than timedelta, else older
 
         Returns:
             List of InputNews within the time delta
         """
         from_date = datetime.utcnow() - delta
 
-        conditions = [InputNews.publication_date >= from_date]
+        conditions = [InputNews.publication_date >= from_date if newer else InputNews.publication_date <= from_date]
+
 
         if has_parsed_news is True:
             conditions.append(InputNews.parsed_news_id != None)

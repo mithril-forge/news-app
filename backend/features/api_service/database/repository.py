@@ -120,3 +120,44 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         statement = select(ParsedNews).where(and_(*conditions))
         result = await self.session.execute(statement)
         return result.scalars().all()
+
+
+    async def update_with_tags(self, news_id: int, news_data: Dict[str, Any],
+                               tag_texts: List[str]) -> ParsedNews:
+        """
+        Update news with its tags in a single transaction.
+
+        Args:
+            news_id: ID of the news to update
+            news_data: Dictionary with news fields to update
+            tag_texts: List of tag texts to associate with the news
+
+        Returns:
+            Updated ParsedNews object
+
+        Raises:
+            HTTPException: If news with given ID is not found
+        """
+        news = await self.update_from_dict(structure_id=news_id, data=news_data)
+        if not news:
+            raise ValueError(f"Structure with id {news_id} not found even what it should be updated ")
+
+        tag_repo = AsyncTagRepository(self.session)
+        news.updated_at = datetime.utcnow()
+        statement = select(ParsedNewsTagLink).where(
+            ParsedNewsTagLink.news_item_id == news_id
+        )
+        result = await self.session.execute(statement)
+        existing_links = result.scalars().all()
+
+        for link in existing_links:
+            await self.session.delete(link)
+
+        for text in tag_texts:
+            tag = await tag_repo.get_or_create(text)
+            link = ParsedNewsTagLink(news_item_id=news_id, tag_id=tag.id)
+            self.session.add(link)
+
+        await self.session.flush()
+
+        return news
