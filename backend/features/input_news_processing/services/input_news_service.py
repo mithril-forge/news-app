@@ -5,6 +5,7 @@ import zipfile
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.database.repository import AsyncInputNewsRepository
 
@@ -18,14 +19,14 @@ logger = logging.getLogger(__name__)
 
 
 class InputNewsService:
-    def __init__(self, session, archive: LocalArchive):
+    def __init__(self, session, archive: AbstractArchive):
         self.session = session
         self.input_news_repo = AsyncInputNewsRepository(session=session)
         self.parsed_news_repo = AsyncParsedNewsRepository(session=session)
         self.archive = archive
         logger.debug("InputNewsService initialized")
 
-    async def add_or_update_input_news_batch(self, input_news_list: List[InputNewsSchema]) -> List[int]:
+    async def add_or_update_input_news_batch(self, input_news_list: List[InputNewsSchema]) -> List[InputNewsSchema]:
         """
         Add a batch of input news items to the database.
 
@@ -37,7 +38,7 @@ class InputNewsService:
         """
         logger.info(f"Adding batch of {len(input_news_list)} input news items")
         orm_models = input_schema_list_to_orm(input_news_list)
-        result_ids = []
+        result_models = []
         for model in orm_models:
             existing = await self.input_news_repo.get_by_source_url(model.source_url)
 
@@ -47,20 +48,20 @@ class InputNewsService:
                     if value is not None:
                         setattr(existing, key, value)
                 updated = await self.input_news_repo.update(existing)
-                result_ids.append(updated.id)
+                result_models.append(updated)
             else:
                 # Add new model
                 logger.debug(f"Adding new input news with title: {model.title}")
                 new_model = await self.input_news_repo.add(model.dict(exclude={"id"}))
-                result_ids.append(new_model.id)
+                result_models.append(new_model)
 
-        logger.info(f"Successfully processed {len(result_ids)} input news items")
-        return result_ids
+        logger.info(f"Successfully processed {len(result_models)} input news items")
+        return input_news_list_to_schema(result_models)
 
-    async def scrap_and_save_input_news(self, delta: timedelta) -> None:
+    async def scrap_and_save_input_news(self, delta: timedelta) -> list[InputNewsSchema]:
         """ Query latest news from the corresponding websites by delta and update them in DB or create news ones"""
         input_news = await self.scrap_input_news(delta=delta)
-        await self.add_or_update_input_news_batch(input_news_list=input_news)
+        return await self.add_or_update_input_news_batch(input_news_list=input_news)
 
     async def clear_old_input_news(self, delta: timedelta) -> None:
         """

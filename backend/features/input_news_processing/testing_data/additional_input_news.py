@@ -6,7 +6,7 @@ ADDITIONAL_ARTICLES = [
     {
         "tags": ["elektromobilita", "automobilový průmysl", "Hyundai", "Ostrava", "investice"],
         "category": "Ekonomika",
-        "publication_date": datetime(2023, 10, 6, 14, 15),
+        "publication_date": datetime(2024, 10, 6, 14, 15),
         "author": "Radek Černý",
         "source_site": sources[1]["name"],
         "source_url": f"{sources[1]['domain']}/ekonomika/hyundai-nova-tovarna-ostrava-elektromobily",
@@ -26,7 +26,7 @@ Zajímavostí je, že nová továrna bude využívat převážně obnovitelné z
     {
         "tags": ["sport", "fotbal", "EURO 2024", "česká reprezentace", "Patrik Schick"],
         "category": "Sport",
-        "publication_date": datetime(2023, 11, 25, 20, 45),
+        "publication_date": datetime(2024, 11, 25, 20, 45),
         "author": "Martin Kučera",
         "source_site": sources[0]["name"],
         "source_url": f"{sources[0]['domain']}/sport/fotbal-cesko-postup-euro-2024",
@@ -47,7 +47,7 @@ Závěrečný turnaj EURO 2024 se bude hrát od 14. června do 14. července př
     {
         "tags": ["technologie", "startup", "umělá inteligence", "financování", "investice"],
         "category": "Technologie",
-        "publication_date": datetime(2023, 10, 12, 9, 30),
+        "publication_date": datetime(2024, 10, 12, 9, 30),
         "author": "Jan Novotný",
         "source_site": sources[2]["name"],
         "source_url": f"{sources[2]['domain']}/technologie/cesky-startup-ai-financovani",
@@ -68,7 +68,7 @@ Deepnote není jediným českým startupem, který v poslední době získal vý
     {
         "tags": ["kultura", "historie", "UNESCO", "památky", "cestovní ruch"],
         "category": "Cestování",
-        "publication_date": datetime(2023, 10, 15, 16, 0),
+        "publication_date": datetime(2024, 10, 15, 16, 0),
         "author": "Barbora Tichá",
         "source_site": sources[1]["name"],
         "source_url": f"{sources[1]['domain']}/cestovani/unesco-nove-pamatky-cesko",

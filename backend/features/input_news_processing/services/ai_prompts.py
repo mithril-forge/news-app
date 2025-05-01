@@ -34,7 +34,7 @@ VÝSTUP:
   * Doplnění chybějících informací
   * Úprava title a description (pouze při zásadních změnách)
   * Topic se pokus zachovat beze změny
-- Pokud nenajdeš žádné shody, potom nevracej nic
+- Pokud nenajdeš žádné shody, potom nevracej nic - tohle je opravdu velmi důležité. NEVYRÁBĚJ JAKÉKOLIV NOVÉ ČLÁNKY, ALE JEN PROPOJ EXISTUJÍCÍ!!!
 """
 
 CREATION_PROMPT = """
@@ -49,7 +49,7 @@ V přiložených souborech najdeš 3 typy vstupních dat:
 2. TOPICS:
    - Kategorie pro zařazení článků
    - Jsou fixní a neměnné
-   - Každý článek musí být zařazen do jednoho tématu, nebo do žádného
+   - Každý článek MUSÍ být zařazen do jednoho tématu!
 
 3. TAGS:
    - Nejsou fixní, lze je přidávat

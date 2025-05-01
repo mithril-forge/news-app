@@ -15,9 +15,11 @@ from features.api_service.database.repository import AsyncTagRepository
 from features.api_service.services.news_service import NewsService
 from features.api_service.services.schemas import TagResponse, TopicResponse, NewsResponseDetailed
 from features.api_service.services.topic_service import TopicService
+from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, CONNECTION_PROMPT
 from features.input_news_processing.services.input_news_service import InputNewsService
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsSchema, ConnectionResult
+from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsSchema, ConnectionResult, \
+    CreationResult
 
 
 class TempFileStorage(BaseModel):
@@ -28,10 +30,10 @@ class TempFileStorage(BaseModel):
 
 
 class ArticleGenerationService:
-    def __init__(self, session):
+    def __init__(self, session, archive: AbstractArchive):
         self.session = session
         self.topic_service = TopicService(session=session)
-        self.input_news_service = InputNewsService(session=session)
+        self.input_news_service = InputNewsService(session=session, archive=archive)
         self.tag_repository = AsyncTagRepository(session=session)
         self.parsed_news_service = NewsService(session=session)
 
@@ -67,7 +69,7 @@ class ArticleGenerationService:
         return TempFileStorage(**paths_mapping)
 
     @staticmethod
-    async def prepare_gemini_client(model_name: str = "gemini-1.5-flash") -> AsyncInstructor:
+    async def prepare_gemini_client(model_name: str = "gemini-2.5-pro-exp-03-25") -> AsyncInstructor:
         """ Prepares model encapsulate by instructor library for structured output."""
         gemini_api_key = os.environ["GEMINI_API_KEY"]
         if gemini_api_key is None:
@@ -119,7 +121,7 @@ class ArticleGenerationService:
             CREATION_PROMPT
         ]
         contents.extend(gemini_files.values())
-        result = await gemini_client.chat.completions.create(response_model=Iterable[ConnectionResult],
+        result = await gemini_client.chat.completions.create(response_model=Iterable[CreationResult],
                                                              messages=[{"role": "user", "content": contents}])
         print(f"Result of the creation query is: {result=}")
         saved_news_list = []
@@ -127,7 +129,7 @@ class ArticleGenerationService:
             saved_news = await self.parsed_news_service.create_news(news_data=news_data.parsed_news)
             for input_id in news_data.input_news_ids:
                 await self.input_news_service.connect_input_with_parsed(input_id=input_id, parsed_id=saved_news.id)
-            saved_news_list.append(saved_news_list)
+            saved_news_list.append(saved_news)
         return saved_news_list
 
     async def connect_existing_news(self, delta: timedelta) -> list[NewsResponseDetailed]:
@@ -148,6 +150,8 @@ class ArticleGenerationService:
         updated_news_list = []
         for news_data in result:
             saved_news = await self.parsed_news_service.update_news(news_data=news_data.parsed_news)
+            if saved_news is None:
+                continue
             for input_id in news_data.input_news_ids:
                 await self.input_news_service.connect_input_with_parsed(input_id=input_id, parsed_id=saved_news.id)
             updated_news_list.append(updated_news_list)

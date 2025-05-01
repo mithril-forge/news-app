@@ -1,12 +1,14 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from core.converters import orm_list_to_pydantic
 from features.api_service.converters import news_list_to_response, news_to_detailed_response
 from features.api_service.database.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
-from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate, NewsUpdate
+from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate, NewsUpdate, \
+    TagResponse
 
 # Configure module logger
 logger = logging.getLogger(__name__)
@@ -19,6 +21,10 @@ class NewsService:
         self.topic_repo = AsyncTopicRepository(session)
         self.tag_repo = AsyncTagRepository(session)
         logger.debug("NewsService initialized")
+
+    async def get_tags(self) -> list[TagResponse]:
+        tag_models = await self.tag_repo.get_all()
+        return orm_list_to_pydantic(tag_models, TagResponse)
 
     async def get_latest_news(self, skip: int, limit: int) -> List[NewsResponseBasic]:
         """Get the latest N news items"""
@@ -61,7 +67,7 @@ class NewsService:
 
         return news_to_detailed_response(complete_news)
 
-    async def update_news(self, news_data: NewsUpdate) -> NewsResponseDetailed:
+    async def update_news(self, news_data: NewsUpdate) -> Optional[NewsResponseDetailed]:
         """
         Update an existing news item including its tags
 
@@ -82,7 +88,7 @@ class NewsService:
         # TODO: Handling of nonexisting structure both in service and repository, decide the solution
         if not existing_news:
             logger.warning(f"News with ID {news_data.id} not found for update")
-            raise HTTPException(status_code=404, detail="News not found")
+            return None
 
         update_data = news_data.dict(exclude={"tags", "id"})
 

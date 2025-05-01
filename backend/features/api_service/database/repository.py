@@ -102,7 +102,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
 
         # Flush to ensure all objects have IDs but don't commit
         await self.session.flush()
-
+        await self.session.refresh(news, ['tags'])
         # DON'T try to assign to news.tags directly
         # Instead, just return the news object without manually loading the tags
         return news

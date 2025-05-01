@@ -70,7 +70,8 @@ def upgrade() -> None:
                        {'text': 'Politika'},  # Added tag
                        {'text': 'Technologie'},  # Added tag
                        {'text': 'Software'},  # Added tag
-                       {'text': 'Kultura'}
+                       {'text': 'Kultura'},
+                       {'text': 'Povodně'}
                    ]
                    )
 
