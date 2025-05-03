@@ -13,6 +13,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ArticleContent from '@/components/news/ArticleContent';
 import Loading from '@/components/common/Loading';
+import InputNewsList from '@/components/news/InputNewsList'; // New component we'll create
 import { fetchNewsById, fetchTopics } from '@/services/api';
 import { NewsDetailed } from '@/types';
 
@@ -109,6 +110,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
             {/* Article content */}
             <ArticleContent content={fullArticle.content} />
+            
+            {/* Input News Section */}
+            {fullArticle.input_news && fullArticle.input_news.length > 0 && (
+              <div className="mt-8 pt-4 border-t border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                   Zdroje článku
+                </h2>
+                <InputNewsList inputNews={fullArticle.input_news} />
+              </div>
+            )}
             
             {/* Tags section */}
             {fullArticle.tags && fullArticle.tags.length > 0 && (

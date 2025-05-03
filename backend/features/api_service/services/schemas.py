@@ -61,5 +61,14 @@ class NewsResponseBasic(NewsBase):
         orm_mode = True
 
 
+class InputNewsDetailed(BaseModel):
+    publication_date: datetime
+    title: str
+    author: str
+    source_site: str
+    source_url: str
+
+
 class NewsResponseDetailed(NewsResponseBasic):
     content: str
+    input_news: list[InputNewsDetailed]
