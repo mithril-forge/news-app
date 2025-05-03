@@ -32,4 +32,3 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 # TODO:
 1. Cache dat kdyz da uzivatel klik zpet
 2. Dodelat cachovani dat
-3. Odkazy na puvodni clanky a originalni zpravy

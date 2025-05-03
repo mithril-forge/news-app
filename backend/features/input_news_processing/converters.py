@@ -100,9 +100,11 @@ def input_news_list_to_schema(input_news_list: List[InputNews]) -> List[InputNew
 
 def parsed_news_with_input(parsed_news: ParsedNews) -> ParsedNewsWithInputNews:
     """ Connects also input news schema to the parsed news one"""
-    detailed_response = news_to_detailed_response(parsed_news)
+    detailed_response = news_to_detailed_response(parsed_news).dict()
+    # TODO: workaround for dependency on converter for the FE, we should probably separate it
+    del detailed_response["input_news"]
     input_news = input_news_list_to_schema(input_news_list=parsed_news.input_news)
-    return ParsedNewsWithInputNews(**detailed_response.dict(), input_news=input_news)
+    return ParsedNewsWithInputNews(**detailed_response, input_news=input_news)
 
 
 def parsed_news_list_with_input(parsed_news_list: List[ParsedNews]) -> List[ParsedNewsWithInputNews]:
