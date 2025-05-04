@@ -81,3 +81,18 @@ VÝSTUP:
 
 DODRŽ VŠECHNY BODY NAHOŘE! Minimální délku content, jazyk atd.
 """
+
+PICTURE_SEARCH_PROMPT = """
+Najdi mi vhodný obrázek k danému článku. Vyhledej pouze takové obrázky, které jsou licencované pro volné použití v redakčním (zpravodajském) kontextu, a to po řádném uvedení autora a licence.
+Primární a preferovaný zdroj pro vyhledávání obrázků je: https://commons.wikimedia.org.
+Pokud budeš vybírat z více možností, vrať pouze jeden nejrelevantnější podle vlastního uvážení.
+Ke každému obrázku přidej:
+– přímý odkaz na obrázek,
+– jméno autora,
+– typ licence (např. CC BY 4.0),
+– znění licence v češtině nebo angličtině (stručně),
+– a informaci, zda je potřeba uvádět autora (pokud ano, jak přesně).
+
+Pokud žádný obrázek s volnou licencí neexistuje nebo se nehodí k tématu, raději nevracej nic.
+
+"""

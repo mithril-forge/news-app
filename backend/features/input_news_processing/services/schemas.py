@@ -42,3 +42,8 @@ class CreationResult(BaseModel):
         self.parsed_news.description = self.parsed_news.description.encode().decode("unicode_escape")
         self.parsed_news.tags = [tag.encode().decode("unicode_escape") for tag in self.parsed_news.tags]
     """
+
+class ImageDetail(BaseModel):
+    link: str
+    source_text: str
+    license: str
