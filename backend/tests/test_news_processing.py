@@ -13,6 +13,7 @@ from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.services.article_generation_service import ArticleGenerationService
 from features.input_news_processing.services.input_news_service import InputNewsService
+from features.input_news_processing.testing_data.common import mock_data
 
 
 def verify_generated_news(generated_news: list[NewsResponseDetailed]) -> None:
@@ -35,7 +36,7 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
     tmp_dir = tempfile.mkdtemp()
     local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
 
-    async with get_session_context(commit_transaction=commit_transaction) as session:
+    async with (get_session_context(commit_transaction=commit_transaction) as session):
         input_news_service = InputNewsService(session=session, archive=local_archive)
         article_generation_service = ArticleGenerationService(
             session=session,
@@ -49,7 +50,8 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
         print("Loading initial data")
 
         # First batch of input news
-        input_news = await input_news_service.scrap_and_save_input_news(delta=delta)
+        input_news_raw = next(mock_data, [])
+        input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
         assert len(
             input_news) == 10, f"Application didn't load proper input news. Loaded {len(input_news)}, Expected 10"
         print(f"Input news loaded: {input_news}")
@@ -67,7 +69,8 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
 
         # Second batch of input news
         print("Loading additional news.")
-        input_news = await input_news_service.scrap_and_save_input_news(delta=delta)
+        input_news_raw = next(mock_data, [])
+        input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
         print(f"Input news loaded: {input_news}")
 
         # Second batch of news generation
