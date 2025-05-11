@@ -70,7 +70,7 @@ class InputNewsService:
         The implementation would be probably by some JSON dump.
         """
         old_input_news = await self.input_news_repo.get_by_time_delta(delta=delta, newer=False, has_parsed_news=False)
-        snapshot = self.input_news_repo.create_snapshot(old_input_news)
+        snapshot = await self.input_news_repo.create_snapshot(old_input_news)
         json_str = json.dumps(snapshot, indent=2, default=str)
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
