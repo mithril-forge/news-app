@@ -56,7 +56,7 @@ async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timede
 
 
 async def test_parse_news(commit_transaction: bool = False):
-    """ Testing workflow, change commit transaction to True if you want to check generated news on page or in DB """
+    """Testing workflow, change commit transaction to True if you want to check generated news on page or in DB """
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
         raise ValueError("You need to provide GEMINI_API_KEY to use the model")
@@ -71,6 +71,7 @@ async def test_parse_news(commit_transaction: bool = False):
         initial_tags_len = len(await parsed_news_service.get_tags())
         print("Loading initial data")
         input_news = await input_news_service.scrap_and_save_input_news(delta=delta)
+        # TODO: Change assertions here since we can do live scrapping now
         assert len(
             input_news) == 10, f"Application didn't load proper input news. Loaded {len(input_news)}, Expected 10"
         print(f"Input news loaded: {input_news}")
