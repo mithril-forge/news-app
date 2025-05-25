@@ -83,7 +83,7 @@ class InputNewsService:
             await self.input_news_repo.remove(id=input_news.id)
 
     @staticmethod
-    async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 10, websites: list[str] = None) -> list[InputNewsBase]:
+    async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 3, websites: list[str] = None) -> list[InputNewsBase]:
         """
         Function that calls the Czech News Crawler to fetch input news from websites.
 
@@ -93,8 +93,6 @@ class InputNewsService:
         Returns:
             List of InputNewsBase objects with news article data
         """
-
-        # NOTE: look at the crawl_czech_news function for more possible arguments
         if websites is not None:
             crawl_result = crawl_czech_news(
                 time_delta=delta,
@@ -112,22 +110,14 @@ class InputNewsService:
         for _domain, articles_list in articles_by_domain.items():
             articles.extend(articles_list)
 
-        # convert articles to InputNewsBase
         input_news_list = []
         for article in articles:
-            # TODO: Drop input news base in favor of the parsed news model
-
-            # IMO change author to authors
-            author = None
-            try:
-                author = article.authors[0]
-            except IndexError:
-                author = ""
-
+            author = ",".join(article.authors)
+            publish_date = article.publish_date if article.publish_date else datetime.now()
             input_news = InputNewsBase(
                 tags=article.tags,
                 category="",
-                publication_date=article.publish_date,
+                publication_date=publish_date,
                 author=author,
                 source_site=article.domain,
                 source_url=article.normalized_url,
@@ -137,7 +127,7 @@ class InputNewsService:
             )
             input_news_list.append(input_news)
 
-        logger.info(f"Scraped {len(articles)} articles from {len(articles_by_domain)} domains")
+        logger.info(f"Scraped {len(input_news_list)} articles from {len(articles_by_domain)} domains")
 
         return input_news_list
 

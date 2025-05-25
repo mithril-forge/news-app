@@ -18,7 +18,7 @@ sqlalchemy = "^2.0.40"
 instructor = "^1.7.9"
 google-generativeai = "^0.8.5"
 jsonref = "^1.1.0"
-ai-knowledge-bot = {git = "https://github.com/simonf-dev/ai-knowledge-bot.git", branch = "main"}
+ai-knowledge-bot = {git = "git@github.com:simonf-dev/ai-knowledge-bot.git", branch = "main"}
 
 
 [build-system]
