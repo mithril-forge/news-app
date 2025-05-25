@@ -99,15 +99,15 @@ async def test_parse_news(commit_transaction: bool = False):
 
 
 async def generate_picture_for_news(news_id: int, commit_transaction: bool = False) -> None:
-    open_ai_key = os.getenv("OPEN_AI_API_KEY")
-    if open_ai_key is None:
-        raise ValueError("You need to provide OPEN_AI_API_KEY to use the model")
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    if gemini_api_key is None:
+        raise ValueError("You need to provide GEMINI_API_KEY to use the model")
     delta = timedelta(days=365)
     tmp_dir = tempfile.mkdtemp()
     local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
     async with get_session_context(commit_transaction=commit_transaction) as session:
         article_generation_service = ArticleGenerationService(session=session, archive=local_archive,
-                                                              ai_model=OpenAIModel(api_key=open_ai_key))
+                                                              ai_model=GeminiAIModel(api_key=gemini_api_key))
         await article_generation_service.generate_picture_for_news(news_id=news_id)
 
 

@@ -82,17 +82,19 @@ VÝSTUP:
 DODRŽ VŠECHNY BODY NAHOŘE! Minimální délku content, jazyk atd.
 """
 
-PICTURE_SEARCH_PROMPT = """
-Najdi mi vhodný obrázek k danému článku. Vyhledej pouze takové obrázky, které jsou licencované pro volné použití v redakčním (zpravodajském) kontextu, a to po řádném uvedení autora a licence.
-Primární a preferovaný zdroj pro vyhledávání obrázků je: https://commons.wikimedia.org.
-Pokud budeš vybírat z více možností, vrať pouze jeden nejrelevantnější podle vlastního uvážení.
-Ke každému obrázku přidej:
-– přímý odkaz na obrázek,
-– jméno autora,
-– typ licence (např. CC BY 4.0),
-– znění licence v češtině nebo angličtině (stručně),
-– a informaci, zda je potřeba uvádět autora (pokud ano, jak přesně).
+PICTURE_SEARCH_CREATION = """
+Vytvořte 3 vyhledávací dotazy (queries) pro https://commons.wikimedia.org/ vztahující se k danému článku. Všechny dotazy formulujte v angličtině.
+Požadavky na dotazy:
 
-Pokud žádný obrázek s volnou licencí neexistuje nebo se nehodí k tématu, raději nevracej nic.
+Specifický dotaz - Použijte přesné klíčové slova a termíny přímo z článku
+Středně obecný dotaz - Zaměřte se na hlavní téma nebo kategorii článku
+Obecný dotaz - Použijte široké související pojmy a koncepty
 
+Formát odpovědi:
+Pro každý dotaz uveďte:
+
+Query: [vyhledávací dotaz]
+
+Cíl:
+Najít relevantní obrázky, které mohou vizuálně doplnit nebo ilustrovat obsah článku, přičemž každý dotaz pokryje jinou úroveň obecnosti tématu.
 """

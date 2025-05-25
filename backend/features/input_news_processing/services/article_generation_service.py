@@ -18,10 +18,11 @@ from features.api_service.services.schemas import TagResponse, TopicResponse, Ne
 from features.api_service.services.topic_service import TopicService
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
-from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, CONNECTION_PROMPT, PICTURE_SEARCH_PROMPT
+from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, CONNECTION_PROMPT, PICTURE_SEARCH_CREATION
 from features.input_news_processing.services.input_news_service import InputNewsService
 from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, ConnectionResult, \
-    CreationResult, InputNewsWithID, ImageDetail
+    CreationResult, InputNewsWithID, ImageQuery, ImageResult
+from get_images_from_wikimedia import query_and_download_images
 
 
 class TempFileStorage(BaseModel):
@@ -126,7 +127,11 @@ class ArticleGenerationService:
         news_as_file = self.save_pydantic_lists_as_files(news_detail=[news])
         # TODO: Fix search, somehow it doesn't work with the ChatGPT model here, but in the web UI it searches good for the query
         # TODO: I guess the issue can be that in UI AI works with multiple models and we query only one, please research and fix
-        image_result = await self.ai_model.prompt_model(files=news_as_file, prompt=PICTURE_SEARCH_PROMPT, response_model=Iterable[ImageDetail])
-        if len(list(image_result)) == 0:
-            print(f"No results for the news {news_id}")
-        print(image_result)
+        image_queries = await self.ai_model.prompt_model(files=news_as_file, prompt=PICTURE_SEARCH_CREATION,
+                                                         response_model=Iterable[ImageQuery])
+        queries_as_str: list[str] = [result_query.query for result_query in image_queries]
+        paths = {path: pathlib.Path(path) for path in query_and_download_images(queries_as_str)}
+        paths.update(news_as_file)
+        image_queries = await self.ai_model.prompt_model(files=paths, prompt="Podivej se na obrazky a clanek ke kteremu maji byt, vrat takove obrazky, ktere se k danemu clanku opravdu hodi a souvisi s nim."
+                                                                             "Serad je od nejvic relevantnich po ty nejmene relevantni",
+                                                         response_model=Iterable[ImageResult])
