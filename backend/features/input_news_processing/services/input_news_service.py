@@ -83,7 +83,7 @@ class InputNewsService:
             await self.input_news_repo.remove(id=input_news.id)
 
     @staticmethod
-    async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 3, websites: list[str] = None) -> list[InputNewsBase]:
+    async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 10, websites: list[str] = None) -> list[InputNewsBase]:
         """
         Function that calls the Czech News Crawler to fetch input news from websites.
 
