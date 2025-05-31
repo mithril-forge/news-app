@@ -11,11 +11,11 @@ interface HeaderProps {
 
 export default function Header({ categories, activeCategory }: HeaderProps) {
   return (
-    <header className="bg-white shadow-lg sticky top-0 z-50">
+    <header className="bg-gray-800 text-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center py-4">
-          <Link href="/" className="text-3xl font-bold text-red-600 hover:text-red-700 transition-colors">
-            ZPRÁVY.CZ
+          <Link href="/" className="text-3xl font-bold text-white hover:text-red-400 transition-colors">
+            NOVINAR.AI
           </Link>
           <nav className="hidden md:block">
             <CategoryNav 

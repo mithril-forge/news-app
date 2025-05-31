@@ -1,9 +1,8 @@
 /**
- * Article detail page component
+ * Article detail page component with new emoji design
  * Shows the full content of a single news article
  */
 import { Suspense } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
@@ -13,9 +12,11 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ArticleContent from '@/components/news/ArticleContent';
 import Loading from '@/components/common/Loading';
-import InputNewsList from '@/components/news/InputNewsList'; // New component we'll create
+import InputNewsList from '@/components/news/InputNewsList';
+import PopularNewsSidebar from '@/components/news/PopularNewsSidebar';
 import { fetchNewsById, fetchTopics } from '@/services/api';
 import { NewsDetailed } from '@/types';
+import { getCategoryEmoji } from '@/lib/categoryEmoji';
 
 interface ArticlePageProps {
   params: {
@@ -33,14 +34,14 @@ export async function generateMetadata({
   
   if (!article) {
     return {
-      title: 'Článek nenalezen | ZPRÁVY.CZ',
+      title: 'Článek nenalezen | Novinář.AI',
       description: 'Požadovaný článek nebyl nalezen.',
     };
   }
   
   return {
-    title: `${article.title} | ZPRÁVY.CZ`,
-    description: article.summary || 'Přečtěte si nejnovější zprávy na ZPRÁVY.CZ',
+    title: `${article.title} | Novinář.AI`,
+    description: article.summary || 'Přečtěte si nejnovější zprávy na Novinář.AI',
     openGraph: {
       title: article.title,
       description: article.summary,
@@ -71,86 +72,132 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const categories = ["Vše", ...topicsData.map(topic => topic.name)];
   const activeCategory = fullArticle.topic.name;
   
+  // Get category emoji info
+  const categoryInfo = getCategoryEmoji(fullArticle.topic.name);
+  
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+    }}>
       <Header 
         categories={categories} 
         activeCategory={activeCategory} 
       />
       
       <Suspense fallback={<Loading />}>
-        <main className="max-w-3xl mx-auto px-4 py-8 w-full flex-grow">
-          <article>
-            {/* Category and date */}
-            <div className="mb-4 text-sm text-gray-600">
-              <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded mr-2">
-                {fullArticle.topic.name}
-              </span>
-              <span>{new Date(fullArticle.updated_at).toLocaleDateString('cs-CZ')}</span>
+        <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Main article content */}
+            <div className="lg:col-span-3">
+              <article className="bg-white rounded-3xl shadow-xl overflow-hidden">
+                {/* Gradient top border */}
+                <div className="h-1 bg-gradient-to-r from-red-500 via-orange-500 to-blue-500"></div>
+                
+                {/* Article header */}
+                <div className="p-8">
+                  {/* Category emoji and meta info */}
+                  <div className="flex items-center gap-6 mb-6">
+                    <div 
+                      className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl border-3 shadow-lg"
+                      style={{ 
+                        borderColor: categoryInfo.color,
+                        background: categoryInfo.bgColor
+                      }}
+                    >
+                      {categoryInfo.emoji}
+                    </div>
+                    
+                    <div className="flex-1">
+                      <div className="flex flex-wrap gap-3 mb-2">
+                        <span 
+                          className="px-4 py-2 rounded-full text-sm font-medium"
+                          style={{ 
+                            backgroundColor: `${categoryInfo.color}20`, 
+                            color: categoryInfo.color 
+                          }}
+                        >
+                          {fullArticle.topic.name}
+                        </span>
+                        <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
+                          {new Date(fullArticle.updated_at).toLocaleDateString('cs-CZ')}
+                        </span>
+                      </div>
+                      
+                      {/* Tags */}
+                      {fullArticle.tags && fullArticle.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {fullArticle.tags.slice(0, 4).map(tag => (
+                            <span key={tag.id} className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600">
+                              {tag.text}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Article title */}
+                  <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-8 leading-tight">
+                    {fullArticle.title}
+                  </h1>
+
+                  {/* Article summary */}
+                  {fullArticle.summary && (
+                    <div className="mb-8 p-6 bg-gray-50 rounded-2xl border-l-4" style={{ borderLeftColor: categoryInfo.color }}>
+                      <p className="text-lg text-gray-700 leading-relaxed font-medium">
+                        {fullArticle.summary}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Article content */}
+                  <div className="prose prose-lg max-w-none text-gray-700">
+                    <ArticleContent content={fullArticle.content} />
+                  </div>
+                </div>
+
+                {/* Input News Section */}
+                {fullArticle.input_news && fullArticle.input_news.length > 0 && (
+                  <div className="p-8 bg-gray-50 border-t">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-xl">
+                        🔗
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800">
+                        Zdroje článku
+                      </h2>
+                    </div>
+                    <InputNewsList inputNews={fullArticle.input_news} />
+                  </div>
+                )}
+
+                {/* Navigation */}
+                <div className="p-8 bg-gray-50 border-t">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <Link 
+                      href="/" 
+                      className="text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-2 transition-all hover:gap-4"
+                    >
+                      ← Zpět na přehled zpráv
+                    </Link>
+                    
+                    <Link 
+                      href={`/?category=${encodeURIComponent(fullArticle.topic.name)}`}
+                      className="text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-2 transition-all hover:gap-4"
+                    >
+                      Zobrazit více z kategorie {fullArticle.topic.name} →
+                    </Link>
+                  </div>
+                </div>
+              </article>
             </div>
 
-            {/* Article title */}
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-              {fullArticle.title}
-            </h1>
-
-            {/* Featured image */}
-            <div className="mb-8 relative w-full aspect-video bg-gray-200 rounded overflow-hidden">
-              {fullArticle.image_url && (
-                <Image
-                  src={fullArticle.image_url}
-                  alt={fullArticle.title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 768px"
-                  className="object-cover"
-                  priority
-                />
-              )}
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <PopularNewsSidebar />
+          
             </div>
-
-            {/* Article content */}
-            <ArticleContent content={fullArticle.content} />
-            
-            {/* Input News Section */}
-            {fullArticle.input_news && fullArticle.input_news.length > 0 && (
-              <div className="mt-8 pt-4 border-t border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                   Zdroje článku
-                </h2>
-                <InputNewsList inputNews={fullArticle.input_news} />
-              </div>
-            )}
-            
-            {/* Tags section */}
-            {fullArticle.tags && fullArticle.tags.length > 0 && (
-              <div className="mt-8 pt-4 border-t border-gray-200">
-                <span className="text-gray-500 text-sm mr-2">Štítky:</span>
-                {fullArticle.tags.map(tag => (
-                  <span key={tag.id} className="inline-block text-xs bg-gray-100 px-2 py-1 rounded mr-2 mb-2">
-                    {tag.text}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Navigation links with proper alignment */}
-            <div className="mt-8 flex justify-between items-center">
-              <Link 
-                href="/" 
-                className="text-red-600 hover:text-red-800"
-              >
-                &larr; Zpět na přehled zpráv
-              </Link>
-              
-              {/* Link to category-specific page - now right-aligned */}
-              <Link 
-                href={`/?category=${encodeURIComponent(fullArticle.topic.name)}`}
-                className="text-red-600 hover:text-red-800"
-              >
-                Zobrazit více z kategorie {fullArticle.topic.name} &rarr;
-              </Link>
-            </div>
-          </article>
+          </div>
         </main>
       </Suspense>
       

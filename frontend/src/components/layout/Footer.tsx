@@ -1,9 +1,10 @@
 'use client'
 
 /**
- * Site footer component with categories and contact information
+ * Simple footer component matching the emoji theme
  */
 import { useRouter } from 'next/navigation';
+import { getCategoryEmoji } from '@/lib/categoryEmoji';
 
 interface FooterProps {
   /** List of all available categories */
@@ -23,17 +24,14 @@ export default function Footer({
    * @param category - Selected category name
    */
   const handleCategoryClick = (category: string) => {
-    // Scroll to top for better UX
     window.scrollTo(0, 0);
     
-    // Always navigate to home with the selected category
     if (category === 'Vše') {
       router.push('/');
     } else {
       router.push(`/?category=${encodeURIComponent(category)}`);
     }
     
-    // Call callback if provided
     if (onSelectCategory) {
       onSelectCategory(category);
     }
@@ -41,40 +39,62 @@ export default function Footer({
 
   return (
     <footer className="bg-gray-800 text-white py-8 mt-8">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
+          {/* Brand */}
           <div>
-            <h3 className="text-lg font-bold mb-4">ZPRÁVY.CZ</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">🤖</span>
+              <h3 className="text-xl font-bold">NOVINAR.AI</h3>
+            </div>
             <p className="text-gray-300 text-sm">
-              Váš spolehlivý zdroj nejnovějších zpráv z České republiky i ze světa.
+              Váš digitální zpravodaj čte za vás všechna česká média a vybírá jen klíčové události dne.
             </p>
           </div>
+
+          {/* Categories */}
           <div>
             <h3 className="text-lg font-bold mb-4">Kategorie</h3>
-            <ul className="space-y-2">
-              {categories.slice(1, 6).map(category => ( // Show first 5 categories except "Vše"
-                <li key={category}>
+            <div className="space-y-2">
+              {categories.slice(1, 6).map(category => {
+                const categoryInfo = getCategoryEmoji(category);
+                return (
                   <button
+                    key={category}
                     onClick={() => handleCategoryClick(category)}
-                    className="text-gray-300 hover:text-white text-sm text-left"
+                    className="flex items-center gap-2 text-gray-300 hover:text-white text-sm transition-colors"
                   >
-                    {category}
+                    <span>{categoryInfo.emoji}</span>
+                    <span>{category}</span>
                   </button>
-                </li>
-              ))}
-            </ul>
+                );
+              })}
+            </div>
           </div>
+
+          {/* Contact */}
           <div>
             <h3 className="text-lg font-bold mb-4">Kontakt</h3>
-            <p className="text-gray-300 text-sm">
-              Email: info@zpravy.cz<br />
-              Telefon: +420 123 456 789<br />
-              Adresa: Václavské náměstí 1, Praha 1
-            </p>
+            <div className="text-gray-300 text-sm space-y-2">
+              <div className="flex items-center gap-2">
+                <span>📧</span>
+                <span>ainovinar@gmail.com</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>🔄</span>
+                <span>Aktualizace každých 10 minut</span>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Bottom */}
         <div className="border-t border-gray-700 mt-8 pt-4 text-center text-sm text-gray-400">
-          © {new Date().getFullYear()} ZPRÁVY.CZ - Všechna práva vyhrazena
+          <div className="flex items-center justify-center gap-1">
+            <span>🤖</span>
+            <span>© {new Date().getFullYear()} NOVINAR.AI - Všechna práva vyhrazena</span>
+          </div>
         </div>
       </div>
     </footer>
