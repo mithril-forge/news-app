@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import List, Optional
 
@@ -32,6 +33,11 @@ class NewsService:
         latest_news = await self.news_repo.get_latest(skip=skip, limit=limit)
         logger.debug(f"Retrieved {len(latest_news)} latest news items")
         return news_list_to_response(latest_news)
+
+    async def get_most_popular_news(self, period: datetime.timedelta, limit: int) -> List[NewsResponseBasic]:
+        logger.info(f"Fetching {limit} most popular news for {period}")
+        popular_news = await self.news_repo.get_most_viewed_news_by_period(period=period, limit=limit)
+        return news_list_to_response(popular_news)
 
     async def get_news_by_id(self, news_id: int) -> NewsResponseDetailed:
         """Get a specific news item by ID"""
