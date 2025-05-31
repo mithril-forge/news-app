@@ -1,65 +1,60 @@
-/**
- * Component for displaying the featured/highlighted article
- * Typically used for the main article at the top of the page
- */
-import Image from 'next/image';
+// components/news/FeaturedArticle.tsx
 import Link from 'next/link';
 import { NewsArticle } from '@/types';
+import { getCategoryEmoji } from '@/lib/categoryEmoji';
 
 interface FeaturedArticleProps {
-  /** The featured article to display */
   article: NewsArticle;
 }
 
 export default function FeaturedArticle({ article }: FeaturedArticleProps) {
-  if (!article) return null; // Safety check
+  if (!article) return null;
+
+  const categoryInfo = getCategoryEmoji(article.topic.name);
 
   return (
-    <div className="mb-8 bg-white rounded-lg shadow overflow-hidden">
-      <div className="md:flex">
-        <div className="md:w-1/2">
-          <div className="relative w-full h-64 md:h-full">
-            {article.image_url && (
-              <Image
-                src={article.image_url}
-                alt={article.title}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-                priority
-              />
-            )}
-          </div>
+    <article className="bg-white rounded-3xl p-8 mb-8 shadow-xl relative overflow-hidden">
+      {/* Gradient top border */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-orange-500 to-blue-500"></div>
+      
+      <div className="flex gap-6 items-center flex-col md:flex-row text-center md:text-left">
+        {/* Hero emoji */}
+        <div 
+          className="w-32 h-32 rounded-3xl flex items-center justify-center text-6xl flex-shrink-0 border-4 shadow-2xl hover:scale-105 transition-transform duration-300 cursor-pointer"
+          style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderColor: 'rgba(255,255,255,0.2)'
+          }}
+        >
+          {categoryInfo.emoji}
         </div>
-        <div className="md:w-1/2 p-6 flex flex-col">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">{article.title}</h2>
-          <p className="text-gray-600 text-lg mb-6">{article.summary}</p>
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-sm text-gray-500">
-              {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}
-            </span>
-            <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+        
+        {/* Content */}
+        <div className="flex-1">
+          <h1 className="text-4xl font-bold text-gray-800 mb-4 leading-tight">
+            {article.title}
+          </h1>
+          <div className="flex gap-4 mb-6 flex-wrap justify-center md:justify-start">
+            <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
               {article.topic.name}
             </span>
-          </div>
-          <div className="flex flex-wrap gap-2 mb-6">
-            {(article.tags || []).map(tag => (
-              <span key={tag.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
+            <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
+              {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}
+            </span>
+            {article.tags?.slice(0, 2).map(tag => (
+              <span key={tag.id} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
                 {tag.text}
               </span>
             ))}
           </div>
           <Link
             href={`/article/${article.id}`}
-            className="text-red-600 hover:text-red-800 font-medium flex items-center mt-auto"
+            className="text-red-600 hover:text-red-800 font-medium text-lg inline-flex items-center gap-2 transition-all hover:gap-4"
           >
-            Přečíst celý článek
-            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-            </svg>
+            Přečíst celý článek →
           </Link>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

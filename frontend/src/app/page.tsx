@@ -1,7 +1,4 @@
-/**
- * Home page component showing the latest news and filterable by category
- * Server component that handles data fetching
- */
+// app/page.tsx
 import { Suspense } from 'react';
 import { fetchTopics, fetchLatestNews, fetchNewsByTopic } from '@/services/api';
 import Header from '@/components/layout/Header';
@@ -45,14 +42,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+    }}>
       <Header 
         categories={categories} 
         activeCategory={activeCategory} 
       />
       
       <Suspense fallback={<Loading />}>
-        <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-grow">
+        <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
           <NewsContent 
             news={newsData} 
             activeCategory={activeCategory}
