@@ -130,7 +130,9 @@ async def latest_news(
 async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
     """Get a specific news item by ID"""
     service = NewsService(session)
-    return await service.get_news_by_id(news_id)
+    result = await service.get_news_by_id(news_id=news_id)
+    await service.add_view_to_news(news_id=news_id)
+    return result
 
 
 @app.get("/health")

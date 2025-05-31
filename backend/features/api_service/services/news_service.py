@@ -43,6 +43,12 @@ class NewsService:
 
         return news_to_detailed_response(news)
 
+    async def add_view_to_news(self, news_id: int) -> None:
+        """ Add view to the news"""
+        logger.info(f"Fetching news by ID: {news_id}")
+        await self.news_repo.add_view_to_news(news_id=news_id)
+        return None
+
     async def get_news_by_topic(self, topic_id: int, limit: int, skip: int) -> List[NewsResponseBasic]:
         """Get all news for a specific topic"""
         logger.info(f"Fetching news for topic ID {topic_id} (skip={skip}, limit={limit})")

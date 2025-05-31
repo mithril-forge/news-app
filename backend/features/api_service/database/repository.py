@@ -1,6 +1,8 @@
 from datetime import timedelta, datetime
 from typing import List, Optional, TypeVar, Any, Dict
 
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy.sql.expression import update
 from sqlmodel import select, SQLModel, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -49,6 +51,19 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
 
     def __init__(self, session: AsyncSession):
         super().__init__(session, ParsedNews)
+
+    async def add_view_to_news(self, news_id: int) -> None:
+        """Increment view count for a specific news article."""
+        stmt = (
+            update(ParsedNews)
+            .where(ParsedNews.id == news_id)
+            .values(view_count=ParsedNews.view_count + 1)
+        )
+
+        result = await self.session.execute(stmt)
+
+        if result.rowcount == 0:
+            raise NoResultFound(f"News with id {news_id} not found")
 
     async def get_by_title(self, title: str) -> Optional[ParsedNews]:
         """Get news by title."""
@@ -120,7 +135,6 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         statement = select(ParsedNews).where(and_(*conditions))
         result = await self.session.execute(statement)
         return result.scalars().all()
-
 
     async def update_with_tags(self, news_id: int, news_data: Dict[str, Any],
                                tag_texts: List[str]) -> ParsedNews:
