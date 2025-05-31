@@ -98,11 +98,10 @@ async def test_parse_news(commit_transaction: bool = False):
         #    f"Number of initial tags: {initial_tags_len} Number of the end tags: {end_tags_len}")
 
 
-async def generate_picture_for_news(news_id: int, commit_transaction: bool = False) -> None:
+async def generate_picture_for_news(news_id: int, commit_transaction: bool = True) -> None:
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
         raise ValueError("You need to provide GEMINI_API_KEY to use the model")
-    delta = timedelta(days=365)
     tmp_dir = tempfile.mkdtemp()
     local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
     async with get_session_context(commit_transaction=commit_transaction) as session:
@@ -113,7 +112,7 @@ async def generate_picture_for_news(news_id: int, commit_transaction: bool = Fal
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(generate_picture_for_news(news_id=74))
+    result = loop.run_until_complete(generate_picture_for_news(news_id=79))
     print(result)
 
     loop.close()

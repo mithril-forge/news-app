@@ -14,7 +14,7 @@ T = TypeVar('T')
 
 class GeminiAIModel(AbstractAIModel, Generic[T]):
 
-    def __init__(self, api_key: str, model_name: str = "gemini-2.0-pro-exp"):
+    def __init__(self, api_key: str, model_name: str = "gemini-2.5-pro-preview-03-25"):
         super().__init__(api_key=api_key, model_name=model_name)
 
     @staticmethod

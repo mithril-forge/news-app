@@ -48,4 +48,5 @@ class ImageQuery(BaseModel):
 
 class ImageResult(BaseModel):
     description: str
-    path: str
+    url: str
+    author: str

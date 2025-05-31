@@ -103,3 +103,16 @@ class NewsService:
         logger.info(f"Successfully updated news item with ID: {news_data.id}")
 
         return news_to_detailed_response(complete_news)
+
+
+    async def add_image_to_news(self, image_url: str, news_id: int) -> None:
+        """ """
+        logger.info(f"Updating news item with ID: {news_id}")
+        existing_news = await self.news_repo.get_by_id(news_id)
+        if not existing_news:
+            logger.warning(f"News with ID {news_id} not found for update")
+            return None
+
+        update_data = {"image_url": image_url}
+        await self.news_repo.update_from_dict(structure_id=news_id, data=update_data)
+        return

@@ -10,9 +10,7 @@ def search_commons_images(queries, max_images=5):
     collected = []
 
     for query in queries:
-        if len(collected) >= max_images:
-            break
-
+        actually_collected = []
         # Step 1: Search
         search_params = {
             "action": "query",
@@ -45,10 +43,11 @@ def search_commons_images(queries, max_images=5):
             title = page.get("title", "").lower()
 
             if title.endswith(image_extensions):
-                collected.append(page["title"])
+                actually_collected.append(page["title"])
 
-                if len(collected) >= max_images:
+                if len(actually_collected) >= max_images:
                     break
+        collected += actually_collected
 
     return collected
 
@@ -117,7 +116,7 @@ def download_commons_image(image_url, save_dir="downloads", filename=None):
     return path
 
 
-def query_and_download_images(queries: list[str]) -> list[str]:
+def query_metadata_about_images(queries: list[str]) -> list[str]:
     image_urls = search_commons_images(
         queries=queries,
         max_images=10)
@@ -127,7 +126,5 @@ def query_and_download_images(queries: list[str]) -> list[str]:
         parsed_image_urls.append(image_url)
 
     file_metadatas = get_commons_file_metadata(parsed_image_urls)
-    paths = []
-    for url in file_metadatas:
-        paths.append(download_commons_image(url["image_url"]))
-    return paths
+
+    return file_metadatas

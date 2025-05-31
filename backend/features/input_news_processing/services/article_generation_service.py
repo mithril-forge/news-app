@@ -4,7 +4,7 @@ import pathlib
 import tempfile
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Iterable, Optional
 
 import instructor
 from instructor import AsyncInstructor
@@ -14,15 +14,15 @@ import google.generativeai as genai
 from core.converters import orm_list_to_pydantic
 from features.api_service.database.repository import AsyncTagRepository
 from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import TagResponse, TopicResponse, NewsResponseDetailed
+from features.api_service.services.schemas import TagResponse, NewsResponseDetailed
 from features.api_service.services.topic_service import TopicService
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, CONNECTION_PROMPT, PICTURE_SEARCH_CREATION
 from features.input_news_processing.services.input_news_service import InputNewsService
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, ConnectionResult, \
-    CreationResult, InputNewsWithID, ImageQuery, ImageResult
-from get_images_from_wikimedia import query_and_download_images
+from features.input_news_processing.services.schemas import ConnectionResult, \
+    CreationResult, ImageQuery, ImageResult
+from get_images_from_wikimedia import query_metadata_about_images
 
 
 class TempFileStorage(BaseModel):
@@ -125,13 +125,23 @@ class ArticleGenerationService:
         news = await self.parsed_news_service.get_news_by_id(news_id=news_id)
         # TODO: Add support also for noniterable params
         news_as_file = self.save_pydantic_lists_as_files(news_detail=[news])
-        # TODO: Fix search, somehow it doesn't work with the ChatGPT model here, but in the web UI it searches good for the query
-        # TODO: I guess the issue can be that in UI AI works with multiple models and we query only one, please research and fix
         image_queries = await self.ai_model.prompt_model(files=news_as_file, prompt=PICTURE_SEARCH_CREATION,
                                                          response_model=Iterable[ImageQuery])
+        print(image_queries)
         queries_as_str: list[str] = [result_query.query for result_query in image_queries]
-        paths = {path: pathlib.Path(path) for path in query_and_download_images(queries_as_str)}
-        paths.update(news_as_file)
-        image_queries = await self.ai_model.prompt_model(files=paths, prompt="Podivej se na obrazky a clanek ke kteremu maji byt, vrat takove obrazky, ktere se k danemu clanku opravdu hodi a souvisi s nim."
-                                                                             "Serad je od nejvic relevantnich po ty nejmene relevantni",
-                                                         response_model=Iterable[ImageResult])
+        metadata_images = query_metadata_about_images(queries_as_str)
+        temp_file = tempfile.NamedTemporaryFile(
+            suffix='.json',
+            mode='w+',
+            delete=False
+        )
+        json.dump(metadata_images, temp_file, indent=2)
+        temp_file.close()
+        news_as_file["metadata"] = pathlib.Path(temp_file.name)
+        image_queries = await self.ai_model.prompt_model(files=news_as_file, prompt="Podivej se na obrazky a clanek ke kteremu maji byt, vrat takove obrazky, ktere se k danemu clanku opravdu hodi a souvisi s nim."
+                                                                             "Ber v potaz cas, kdy byly vygenerovane, jak jejich popis souvisi moc s clankem, jak moc jsou redundantni s ostatnimi atd. "
+                                                                                    "Serad je od nejvic relevantnich po ty nejmene relevantni. Vysledek ma byt 1 obrazek, ktery se muze pouzit ke clanku.",
+                                                         response_model=Optional[ImageResult])
+        print(image_queries)
+        if image_queries is not None:
+            await self.parsed_news_service.add_image_to_news(image_url=image_queries.url, news_id=news_id)
