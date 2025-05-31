@@ -130,11 +130,12 @@ async def latest_news(
 @app.get("/news/popular", response_model=List[NewsResponseBasic])
 async def popular_news(
         limit: Optional[int] = Query(10, ge=1, le=20),
-        period: Optional[datetime.timedelta] = Query(datetime.timedelta(days=3)),
+        days: Optional[int] = Query(3, ge=1, le=30),
         session: AsyncSession = Depends(get_session)
 ):
     """ Get the most popular news by views"""
     service = NewsService(session=session)
+    period = datetime.timedelta(days=days)
     return await service.get_most_popular_news(period=period, limit=limit)
 
 
