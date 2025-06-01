@@ -37,14 +37,15 @@ if environment == Environment.DEVELOPMENT.value:
         "*",
     ]
 
-elif environment == Environment.PRODUCTION.value:
-    default_limits = ["5/minute"]
-limiter = Limiter(key_func=get_remote_address, default_limits=default_limits)
-app = FastAPI(middleware=[Middleware(SlowAPIMiddleware)])
-app.add_middleware(GZipMiddleware, minimum_size=4000)
-app.state.limiter = limiter
-environment = os.getenv("ENVIRONMENT")
+app = FastAPI()
 
+# if environment == Environment.PRODUCTION.value:
+#     default_limits = ["5/minute"]
+#     limiter = Limiter(key_func=get_remote_address, default_limits=default_limits)
+#     app = FastAPI(middleware=[Middleware(SlowAPIMiddleware)])
+#     app.state.limiter = limiter
+
+app.add_middleware(GZipMiddleware, minimum_size=4000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # List of origins allowed to make requests
