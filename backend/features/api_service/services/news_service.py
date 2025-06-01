@@ -70,8 +70,10 @@ class NewsService:
         tag_texts = news_data.tags or []
         logger.debug(f"News tags: {', '.join(tag_texts) if tag_texts else 'None'}")
 
-        news_dict = news_data.dict(exclude={"tags"})
-
+        # TODO: Image url ignored now and made static
+        news_dict = news_data.dict(exclude={"tags", "image_url"})
+        news_dict[
+            "image_url"] = "https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg"
         news = await self.news_repo.prepare_with_tags(news_dict, tag_texts)
         logger.info(f"Created news item with ID: {news.id}")
 
@@ -98,7 +100,8 @@ class NewsService:
             logger.warning(f"News with ID {news_data.id} not found for update")
             return None
 
-        update_data = news_data.dict(exclude={"tags", "id"})
+        # TODO: Image url due to unsupported images right now, this will be fixed
+        update_data = news_data.dict(exclude={"tags", "id", "image_url"})
 
         tag_texts = news_data.tags or []
         logger.debug(f"Updating news tags to: {', '.join(tag_texts) if tag_texts else 'None'}")

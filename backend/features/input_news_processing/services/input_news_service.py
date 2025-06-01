@@ -8,6 +8,7 @@ from typing import List, Optional
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.database.repository import AsyncInputNewsRepository
+from cz_news import crawl_czech_news, Article, CrawlResult, CrawlSummary
 
 from features.api_service.database.repository import AsyncParsedNewsRepository
 from features.input_news_processing.converters import parsed_news_list_with_input, input_news_list_to_schema, \
@@ -81,12 +82,55 @@ class InputNewsService:
         for input_news in old_input_news:
             await self.input_news_repo.remove(id=input_news.id)
 
-    async def scrap_input_news(self, delta: timedelta) -> list[InputNewsBase]:
+    @staticmethod
+    async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 10, websites: list[str] = None) -> list[InputNewsBase]:
         """
-        Function that will call external function to scrap input news from websites by delta and return them.
-        Right now implemented with mock testing data.
+        Function that calls the Czech News Crawler to fetch input news from websites.
+
+        Args:
+            delta: Time period to look back for articles
+
+        Returns:
+            List of InputNewsBase objects with news article data
         """
-        return next(mock_data, [])
+        if websites is not None:
+            crawl_result = crawl_czech_news(
+                time_delta=delta,
+                max_articles_per_site=max_articles_per_site,
+                websites=websites
+            )
+        else:
+            crawl_result = crawl_czech_news(
+                time_delta=delta,
+                max_articles_per_site=max_articles_per_site
+            )
+
+        articles_by_domain: dict[str, list[Article]] = crawl_result.articles_by_domain
+        articles: list[Article] = []
+        for _domain, articles_list in articles_by_domain.items():
+            articles.extend(articles_list)
+
+        input_news_list = []
+        for article in articles:
+            author = ",".join(article.authors)
+            publish_date = article.publish_date if article.publish_date else datetime.now()
+            input_news = InputNewsBase(
+                tags=article.tags,
+                category="",
+                publication_date=publish_date,
+                author=author,
+                source_site=article.domain,
+                source_url=article.normalized_url,
+                content=article.text,
+                title=article.title,
+                summary=article.description,
+            )
+            input_news_list.append(input_news)
+
+        logger.info(f"Scraped {len(input_news_list)} articles from {len(articles_by_domain)} domains")
+
+        return input_news_list
+
 
     async def get_input_news_by_delta(self, delta: timedelta, has_parsed_news: Optional[bool] = None) -> list[
         InputNewsWithID]:

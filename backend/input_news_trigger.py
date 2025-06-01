@@ -2,36 +2,20 @@ import asyncio
 import os
 import pathlib
 import tempfile
+import argparse
 from datetime import datetime, timedelta
 
 from core.engine import get_session_context
-from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import NewsResponseDetailed
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.ai_library.openai_model import OpenAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
-
 from features.input_news_processing.services.article_generation_service import ArticleGenerationService
 from features.input_news_processing.services.input_news_service import InputNewsService
 
 
-def verify_generated_news(generated_news: list[NewsResponseDetailed]) -> None:
-    for single_generated_news in generated_news:
-        content_len = len(single_generated_news.content.split(" "))
-        json_dump = single_generated_news.model_dump_json()
-        assert content_len >= 150, f"News {json_dump} don't have minimum 200 words in content. Len of content: {content_len}"
-        assert 1 <= len(
-            single_generated_news.tags) <= 3, f"News {json_dump} don't have minimum of 2 and maximum of 3 tags. Len of tags: {len(single_generated_news.tags)}"
-
-
-async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timedelta = timedelta(days=1)):
-    """ Official scenario that will be used to parse new input news and generates the parsed ones from them"""
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model")
-    tmp_dir = tempfile.mkdtemp()
-    # TODO: Implement local archive target directory
-    local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
+async def get_input_news(local_archive: LocalArchive, adjust_parse_date: bool = True,
+                         delta: timedelta = timedelta(days=1)):
+    """Official scenario that will be used to parse new input news"""
     async with get_session_context() as session:
         input_news_service = InputNewsService(session=session, archive=local_archive)
         if adjust_parse_date:
@@ -44,76 +28,140 @@ async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timede
                     delta = time_since_latest
         await input_news_service.scrap_and_save_input_news(delta=delta)
 
+
+async def parse_input_news(local_archive: LocalArchive, gemini_api_key: str,
+                           delta: timedelta = timedelta(days=1)):
+    """Parse input news using Gemini AI model"""
     async with get_session_context() as session:
-        input_news_service = InputNewsService(session=session, archive=local_archive)
-        article_generation_service = ArticleGenerationService(session=session, archive=local_archive,
-                                                              ai_model=GeminiAIModel(api_key=gemini_api_key))
-        await input_news_service.scrap_and_save_input_news(delta=delta)
-        session.flush()
+        article_generation_service = ArticleGenerationService(
+            session=session,
+            archive=local_archive,
+            ai_model=GeminiAIModel(api_key=gemini_api_key)
+        )
         await article_generation_service.connect_existing_news(delta=delta)
         session.flush()
         await article_generation_service.creates_new_news(delta=delta)
 
 
-async def test_parse_news(commit_transaction: bool = False):
-    """ Testing workflow, change commit transaction to True if you want to check generated news on page or in DB """
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model")
-    delta = timedelta(days=365)
-    tmp_dir = tempfile.mkdtemp()
-    local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
-    async with get_session_context(commit_transaction=commit_transaction) as session:
-        input_news_service = InputNewsService(session=session, archive=local_archive)
-        article_generation_service = ArticleGenerationService(session=session, archive=local_archive,
-                                                              ai_model=GeminiAIModel(api_key=gemini_api_key))
-        parsed_news_service = NewsService(session=session)
-        initial_tags_len = len(await parsed_news_service.get_tags())
-        print("Loading initial data")
-        input_news = await input_news_service.scrap_and_save_input_news(delta=delta)
-        assert len(
-            input_news) == 10, f"Application didn't load proper input news. Loaded {len(input_news)}, Expected 10"
-        print(f"Input news loaded: {input_news}")
-        await session.flush()
-        generated_news = await article_generation_service.connect_existing_news(delta=delta)
-        verify_generated_news(generated_news)
-        assert len(generated_news) == 0, f"The testing workflow shouldn't add any connected news. {generated_news=}"
-        generated_news = await article_generation_service.creates_new_news(delta=delta)
-        verify_generated_news(generated_news)
-        assert len(generated_news) == 3, f"Service should generate exactly 3 news. {generated_news=}"
-        await session.flush()
-        print("Loading additional news.")
-        input_news = await input_news_service.scrap_and_save_input_news(delta=delta)
-        print(f"Input news loaded: {input_news}")
-        generated_news = await article_generation_service.connect_existing_news(delta=delta)
-        verify_generated_news(generated_news)
-        assert len(generated_news) == 1, f"The testing workflow should add exactly 1 connected news. {generated_news=}"
-        generated_news = await article_generation_service.creates_new_news(delta=delta)
-        verify_generated_news(generated_news)
-        assert len(generated_news) == 1, f"Service should generate exactly 1 news. {generated_news=}"
-        await session.flush()
-        end_tags_len = len(await parsed_news_service.get_tags())
-        # assert initial_tags_len == end_tags_len, (
-        #    f"Tests created tags even when was expected that will be used the existing ones."
-        #    f"Number of initial tags: {initial_tags_len} Number of the end tags: {end_tags_len}")
-
-
 async def generate_picture_for_news(news_id: int, commit_transaction: bool = False) -> None:
+    """Generate picture for specific news article"""
     open_ai_key = os.getenv("OPEN_AI_API_KEY")
     if open_ai_key is None:
         raise ValueError("You need to provide OPEN_AI_API_KEY to use the model")
-    delta = timedelta(days=365)
+
     tmp_dir = tempfile.mkdtemp()
     local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
+
     async with get_session_context(commit_transaction=commit_transaction) as session:
-        article_generation_service = ArticleGenerationService(session=session, archive=local_archive,
-                                                              ai_model=OpenAIModel(api_key=open_ai_key))
+        article_generation_service = ArticleGenerationService(
+            session=session,
+            archive=local_archive,
+            ai_model=OpenAIModel(api_key=open_ai_key)
+        )
         await article_generation_service.generate_picture_for_news(news_id=news_id)
 
 
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(generate_picture_for_news(news_id=74))
-    print(result)
+def create_local_archive() -> LocalArchive:
+    """Create a local archive with temporary directory"""
+    tmp_dir = tempfile.mkdtemp()
+    return LocalArchive(target_location=pathlib.Path(tmp_dir))
 
-    loop.close()
+
+def validate_api_keys():
+    """Validate required API keys"""
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    if gemini_api_key is None:
+        raise ValueError("You need to provide GEMINI_API_KEY to use the model")
+    return gemini_api_key
+
+
+async def main():
+    parser = argparse.ArgumentParser(description="News Processing CLI")
+    parser.add_argument(
+        "command",
+        choices=["get-input", "parse", "generate-picture", "full-pipeline"],
+        help="Command to execute"
+    )
+    parser.add_argument(
+        "--days",
+        type=int,
+        default=1,
+        help="Number of days to process (default: 1)"
+    )
+    parser.add_argument(
+        "--news-id",
+        type=int,
+        help="News ID for picture generation"
+    )
+    parser.add_argument(
+        "--commit",
+        action="store_true",
+        help="Commit transaction to database"
+    )
+    parser.add_argument(
+        "--no-adjust-date",
+        action="store_true",
+        help="Don't adjust parse date based on latest timestamp"
+    )
+
+    args = parser.parse_args()
+
+    try:
+        gemini_api_key = validate_api_keys()
+        local_archive = create_local_archive()
+        delta = timedelta(days=args.days)
+
+        if args.command == "get-input":
+            print(f"Getting input news for the last {args.days} day(s)...")
+            await get_input_news(
+                local_archive=local_archive,
+                adjust_parse_date=not args.no_adjust_date,
+                delta=delta
+            )
+            print("Input news retrieval completed.")
+
+        elif args.command == "parse":
+            print(f"Parsing input news for the last {args.days} day(s)...")
+            await parse_input_news(
+                local_archive=local_archive,
+                gemini_api_key=gemini_api_key,
+                delta=delta
+            )
+            print("News parsing completed.")
+
+        elif args.command == "generate-picture":
+            if args.news_id is None:
+                raise ValueError("--news-id is required for picture generation")
+            print(f"Generating picture for news ID: {args.news_id}")
+            await generate_picture_for_news(
+                news_id=args.news_id,
+                commit_transaction=args.commit
+            )
+            print("Picture generation completed.")
+
+        elif args.command == "full-pipeline":
+            print(f"Running full pipeline for the last {args.days} day(s)...")
+            print("Step 1: Getting input news...")
+            await get_input_news(
+                local_archive=local_archive,
+                adjust_parse_date=not args.no_adjust_date,
+                delta=delta
+            )
+            print("Step 2: Parsing input news...")
+            await parse_input_news(
+                local_archive=local_archive,
+                gemini_api_key=gemini_api_key,
+                delta=delta
+            )
+            print("Full pipeline completed.")
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    exit_code = asyncio.run(main())
+    exit(exit_code)
