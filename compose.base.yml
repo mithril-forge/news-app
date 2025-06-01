@@ -5,9 +5,6 @@ services:
   postgres:
     container_name: news-app-postgres
     image: postgres:17
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_DB: app_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,9 +19,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    depends_on:
-      postgres:
-        condition: service_healthy
     restart: unless-stopped
 
   frontend:
@@ -35,6 +29,3 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
-
-volumes:
-  postgres_data:

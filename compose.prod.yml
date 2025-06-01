@@ -6,22 +6,20 @@ services:
     extends:
       file: compose.base.yml
       service: postgres
-    environment:
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-    secrets:
-      - db_password
+    env_file:
+      - envs/common_prod.env
+      - .env
 
   backend:
     extends:
       file: compose.base.yml
       service: backend
+    depends_on:
+      postgres:
+        condition: service_healthy
     env_file:
       - envs/common_prod.env
-    environment:
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-    secrets:
-      - gemini_api_key
-      - db_password
+      - .env
 
   frontend:
     build:
@@ -31,8 +29,11 @@ services:
     extends:
       file: compose.base.yml
       service: frontend
+    depends_on:
+      - backend
     env_file:
       - envs/common_prod.env
+      - .env
 
   caddy:
     container_name: news-app-caddy
@@ -53,9 +54,3 @@ volumes:
   postgres_data:
   caddy_data:
   caddy_config:
-
-secrets:
-  db_password:
-    file: ./secrets/db_password.txt
-  gemini_api_key:
-    file: ./secrets/gemini_api_key.txt

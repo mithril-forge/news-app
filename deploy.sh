@@ -5,29 +5,6 @@ set -e
 
 echo "🚀 Starting production deployment..."
 
-# Create necessary directories
-mkdir -p secrets caddy
-cp ../secrets/db_password.txt secrets/
-cp ../secrets/gemini_api_key.txt secrets/
-
-# Check if secrets exist
-if [ ! -f "secrets/db_password.txt" ]; then
-    echo "❌ Please create secrets/db_password.txt with your database password"
-    echo "   Example: echo 'your_strong_password' > secrets/db_password.txt"
-    exit 1
-fi
-
-if [ ! -f "secrets/gemini_api_key.txt" ]; then
-    echo "❌ Please create secrets/gemini_api_key.txt with your Gemini API key"
-    echo "   Example: echo 'your_api_key' > secrets/gemini_api_key.txt"
-    exit 1
-fi
-
-if [ ! -f "caddy/Caddyfile" ]; then
-    echo "❌ Please create caddy/Caddyfile with your Caddy configuration"
-    exit 1
-fi
-
 # Pull latest images and build
 echo "🏗️  Building and pulling images..."
 docker compose -f compose.prod.yml pull
