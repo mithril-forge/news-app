@@ -47,9 +47,9 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         conditions = [InputNews.publication_date >= from_date if newer else InputNews.publication_date <= from_date]
 
         if has_parsed_news is True:
-            conditions.append(InputNews.parsed_news_id != None)
+            conditions.append(InputNews.parsed_news != None)
         elif has_parsed_news is False:
-            conditions.append(InputNews.parsed_news_id == None)
+            conditions.append(InputNews.parsed_news == None)
 
         statement = select(InputNews).where(and_(*conditions))
         result = await self.session.execute(statement)
@@ -68,7 +68,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         """
         input_news = await self.get_by_id(input_id)
         if input_news:
-            input_news.parsed_news_id = parsed_news_id
+            input_news.parsed_news = parsed_news_id
             self.session.add(input_news)
             statement = select(ParsedNews).where(ParsedNews.id == parsed_news_id)
             result = await self.session.execute(statement)

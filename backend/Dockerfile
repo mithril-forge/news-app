@@ -15,6 +15,7 @@ RUN apt-get update \
         libpq-dev \
         postgresql-client \
         curl \
+        cron \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -49,5 +50,4 @@ RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 # Run the application
-# CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

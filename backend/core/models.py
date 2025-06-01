@@ -92,7 +92,7 @@ class InputNews(BaseModel, table=True):
     content: str = Field()
     title: str = Field()
 
-    parsed_news_id: Optional[int] = Field(
+    parsed_news: Optional[int] = Field(
         default=None,
         foreign_key="parsed_news.id",
         nullable=True
