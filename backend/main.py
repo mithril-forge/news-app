@@ -1,3 +1,4 @@
+import datetime
 import os
 import logging
 import time
@@ -126,11 +127,25 @@ async def latest_news(
     return await service.get_latest_news(skip=skip, limit=limit)
 
 
+@app.get("/news/popular", response_model=List[NewsResponseBasic])
+async def popular_news(
+        limit: Optional[int] = Query(10, ge=1, le=20),
+        days: Optional[int] = Query(3, ge=1, le=30),
+        session: AsyncSession = Depends(get_session)
+):
+    """ Get the most popular news by views"""
+    service = NewsService(session=session)
+    period = datetime.timedelta(days=days)
+    return await service.get_most_popular_news(period=period, limit=limit)
+
+
 @app.get("/news/{news_id}", response_model=NewsResponseDetailed)
 async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
     """Get a specific news item by ID"""
     service = NewsService(session)
-    return await service.get_news_by_id(news_id)
+    result = await service.get_news_by_id(news_id=news_id)
+    await service.add_view_to_news(news_id=news_id)
+    return result
 
 
 @app.get("/health")

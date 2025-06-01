@@ -59,6 +59,7 @@ class ParsedNews(BaseModel, table=True):
     image_url: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    view_count: int = Field(default=0, sa_column_kwargs={"server_default": "0"})
 
     tags: Mapped[List["Tag"]] = Relationship(
         back_populates="news_items",

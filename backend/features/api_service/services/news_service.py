@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import List, Optional
 
@@ -33,6 +34,11 @@ class NewsService:
         logger.debug(f"Retrieved {len(latest_news)} latest news items")
         return news_list_to_response(latest_news)
 
+    async def get_most_popular_news(self, period: datetime.timedelta, limit: int) -> List[NewsResponseBasic]:
+        logger.info(f"Fetching {limit} most popular news for {period}")
+        popular_news = await self.news_repo.get_most_viewed_news_by_period(period=period, limit=limit)
+        return news_list_to_response(popular_news)
+
     async def get_news_by_id(self, news_id: int) -> NewsResponseDetailed:
         """Get a specific news item by ID"""
         logger.info(f"Fetching news by ID: {news_id}")
@@ -42,6 +48,12 @@ class NewsService:
             raise HTTPException(status_code=404, detail="News not found")
 
         return news_to_detailed_response(news)
+
+    async def add_view_to_news(self, news_id: int) -> None:
+        """ Add view to the news"""
+        logger.info(f"Fetching news by ID: {news_id}")
+        await self.news_repo.add_view_to_news(news_id=news_id)
+        return None
 
     async def get_news_by_topic(self, topic_id: int, limit: int, skip: int) -> List[NewsResponseBasic]:
         """Get all news for a specific topic"""
@@ -58,8 +70,10 @@ class NewsService:
         tag_texts = news_data.tags or []
         logger.debug(f"News tags: {', '.join(tag_texts) if tag_texts else 'None'}")
 
-        news_dict = news_data.dict(exclude={"tags"})
-
+        # TODO: Image url ignored now and made static
+        news_dict = news_data.dict(exclude={"tags", "image_url"})
+        news_dict[
+            "image_url"] = "https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg"
         news = await self.news_repo.prepare_with_tags(news_dict, tag_texts)
         logger.info(f"Created news item with ID: {news.id}")
 
@@ -86,7 +100,8 @@ class NewsService:
             logger.warning(f"News with ID {news_data.id} not found for update")
             return None
 
-        update_data = news_data.dict(exclude={"tags", "id"})
+        # TODO: Image url due to unsupported images right now, this will be fixed
+        update_data = news_data.dict(exclude={"tags", "id", "image_url"})
 
         tag_texts = news_data.tags or []
         logger.debug(f"Updating news tags to: {', '.join(tag_texts) if tag_texts else 'None'}")

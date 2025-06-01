@@ -38,3 +38,4 @@ else
   # Normal production mode
   exec "$@"
 fi
+

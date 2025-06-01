@@ -1,34 +1,36 @@
-/**
- * Site header component with title and category navigation
- */
-import CategoryNav from '@/components/news/CategoryNav';
+// components/layout/Header.tsx
+'use client'
+
+import Link from 'next/link';
+import CategoryNav from '../news/CategoryNav';
 
 interface HeaderProps {
-  /** List of all available categories */
   categories: string[];
-  /** Currently selected category */
   activeCategory: string;
-  /** Optional callback function when a category is selected */
-  onSelectCategory?: (category: string) => void;
 }
 
-export default function Header({ 
-  categories, 
-  activeCategory, 
-  onSelectCategory 
-}: HeaderProps) {
+export default function Header({ categories, activeCategory }: HeaderProps) {
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="py-4">
-          <h1 className="text-3xl font-bold text-gray-800">ZPRÁVY.CZ</h1>
-          <p className="text-sm text-gray-500">NAVŽDY BEZ REKLAM</p>
+    <header className="bg-gray-800 text-white shadow-lg sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex justify-between items-center py-4">
+          <Link href="/" className="text-3xl font-bold text-white hover:text-red-400 transition-colors">
+            NOVINAR.AI
+          </Link>
+          <nav className="hidden md:block">
+            <CategoryNav 
+              categories={categories} 
+              activeCategory={activeCategory} 
+            />
+          </nav>
         </div>
-        <CategoryNav
-          categories={categories}
-          activeCategory={activeCategory}
-          onSelectCategory={onSelectCategory}
-        />
+        {/* Mobile navigation */}
+        <div className="md:hidden pb-4">
+          <CategoryNav 
+            categories={categories} 
+            activeCategory={activeCategory} 
+          />
+        </div>
       </div>
     </header>
   );

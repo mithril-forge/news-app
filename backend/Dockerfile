@@ -7,7 +7,7 @@ WORKDIR /app
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    POETRY_VERSION=1.5.1
+    POETRY_VERSION=2.1.3
 
 # Install system dependencies including PostgreSQL requirements
 RUN apt-get update \
@@ -28,7 +28,7 @@ COPY pyproject.toml poetry.lock* ./
 
 # Configure poetry to not use a virtual environment
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi --no-dev
+    && poetry install --no-interaction --no-ansi
 
 # Copy application code
 COPY . ./app

@@ -1,50 +1,65 @@
-/**
- * Card component for displaying a news article in a list/grid
- */
-import Image from 'next/image';
+// components/news/ArticleCard.tsx
 import Link from 'next/link';
 import { NewsArticle } from '@/types';
+import { getCategoryEmoji } from '@/lib/categoryEmoji';
 
 interface ArticleCardProps {
-  /** The news article to display */
   item: NewsArticle;
 }
 
 export default function ArticleCard({ item }: ArticleCardProps) {
+  const categoryInfo = getCategoryEmoji(item.topic.name);
+
   return (
-    <article className="bg-white rounded-lg shadow overflow-hidden flex flex-col">
-      <div className="relative w-full h-48">
-        {item.image_url && (
-          <Image
-            src={item.image_url}
-            alt={item.title}
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover"
-          />
-        )}
+    <article className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex gap-6 flex-col sm:flex-row">
+      {/* Emoji icon */}
+      <div 
+        className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-3 hover:scale-110 transition-transform duration-300 cursor-pointer mx-auto sm:mx-0"
+        style={{ 
+          borderColor: categoryInfo.color,
+          borderWidth: '3px',
+          borderStyle: 'solid',
+          background: categoryInfo.bgColor
+        }}
+      >
+        {categoryInfo.emoji}
       </div>
-      <div className="p-4 flex flex-col flex-grow">
-        <h2 className="text-xl font-bold text-gray-800 mb-2">{item.title}</h2>
-        <p className="text-gray-600 mb-3 line-clamp-3 flex-grow">{item.summary}</p>
-        <div className="flex justify-between items-center mt-2">
-          <span className="text-sm text-gray-500">
+      
+      {/* Content */}
+      <div className="flex-1 text-center sm:text-left">
+        <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+          <span className="text-gray-500 text-sm">
             {item.date || new Date(item.updated_at).toLocaleDateString('cs-CZ')}
           </span>
-          <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+          <span 
+            className="px-3 py-1 rounded-full text-xs font-medium"
+            style={{ 
+              backgroundColor: `${categoryInfo.color}20`, 
+              color: categoryInfo.color 
+            }}
+          >
             {item.topic.name}
           </span>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {(item.tags || []).slice(0, 3).map(tag => (
-            <span key={tag.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
-              {tag.text}
-            </span>
-          ))}
-        </div>
+        
+        <h2 className="text-xl font-semibold text-gray-800 mb-3 leading-tight hover:text-red-600 transition-colors">
+          {item.title}
+        </h2>
+        
+        {/* Tags */}
+        {item.tags && item.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3 justify-center sm:justify-start">
+            {item.tags.slice(0, 2).map(tag => (
+              <span key={tag.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                {tag.text}
+              </span>
+            ))}
+          </div>
+        )}
+        
         <Link
           href={`/article/${item.id}`}
-          className="mt-4 text-red-600 hover:text-red-800 text-sm font-medium block"
+          className="text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-2 transition-all hover:gap-4"
         >
           Přečíst článek →
         </Link>

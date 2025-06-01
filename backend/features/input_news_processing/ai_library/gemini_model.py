@@ -1,10 +1,8 @@
-import os
 import pathlib
 from typing import TypeVar, Generic, Type, Union
 
 import instructor
 from instructor import AsyncInstructor
-from pydantic import BaseModel
 
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 import google.generativeai as genai
@@ -14,7 +12,7 @@ T = TypeVar('T')
 
 class GeminiAIModel(AbstractAIModel, Generic[T]):
 
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-pro-exp-03-25"):
+    def __init__(self, api_key: str, model_name: str = "gemini-2.5-pro-preview-03-25"):
         super().__init__(api_key=api_key, model_name=model_name)
 
     @staticmethod
