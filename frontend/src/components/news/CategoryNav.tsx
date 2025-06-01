@@ -55,8 +55,8 @@ export default function CategoryNav({
               onClick={() => handleCategorySelect(category)}
               className={`text-sm font-medium transition-colors ${
                 activeCategory === category
-                  ? "text-red-600 border-b-2 border-red-600 pb-1"
-                  : "text-gray-700 hover:text-red-600 pb-1"
+                  ? "text-red-400 border-b-2 border-red-400 pb-1"
+                  : "text-gray-300 hover:text-red-400 pb-1"
               }`}
               aria-current={activeCategory === category ? 'page' : undefined}
             >

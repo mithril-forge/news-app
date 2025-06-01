@@ -52,6 +52,36 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, ParsedNews)
 
+    async def get_most_viewed_news_by_period(
+            self,
+            period: timedelta,
+            limit: int = 10
+    ) -> List[ParsedNews]:
+        """
+        Get most viewed news articles within a specified time period.
+
+        Args:
+            period: timedelta object specifying how far back to look
+            limit: Maximum number of articles to return
+            min_views: Minimum view count to filter by
+
+        Returns:
+            List of ParsedNews ordered by view_count descending
+        """
+        cutoff_date = datetime.utcnow() - period
+
+        stmt = (
+            select(ParsedNews)
+            .where(
+                ParsedNews.created_at >= cutoff_date,
+            )
+            .order_by(ParsedNews.view_count.desc())
+            .limit(limit)
+        )
+
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
     async def add_view_to_news(self, news_id: int) -> None:
         """Increment view count for a specific news article."""
         stmt = (

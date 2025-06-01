@@ -37,6 +37,22 @@ export const fetchLatestNews = async (
 };
 
 /**
+ * Fetches the most popular news articles
+ * @param days - Number of days to fetch popular news for
+ * @param limit - Number of articles to fetch
+ * @returns Promise with array of news articles
+ */
+export const fetchPopularNews = async (
+  days = 30,
+  limit = 10
+): Promise<NewsArticle[]> => {
+  return fetchApi<NewsArticle[]>(
+    `/news/popular?days=${days}&limit=${limit}`
+  );
+};
+
+
+/**
  * Fetches a specific news article by ID
  * @param newsId - The ID of the news article to fetch
  * @returns Promise with the news article or null if not found
