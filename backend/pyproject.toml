@@ -1,4 +1,4 @@
-[project]
+[tool.poetry]
 name = "news-app"
 version = "0.1.0"
 description = ""
@@ -7,7 +7,7 @@ readme = "README.md"
 packages = []
 package-mode = false
 
-[dependencies]
+[tool.poetry.dependencies]
 python = "^3.10"
 fastapi = {extras = ["standard"], version = "^0.115.12"}
 sqlmodel = "^0.0.24"
@@ -23,4 +23,3 @@ ai-knowledge-bot = {path = "./wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl"}
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-

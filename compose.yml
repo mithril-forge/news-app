@@ -1,30 +1,34 @@
-version: '3.8'
+# Compose file used for local development
 
 services:
   postgres:
-    container_name: postgres
-    restart: always
+    extends:
+      file: compose.base.yml
+      service: postgres
     ports:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: postgres
 
   backend:
-    container_name: fastapi_backend
-    restart: always
+    extends:
+      file: compose.base.yml
+      service: backend
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
     env_file:
       - envs/common_dev.env
-    environment:
-      GEMINI_API_KEY:
-      LOCAL_ARCHIVE_FOLDER: /tmp/archive_folder
 
   frontend:
-    container_name: nextjs_frontend
-    restart: always
+    extends:
+      file: compose.base.yml
+      service: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
     ports:
       - "3000:3000"
     volumes:
@@ -32,6 +36,5 @@ services:
     env_file:
       - envs/common_dev.env
 
-networks:
-  app_network:
-    driver: bridge
+volumes:
+  postgres_data:

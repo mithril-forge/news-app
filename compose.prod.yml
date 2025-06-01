@@ -1,0 +1,61 @@
+
+# Compose file used for production deployment
+
+services:
+  postgres:
+    extends:
+      file: compose.base.yml
+      service: postgres
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+
+  backend:
+    extends:
+      file: compose.base.yml
+      service: backend
+    env_file:
+      - envs/common_prod.env
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - gemini_api_key
+      - db_password
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    extends:
+      file: compose.base.yml
+      service: frontend
+    env_file:
+      - envs/common_prod.env
+
+  caddy:
+    container_name: news-app-caddy
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      # - "443:443"  # Uncomment when using domain with HTTPS
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  gemini_api_key:
+    file: ./secrets/gemini_api_key.txt

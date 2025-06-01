@@ -7,11 +7,36 @@ from sqlalchemy import pool
 
 from core.models import BaseModel
 
+def get_database_url():
+    """Get database URL with password from Docker secret or environment"""
+    base_url = os.getenv('DATABASE_CONNECTION_STR')
+
+    if not base_url:
+        return None
+
+    # Try to read password from Docker secret
+    password_file = os.getenv('POSTGRES_PASSWORD_FILE')
+    if password_file and os.path.exists(password_file):
+        try:
+            with open(password_file, 'r') as f:
+                password = f.read().strip()
+            # Insert password into connection string
+            # postgresql+psycopg://postgres@postgres:5432/app_db
+            # becomes postgresql+psycopg://postgres:PASSWORD@postgres:5432/app_db
+            if '@postgres:' in base_url and ':' not in base_url.split('//')[1].split('@')[0]:
+                return base_url.replace('@postgres:', f':{password}@postgres:')
+        except Exception as e:
+            print(f"Warning: Could not read password from secret file: {e}")
+
+    # Fallback to original URL (for development or if secret not available)
+    return base_url
+
+
 SCHEMA_USED = "public"
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-db_url_from_env = os.getenv('DATABASE_CONNECTION_STR') # Use the exact env var name (case-sensitive on Linux)
+db_url_from_env = get_database_url()
 
 # If the environment variable is set, override the sqlalchemy.url from alembic.ini
 if db_url_from_env:
@@ -24,7 +49,6 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 target_metadata = BaseModel.metadata
 target_metadata.schema = SCHEMA_USED
-
 
 
 def run_migrations_offline() -> None:

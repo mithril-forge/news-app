@@ -37,7 +37,7 @@ RUN uv pip install --system poetry \
     && rm -f pyproject.toml poetry.lock
 
 # Copy application code
-COPY . ./app
+COPY . .
 
 # Expose port
 EXPOSE 8000

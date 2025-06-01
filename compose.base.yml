@@ -1,42 +1,40 @@
-version: '3.8'
+# Docker Compose Base file
+# Services defined in this compose apply to both development and production environments.
 
 services:
   postgres:
-    image: postgres:15
+    container_name: news-app-postgres
+    image: postgres:17
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DB: app_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   backend:
+    container_name: news-app-backend
     build:
       context: ./backend
       dockerfile: Dockerfile
-    networks:
-      - app_network
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
 
   frontend:
+    container_name: news-app-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    networks:
-      - app_network
     depends_on:
       - backend
-
-networks:
-  app_network:
+    restart: unless-stopped
 
 volumes:
   postgres_data:
