@@ -16,6 +16,7 @@ RUN apt-get update \
         python3-dev \
         libpq-dev \
         postgresql-client \
+        cron \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
