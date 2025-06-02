@@ -4,6 +4,7 @@ import argparse
 import os
 import pathlib
 import tempfile
+import logging
 from datetime import datetime, timedelta
 
 from core.engine import get_session_context
@@ -12,7 +13,14 @@ from features.input_news_processing.ai_library.openai_model import OpenAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.services.article_generation_service import ArticleGenerationService
 from features.input_news_processing.services.input_news_service import InputNewsService
-
+handler = logging.FileHandler('/app/logs/cron.log')
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
+logger.info("Starting parsing")
 
 async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timedelta = timedelta(days=1)):
     """ Official scenario that will be used to parse new input news and generates the parsed ones from them"""
@@ -35,15 +43,22 @@ async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timede
                 if time_since_latest < delta:
                     delta = time_since_latest
         await input_news_service.scrap_and_save_input_news(delta=delta)
+    generate_and_connect_news()
 
+async def generate_and_connect_news(delta: timedelta):
+    local_archive_folder = os.getenv("LOCAL_ARCHIVE_FOLDER")
+    if local_archive_folder is None:
+        raise ValueError("You need to provide LOCAL_ARCHIVE_FOLDER")
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    if gemini_api_key is None:
+        raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
+    local_archive = LocalArchive(target_location=pathlib.Path(local_archive_folder))
     async with get_session_context() as session:
-        input_news_service = InputNewsService(session=session, archive=local_archive)
         article_generation_service = ArticleGenerationService(
             session=session,
             archive=local_archive,
             ai_model=GeminiAIModel(api_key=gemini_api_key)
         )
-        await input_news_service.scrap_and_save_input_news(delta=delta)
         session.flush()
         await article_generation_service.connect_existing_news(delta=delta)
         session.flush()
@@ -89,7 +104,9 @@ def main():
     parse_parser = subparsers.add_parser("parse", help="Parse input news and generate new articles")
     parse_parser.add_argument("--days", type=int, default=1, help="Number of days to look back for news")
     parse_parser.add_argument("--adjust-date", action="store_true", help="Adjust parse date based on latest timestamp")
-
+    # Generate news
+    generate_parser = subparsers.add_parser("generate", help="")
+    generate_parser.add_argument("--days", type=int, default=1)
     # Generate picture command
     picture_parser = subparsers.add_parser("generate-picture", help="Generate picture for a specific news article")
     picture_parser.add_argument("news_id", type=int, help="ID of the news article")
@@ -113,6 +130,9 @@ def main():
     elif args.command == "archive":
         delta = timedelta(days=args.days)
         loop.run_until_complete(clear_old_input_news(delta=delta))
+    elif args.command == "generate":
+        delta = timedelta(days=args.days)
+        loop.run_until_complete(generate_and_connect_news(delta=delta))
     else:
         parser.print_help()
 

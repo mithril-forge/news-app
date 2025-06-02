@@ -17,7 +17,7 @@ if not all([POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POST
 
 DATABASE_CONNECTION_STR = f"postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
-async_engine = create_async_engine(DATABASE_CONNECTION_STR, echo=True)
+async_engine = create_async_engine(DATABASE_CONNECTION_STR, echo=False)
 async_session_maker = async_sessionmaker(async_engine, expire_on_commit=False)
 
 
