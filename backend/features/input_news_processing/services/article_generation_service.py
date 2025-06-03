@@ -71,11 +71,13 @@ class ArticleGenerationService:
 
         return paths_mapping
 
-    async def prepare_actual_data_for_ai(self, delta: timedelta) -> dict[str, Path]:
+    async def prepare_actual_data_for_ai(self, delta: timedelta, include_parsed: bool = True) -> dict[str, Path]:
         """ Prepares needed data for the AI queries. It can be adjusted by delta by which the news are taken"""
+        recent_parsed_news = []
         recent_input_news = await self.input_news_service.get_input_news_by_delta(delta=delta,
                                                                                   has_parsed_news=False)
-        recent_parsed_news = await self.input_news_service.get_parsed_with_input_news(delta=delta)
+        if include_parsed:
+         recent_parsed_news = await self.input_news_service.get_parsed_with_input_news(delta=delta)
         existing_topics = await self.topic_service.get_all_topics()
         existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
         files = self.save_pydantic_lists_as_files(tags_list=existing_tags, topics_list=existing_topics,
@@ -91,6 +93,7 @@ class ArticleGenerationService:
         files = await self.prepare_actual_data_for_ai(delta=delta)
         result = await self.ai_model.prompt_model(files=files, prompt=CREATION_PROMPT,
                                                   response_model=Iterable[CreationResult])
+
         print(f"Result of the creation query is: {result=}")
         saved_news_list = []
         for news_data in result:
