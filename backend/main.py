@@ -178,11 +178,11 @@ async def scheduled_task():
                 logger.error(f"Error {err} when generating articles")
                 pass
         else:
-            logger.info("Skipping parsing of input news.")
+            logger.info(f"Skipping parsing of input news. Latest timestamp of input news: {latest_timestamp}")
         now = datetime.datetime.now()
         async with get_session_context() as session:
-            input_news_service = NewsService(session=session)
-            latest_timestamp = await input_news_service.get_latest_timestamp()
+            news_service = NewsService(session=session)
+            latest_timestamp = await news_service.get_latest_timestamp()
         if now.hour >= 18 and latest_timestamp.day != now.day:
             try:
                 delta = datetime.timedelta(days=3)
@@ -192,7 +192,7 @@ async def scheduled_task():
                 logger.error(f"Error {err} when generating articles")
                 pass
         else:
-            logger.info("Skipping preparation of the AI generated news.")
+            logger.info(f"Skipping preparation of the AI generated news. Latest timestamp of news: {latest_timestamp}")
         await asyncio.sleep(3600)
 
 

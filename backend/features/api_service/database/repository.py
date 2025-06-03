@@ -215,7 +215,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         Returns:
             The latest timestamp or None if no records exist
         """
-        statement = select(func.max(InputNews.received_at))
+        statement = select(func.max(ParsedNews.received_at))
         result = await self.session.execute(statement)
         latest_timestamp = result.scalar_one_or_none()
 
