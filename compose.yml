@@ -5,8 +5,6 @@ services:
     extends:
       file: compose.base.yml
       service: postgres
-    ports:
-      - "5432:5432"
     env_file:
       - envs/common_dev.env
 
