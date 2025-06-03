@@ -53,8 +53,9 @@ async def generate_and_connect_news(delta: timedelta):
             archive=local_archive,
             ai_model=GeminiAIModel(api_key=gemini_api_key)
         )
-        await session.flush()
-        await article_generation_service.connect_existing_news(delta=delta)
+        # TODO: Fix connection and enable again
+        #await session.flush()
+        #await article_generation_service.connect_existing_news(delta=delta)
         await session.flush()
         await article_generation_service.creates_new_news(delta=delta)
 
