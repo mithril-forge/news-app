@@ -26,6 +26,4 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    depends_on:
-      - backend
     restart: unless-stopped
