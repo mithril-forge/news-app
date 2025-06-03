@@ -9,7 +9,6 @@ services:
       - "5432:5432"
     env_file:
       - envs/common_dev.env
-      - .env
 
   backend:
     extends:
@@ -24,7 +23,6 @@ services:
         condition: service_healthy
     env_file:
       - envs/common_dev.env
-      - .env
 
   frontend:
     extends:
@@ -42,7 +40,6 @@ services:
       - backend
     env_file:
       - envs/common_dev.env
-      - .env
 
 volumes:
   postgres_data:
