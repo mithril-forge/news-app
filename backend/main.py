@@ -2,6 +2,8 @@ import asyncio
 import datetime
 import os
 import logging
+import pathlib
+import tempfile
 import time
 from typing import List, Optional
 
@@ -18,10 +20,13 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
 
-from core.engine import get_session
+from core.engine import get_session, get_session_context
+from core.models import ParsedNews
 from features.api_service.services.news_service import NewsService
 from features.api_service.services.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
 from features.api_service.services.topic_service import TopicService
+from features.input_news_processing.archive.local_archive import LocalArchive
+from features.input_news_processing.services.input_news_service import InputNewsService
 from news_processing import get_input_news_and_parse, generate_and_connect_news
 
 # Configure logging
@@ -157,24 +162,37 @@ async def health_check():
 
 
 async def scheduled_task():
-    day_parsing_executed = None
-    day_generation_executed = None
     while True:
         now = datetime.datetime.now()
-        if now.hour >= 18 and day_parsing_executed != now.day:
+        async with get_session_context() as session:
+            tmp_dir = tempfile.mkdtemp()
+            local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
+            input_news_service = InputNewsService(session=session, archive=local_archive)
+            latest_timestamp = await input_news_service.get_latest_timestamp()
+        if now.hour >= 18 and latest_timestamp.day != now.day:
             try:
                 delta = datetime.timedelta(days=1)
                 await get_input_news_and_parse(adjust_parse_date=True, delta=delta)
-                day_parsing_executed = now.day
-            except Exception:
+                logger.info("Successfully parsed news.")
+            except Exception as err:
+                logger.error(f"Error {err} when generating articles")
                 pass
-        if now.hour >= 18 and day_generation_executed != now.day:
+        else:
+            logger.info("Skipping parsing of input news.")
+        now = datetime.datetime.now()
+        async with get_session_context() as session:
+            input_news_service = NewsService(session=session)
+            latest_timestamp = await input_news_service.get_latest_timestamp()
+        if now.hour >= 18 and latest_timestamp.day != now.day:
             try:
-                delta = datetime.timedelta(days=7)
+                delta = datetime.timedelta(days=3)
                 await generate_and_connect_news(delta=delta)
-                day_generation_executed = now.day
-            except Exception:
+                logger.info("Successfully parsed news.")
+            except Exception as err:
+                logger.error(f"Error {err} when generating articles")
                 pass
+        else:
+            logger.info("Skipping preparation of the AI generated news.")
         await asyncio.sleep(3600)
 
 

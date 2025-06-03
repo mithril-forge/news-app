@@ -205,3 +205,17 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         await self.session.flush()
 
         return news
+
+
+    async def get_latest_received_timestamp(self, func=None) -> Optional[datetime]:
+        """
+        Get the most recent received_at timestamp.
+
+        Returns:
+            The latest timestamp or None if no records exist
+        """
+        statement = select(func.max(InputNews.received_at))
+        result = await self.session.execute(statement)
+        latest_timestamp = result.scalar_one_or_none()
+
+        return latest_timestamp

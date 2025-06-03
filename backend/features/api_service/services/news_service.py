@@ -118,3 +118,9 @@ class NewsService:
         logger.info(f"Successfully updated news item with ID: {news_data.id}")
 
         return news_to_detailed_response(complete_news)
+
+    async def get_latest_timestamp(self) -> Optional[datetime]:
+        """
+        Returns latest timestamp of the input news
+        """
+        return await self.news_repo.get_latest_received_timestamp()
