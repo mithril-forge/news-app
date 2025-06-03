@@ -193,7 +193,7 @@ async def scheduled_task():
                 pass
         else:
             logger.info(f"Skipping preparation of the AI generated news. Latest timestamp of news: {latest_timestamp}")
-        await asyncio.sleep(3600)
+        await asyncio.sleep(7200)
 
 
 @app.on_event("startup")
