@@ -43,7 +43,6 @@ async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timede
                 if time_since_latest < delta:
                     delta = time_since_latest
         await input_news_service.scrap_and_save_input_news(delta=delta)
-    generate_and_connect_news()
 
 async def generate_and_connect_news(delta: timedelta):
     local_archive_folder = os.getenv("LOCAL_ARCHIVE_FOLDER")
@@ -124,6 +123,7 @@ def main():
     if args.command == "parse":
         delta = timedelta(days=args.days)
         loop.run_until_complete(get_input_news_and_parse(adjust_parse_date=args.adjust_date, delta=delta))
+        loop.run_until_complete(generate_and_connect_news(delta=delta))
 
     elif args.command == "generate-picture":
         loop.run_until_complete(generate_picture_for_news(news_id=args.news_id, commit_transaction=args.commit))

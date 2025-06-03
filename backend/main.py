@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import os
 import logging
@@ -21,6 +22,7 @@ from core.engine import get_session
 from features.api_service.services.news_service import NewsService
 from features.api_service.services.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
 from features.api_service.services.topic_service import TopicService
+from news_processing import get_input_news_and_parse, generate_and_connect_news
 
 # Configure logging
 logging.basicConfig(
@@ -152,3 +154,30 @@ async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+
+async def scheduled_task():
+    day_parsing_executed = None
+    day_generation_executed = None
+    while True:
+        now = datetime.datetime.now()
+        if now.hour >= 18 and day_parsing_executed != now.day:
+            try:
+                delta = datetime.timedelta(days=1)
+                await get_input_news_and_parse(adjust_parse_date=True, delta=delta)
+                day_parsing_executed = now.day
+            except Exception:
+                pass
+        if now.hour >= 18 and day_generation_executed != now.day:
+            try:
+                delta = datetime.timedelta(days=7)
+                await generate_and_connect_news(delta=delta)
+                day_generation_executed = now.day
+            except Exception:
+                pass
+        await asyncio.sleep(3600)
+
+
+@app.on_event("startup")
+async def startup():
+    asyncio.create_task(scheduled_task())
