@@ -5,6 +5,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.expression import update
 from sqlmodel import select, SQLModel, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy import func
 
 from core.models import InputNews
 from core.repository import AsyncBaseRepository
@@ -207,7 +208,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return news
 
 
-    async def get_latest_received_timestamp(self, func=None) -> Optional[datetime]:
+    async def get_latest_received_timestamp(self) -> Optional[datetime]:
         """
         Get the most recent received_at timestamp.
 

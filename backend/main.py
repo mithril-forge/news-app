@@ -198,4 +198,6 @@ async def scheduled_task():
 
 @app.on_event("startup")
 async def startup():
+    if environment == Environment.DEVELOPMENT.value:
+        pass
     asyncio.create_task(scheduled_task())
