@@ -185,7 +185,7 @@ async def scheduled_task():
             latest_timestamp = await news_service.get_latest_timestamp()
         if now.hour >= 18 and latest_timestamp.day != now.day:
             try:
-                delta = datetime.timedelta(days=3)
+                delta = datetime.timedelta(days=1)
                 await generate_and_connect_news(delta=delta)
                 logger.info("Successfully parsed news.")
             except Exception as err:
@@ -193,7 +193,7 @@ async def scheduled_task():
                 pass
         else:
             logger.info(f"Skipping preparation of the AI generated news. Latest timestamp of news: {latest_timestamp}")
-        await asyncio.sleep(7200)
+        await asyncio.sleep(21600)
 
 
 @app.on_event("startup")
