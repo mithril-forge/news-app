@@ -105,7 +105,7 @@ class ArticleGenerationService:
         Result should be newly created parsed news from Gemini model.
         """
         logger.info(f"Creating new news with delta: {delta}")
-        files = await self.prepare_actual_data_for_ai(delta=delta)
+        files = await self.prepare_actual_data_for_ai(delta=delta, include_parsed=False)
         result = await self.ai_model.prompt_model(files=files, prompt=CREATION_PROMPT,
                                                   response_model=Iterable[CreationResult])
 

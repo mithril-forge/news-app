@@ -13,7 +13,7 @@ export const getApiBaseUrl = (): string => {
       return process.env.NEXT_PUBLIC_CONTAINER_API_URL || '';
     }
     // When running in the browser
-    return process.env.NEXT_PUBLIC_API_URL || '';
+    return "http://185.215.165.121:8000";
   };
 
   /**
