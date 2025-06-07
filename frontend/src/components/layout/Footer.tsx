@@ -58,8 +58,8 @@ export default function Footer({
             <h3 className="text-lg font-bold mb-4">Kategorie</h3>
             <div className="space-y-2">
               {categories.slice(1, 6).map(category => {
-                const categoryInfo = getCategoryEmoji(category);
-                return (
+                  const categoryInfo = getCategoryEmoji(category?.name || 'Vše');
+                  return (
                   <button
                     key={category}
                     onClick={() => handleCategoryClick(category)}

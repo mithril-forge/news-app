@@ -8,7 +8,7 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ item }: ArticleCardProps) {
-  const categoryInfo = getCategoryEmoji(item.topic.name);
+  const categoryInfo = getCategoryEmoji(item.topic?.name || 'Vše');
 
   return (
     <article className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex gap-6 flex-col sm:flex-row">

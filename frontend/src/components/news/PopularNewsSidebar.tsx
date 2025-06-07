@@ -74,7 +74,7 @@ export default function PopularNewsSidebar() {
       
       <div className="space-y-4">
         {popularNews.map((article, index) => {
-          const categoryInfo = getCategoryEmoji(article.topic.name);
+          const categoryInfo = getCategoryEmoji(article.topic?.name || 'Vše');
           
           return (
             <Link

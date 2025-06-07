@@ -10,7 +10,7 @@ interface FeaturedArticleProps {
 export default function FeaturedArticle({ article }: FeaturedArticleProps) {
   if (!article) return null;
 
-  const categoryInfo = getCategoryEmoji(article.topic.name);
+    const categoryInfo = getCategoryEmoji(article.topic?.name || 'Vše');
 
   return (
     <article className="bg-white rounded-3xl p-8 mb-8 shadow-xl relative overflow-hidden">

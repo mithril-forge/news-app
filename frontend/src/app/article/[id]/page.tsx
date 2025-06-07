@@ -73,8 +73,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const activeCategory = fullArticle.topic.name;
   
   // Get category emoji info
-  const categoryInfo = getCategoryEmoji(fullArticle.topic.name);
-  
+  const categoryInfo = getCategoryEmoji(fullArticle.topic?.name || 'Vše');
+
   return (
     <div className="min-h-screen flex flex-col" style={{
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
