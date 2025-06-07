@@ -38,7 +38,7 @@ export default function ArticleCard({ item }: ArticleCardProps) {
               color: categoryInfo.color 
             }}
           >
-            {item.topic.name}
+            {item.topic?.name || "Vše"}
           </span>
         </div>
         

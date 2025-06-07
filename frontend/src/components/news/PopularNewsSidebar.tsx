@@ -99,7 +99,7 @@ export default function PopularNewsSidebar() {
                   {article.title}
                 </h4>
                 <div className="text-xs text-gray-500">
-                  {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')} • {article.topic.name}
+                  {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')} • {article.topic?.name || "Vše"}
                 </div>
               </div>
             </Link>

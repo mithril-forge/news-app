@@ -70,7 +70,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   
   // Prepare categories for header/footer
   const categories = ["Vše", ...topicsData.map(topic => topic.name)];
-  const activeCategory = fullArticle.topic.name;
+  const activeCategory = fullArticle.topic?.name || "Vše";
   
   // Get category emoji info
   const categoryInfo = getCategoryEmoji(fullArticle.topic?.name || 'Vše');
@@ -185,7 +185,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                       href={`/?category=${encodeURIComponent(fullArticle.topic.name)}`}
                       className="text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-2 transition-all hover:gap-4"
                     >
-                      Zobrazit více z kategorie {fullArticle.topic.name} →
+                      Zobrazit více z kategorie {fullArticle.topic?.name || "Vše"} →
                     </Link>
                   </div>
                 </div>
