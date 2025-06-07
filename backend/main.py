@@ -35,7 +35,7 @@ logger = create_logger(__name__)
 environment = os.getenv("ENVIRONMENT")
 logger.info(f"Environment: {environment}")
 default_limits = []
-origins = []
+origins = ["http://185.215.165.121"]
 if environment == Environment.DEVELOPMENT.value:
     origins = [
         "*",
