@@ -21,7 +21,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   
   // Fetch data on the server
   const topicsData = await fetchTopics();
-  const categories = ["Vše", ...topicsData.map(topic => "A")];
+  const categories = ["Vše", ...topicsData.map(topic => topic.name)];
   
   // Fetch the appropriate news data based on selected category
   let newsData;
@@ -32,7 +32,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     newsData = await fetchLatestNews(10);
   } else {
     // For specific category, find topic ID and fetch related news
-    const selectedTopic = topicsData.find(topic => "" === activeCategory);
+    const selectedTopic = topicsData.find(topic => topic.name === activeCategory);
     if (selectedTopic) {
       selectedTopicId = selectedTopic.id;
       newsData = await fetchNewsByTopic(selectedTopicId, 10);
