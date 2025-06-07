@@ -17,6 +17,8 @@ services:
       - "5432:5432"
   backend:
     container_name: news-app-backend
+    ports:
+      - "8000:8000"
     build:
       context: ./backend
       dockerfile: Dockerfile
