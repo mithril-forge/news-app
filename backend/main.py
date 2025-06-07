@@ -28,13 +28,10 @@ from features.api_service.services.topic_service import TopicService
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.services.input_news_service import InputNewsService
 from news_processing import get_input_news_and_parse, generate_and_connect_news
+from core.logger import create_logger
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+logger = create_logger(__name__)
+
 environment = os.getenv("ENVIRONMENT")
 logger.info(f"Environment: {environment}")
 default_limits = []
@@ -64,6 +61,7 @@ app.add_middleware(
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
+    logger.error(f"HTTP exception: {exc.status_code} - {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.detail},
@@ -72,6 +70,7 @@ async def http_exception_handler(request, exc):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
+    logger.error(f"Validation error: {exc.errors()}")
     return JSONResponse(
         status_code=422,
         content={"message": "Validation error", "details": exc.errors()},
@@ -85,6 +84,7 @@ async def log_requests(request: Request, call_next):
     user_agent = request.headers.get("user-agent", "unknown")
 
     start_time = time.time()
+    logger.debug(f"Request started: {request.method} {request.url.path} from IP: {client_ip}")
 
     response = await call_next(request)
 
@@ -102,7 +102,8 @@ async def log_requests(request: Request, call_next):
 async def all_topics(session: AsyncSession = Depends(get_session)):
     """Get all topics"""
     service = TopicService(session)
-    return await service.get_all_topics()
+    result = await service.get_all_topics()
+    return result
 
 
 @app.get("/topics/{topic_id}", response_model=TopicResponse)
@@ -162,42 +163,56 @@ async def health_check():
 
 
 async def scheduled_task():
+    logger.info("Starting scheduled task")
     while True:
         now = datetime.datetime.now()
+        logger.debug(f"Scheduled task running at: {now}")
+
         async with get_session_context() as session:
             tmp_dir = tempfile.mkdtemp()
             local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
             input_news_service = InputNewsService(session=session, archive=local_archive)
             latest_timestamp = await input_news_service.get_latest_timestamp()
+
         if now.hour >= 18 and latest_timestamp.day != now.day:
+            logger.info("Starting input news parsing")
             try:
                 delta = datetime.timedelta(days=1)
                 await get_input_news_and_parse(adjust_parse_date=True, delta=delta)
-                logger.info("Successfully parsed news.")
+                logger.info("Successfully parsed input news")
             except Exception as err:
                 logger.error(f"Error {err} when generating articles")
                 pass
         else:
-            logger.info(f"Skipping parsing of input news. Latest timestamp of input news: {latest_timestamp}")
+            logger.debug(f"Skipping parsing of input news. Latest timestamp: {latest_timestamp}")
+
         now = datetime.datetime.now()
         async with get_session_context() as session:
             news_service = NewsService(session=session)
             latest_timestamp = await news_service.get_latest_timestamp()
+
         if now.hour >= 18 and latest_timestamp.day != now.day:
+            logger.info("Starting AI news generation")
             try:
                 delta = datetime.timedelta(days=1)
                 await generate_and_connect_news(delta=delta)
-                logger.info("Successfully parsed news.")
+                logger.info("Successfully generated and connected news")
             except Exception as err:
                 logger.error(f"Error {err} when generating articles")
                 pass
         else:
-            logger.info(f"Skipping preparation of the AI generated news. Latest timestamp of news: {latest_timestamp}")
+            logger.debug(f"Skipping AI news generation. Latest timestamp: {latest_timestamp}")
+
+        logger.debug("Scheduled task sleeping for 6 hours")
         await asyncio.sleep(21600)
 
 
 @app.on_event("startup")
 async def startup():
+    logger.info("FastAPI application starting up")
     if environment == Environment.DEVELOPMENT.value:
-        pass
+        logger.info("Running in development mode")
+    else:
+        logger.info("Running in production mode")
+    logger.info("Creating scheduled task for the input news parsing")
     asyncio.create_task(scheduled_task())
