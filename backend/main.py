@@ -210,9 +210,9 @@ async def scheduled_task():
 @app.on_event("startup")
 async def startup():
     logger.info("FastAPI application starting up")
-    if environment == Environment.DEVELOPMENT.value:
-        logger.info("Running in development mode")
-    else:
+    if environment == Environment.PRODUCTION.value:
         logger.info("Running in production mode")
-    logger.info("Creating scheduled task for the input news parsing")
-    asyncio.create_task(scheduled_task())
+        logger.info("Creating scheduled task for the input news parsing")
+        asyncio.create_task(scheduled_task())
+    else:
+        logger.info("Running in development mode")
