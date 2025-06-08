@@ -1,6 +1,7 @@
 from datetime import timedelta, datetime
 from typing import List, Optional, TypeVar, Any, Dict
 
+import structlog
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.expression import update
 from sqlmodel import select, SQLModel, and_
@@ -9,12 +10,10 @@ from sqlalchemy import func
 
 from core.repository import AsyncBaseRepository
 from core.models import Topic, Tag, ParsedNews, ParsedNewsTagLink
-from core.logger import create_logger
 
 T = TypeVar('T', bound=SQLModel)
 
-logger = create_logger(__name__)
-
+logger = structlog.get_logger()
 
 class AsyncTopicRepository(AsyncBaseRepository[Topic]):
     """Async repository for Topic model."""
@@ -220,7 +219,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         Raises:
             HTTPException: If news with given ID is not found
         """
-        logger.debug(f"Updating news ID: {news_id} with {len(tag_texts)} tags")
+        logger.info(f"Updating news ID: {news_id} with {tag_texts} tags")
         news = await self.update_from_dict(structure_id=news_id, data=news_data)
         if not news:
             logger.error(f"News with ID {news_id} not found for update")
@@ -234,18 +233,18 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         result = await self.session.execute(statement)
         existing_links = result.scalars().all()
 
-        logger.debug(f"Removing {len(existing_links)} existing tag links")
+        logger.debug(f"Removing existing tag links: {existing_links}")
         for link in existing_links:
             await self.session.delete(link)
 
-        logger.debug(f"Adding {len(tag_texts)} new tag links")
+        logger.debug(f"Adding new tag links: {tag_texts}")
         for text in tag_texts:
             tag = await tag_repo.get_or_create(text)
             link = ParsedNewsTagLink(news_item_id=news_id, tag_id=tag.id)
             self.session.add(link)
 
         await self.session.flush()
-        logger.info(f"Successfully updated news ID: {news_id} with {len(tag_texts)} tags")
+        logger.info(f"Successfully updated news ID: {news_id} with {tag_texts} tags")
 
         return news
 

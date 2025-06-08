@@ -19,6 +19,7 @@ instructor = "^1.7.9"
 google-generativeai = "^0.8.5"
 jsonref = "^1.1.0"
 ai-knowledge-bot = {path = "./wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl"}
+structlog = "^25.4.0"
 
 [build-system]
 requires = ["poetry-core"]

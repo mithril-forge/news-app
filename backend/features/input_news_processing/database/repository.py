@@ -1,15 +1,15 @@
 from datetime import datetime, timedelta
 from typing import Optional, List
 
+import structlog
 from sqlalchemy import func
 from sqlmodel import select, and_
 
 from core.models import InputNews, ParsedNews
 from core.repository import AsyncBaseRepository
 from sqlmodel.ext.asyncio.session import AsyncSession
-from core.logger import create_logger
 
-logger = create_logger(__name__)
+logger = structlog.get_logger()
 
 
 class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):

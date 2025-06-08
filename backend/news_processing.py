@@ -7,15 +7,16 @@ import tempfile
 import logging
 from datetime import datetime, timedelta
 
+import structlog
+
 from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.ai_library.openai_model import OpenAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.services.article_generation_service import ArticleGenerationService
 from features.input_news_processing.services.input_news_service import InputNewsService
-from core.logger import create_logger
 
-logger = create_logger(__name__)
+logger = structlog.get_logger()
 logger.info("Starting parsing")
 
 async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timedelta = timedelta(days=1)):
@@ -38,11 +39,10 @@ async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timede
            if latest_timestamp is not None:
                now = datetime.utcnow()
                time_since_latest = now - latest_timestamp
-               logger.debug(f"Latest timestamp: {latest_timestamp}, time since: {time_since_latest}")
-
+               logger.debug(f"Time of the latest input news is: {latest_timestamp}")
                if time_since_latest < delta:
                    delta = time_since_latest
-                   logger.info(f"Adjusted delta to: {delta}")
+                   logger.info(f"Adjusted delta of parsing for input news to: {delta}")
        result = await input_news_service.scrap_and_save_input_news(delta=delta)
        logger.info(f"Successfully scraped and saved {len(result)} input news items")
 
@@ -66,11 +66,11 @@ async def generate_and_connect_news(delta: timedelta):
        await session.flush()
        logger.info("Connecting existing news...")
        connected_news = await article_generation_service.connect_existing_news(delta=delta)
-       logger.info(f"Connected {len(connected_news)} existing news articles")
+       logger.info(f"Adjusted existing news articles with ids: {[news.id for news in connected_news]}")
        await session.flush()
        logger.info("Creating new news...")
        new_news = await article_generation_service.creates_new_news(delta=delta)
-       logger.info(f"Created {len(new_news)} new news articles")
+       logger.info(f"Created news articles with ids: {[news.id for news in new_news]}")
 
 
 async def generate_picture_for_news(news_id: int, commit_transaction: bool = False) -> None:

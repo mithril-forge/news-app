@@ -3,10 +3,11 @@ import pathlib
 import uuid
 from typing import Optional
 
-from features.input_news_processing.archive.abstract_archive import AbstractArchive
-from core.logger import create_logger
+import structlog
 
-logger = create_logger(__name__)
+from features.input_news_processing.archive.abstract_archive import AbstractArchive
+
+logger = structlog.get_logger()
 
 
 class LocalArchive(AbstractArchive):

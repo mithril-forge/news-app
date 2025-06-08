@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 import instructor
+import structlog
 from instructor import AsyncInstructor
 from pydantic import BaseModel
 import google.generativeai as genai
@@ -22,9 +23,8 @@ from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, 
 from features.input_news_processing.services.input_news_service import InputNewsService
 from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, ConnectionResult, \
     CreationResult, InputNewsWithID, ImageDetail
-from core.logger import create_logger
 
-logger = create_logger(__name__)
+logger = structlog.get_logger()
 
 
 class TempFileStorage(BaseModel):

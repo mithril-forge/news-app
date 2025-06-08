@@ -1,14 +1,14 @@
 from typing import List
 
+import structlog
+
 from core.converters import orm_to_pydantic, orm_list_to_pydantic
 from core.models import ParsedNews
 
 from features.api_service.services.schemas import NewsResponseBasic, TopicResponse, TagResponse, NewsResponseDetailed, \
    InputNewsDetailed
-from core.logger import create_logger
 
-logger = create_logger(__name__)
-
+logger = structlog.get_logger()
 
 def news_to_response(news: ParsedNews) -> NewsResponseBasic:
    """
@@ -34,7 +34,7 @@ def news_to_response(news: ParsedNews) -> NewsResponseBasic:
 
    # Create response model from dict
    result = NewsResponseBasic(**data)
-   logger.info(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to basic response")
+   logger.debug(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to basic response")
    return result
 
 
@@ -50,7 +50,7 @@ def news_list_to_response(news_list: List[ParsedNews]) -> List[NewsResponseBasic
    """
    logger.debug(f"Converting list of {len(news_list)} news items to response")
    result = [news_to_response(news) for news in news_list]
-   logger.info(f"Successfully converted {len(result)} news items to basic response list")
+   logger.debug(f"Successfully converted {len(result)} news items to basic response list")
    return result
 
 
@@ -79,5 +79,5 @@ def news_to_detailed_response(news: ParsedNews) -> NewsResponseDetailed:
 
    # Create response model from dict
    result = NewsResponseDetailed(**data)
-   logger.info(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to detailed response")
+   logger.debug(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to detailed response")
    return result

@@ -2,15 +2,14 @@ import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+import structlog
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from core.logger import create_logger
 
-logger = create_logger(__name__)
-
+logger = structlog.get_logger()
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")

@@ -7,6 +7,7 @@ import tempfile
 import time
 from typing import List, Optional
 
+import structlog
 from fastapi import FastAPI, Depends, Query, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -16,21 +17,18 @@ from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config import Environment
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.middleware import SlowAPIMiddleware
 
 from core.engine import get_session, get_session_context
-from core.models import ParsedNews
 from features.api_service.services.news_service import NewsService
 from features.api_service.services.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
 from features.api_service.services.topic_service import TopicService
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.services.input_news_service import InputNewsService
+from logger import init_logging
 from news_processing import get_input_news_and_parse, generate_and_connect_news
-from core.logger import create_logger
 
-logger = create_logger(__name__)
+init_logging()
+logger = structlog.get_logger()
 
 environment = os.getenv("ENVIRONMENT")
 logger.info(f"Environment: {environment}")

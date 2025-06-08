@@ -5,8 +5,9 @@ import zipfile
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+import structlog
+
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
-from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.database.repository import AsyncInputNewsRepository
 from cz_news import crawl_czech_news, Article, CrawlResult, CrawlSummary
 
@@ -15,10 +16,8 @@ from features.input_news_processing.converters import parsed_news_list_with_inpu
     input_schema_list_to_orm, input_news_to_schema
 from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsBase, \
     InputNewsWithID
-from features.input_news_processing.testing_data.common import mock_data
-from core.logger import create_logger
 
-logger = create_logger(__name__)
+logger = structlog.get_logger()
 
 
 class InputNewsService:

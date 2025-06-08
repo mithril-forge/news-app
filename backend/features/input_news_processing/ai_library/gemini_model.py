@@ -2,15 +2,15 @@ import pathlib
 from typing import TypeVar, Generic, Type, Union
 
 import instructor
+import structlog
 from instructor import AsyncInstructor
 
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 import google.generativeai as genai
-from core.logger import create_logger
 
 T = TypeVar('T')
 
-logger = create_logger(__name__)
+logger = structlog.get_logger()
 
 
 class GeminiAIModel(AbstractAIModel, Generic[T]):
@@ -44,7 +44,8 @@ class GeminiAIModel(AbstractAIModel, Generic[T]):
         gemini_files = self.upload_files_gemini(files=files)
         contents.extend(gemini_files.values())
 
-        logger.debug("Sending request to Gemini model")
+        logger.info("Sending request to Gemini model")
+        logger.debug(f"Content to gemini: {contents}")
         result = await gemini_client.chat.completions.create(response_model=response_model,
                                                              messages=[{"role": "user", "content": contents}])
         logger.info(f"Successfully received response from Gemini model")
@@ -52,7 +53,7 @@ class GeminiAIModel(AbstractAIModel, Generic[T]):
 
     def prepare_model_sdk(self) -> AsyncInstructor:
         """ Prepares model encapsulated by instructor library for structured output."""
-        logger.debug("Preparing Gemini model SDK with instructor")
+        logger.info("Preparing Gemini model SDK with instructor")
         genai.configure(api_key=self.api_key)
         client = instructor.from_gemini(
             client=genai.GenerativeModel(

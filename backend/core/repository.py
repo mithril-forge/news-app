@@ -4,15 +4,14 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import List, Optional, TypeVar, Generic, Type, Any, Dict, Union, AsyncContextManager
 
+import structlog
 from sqlmodel import select, SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from core.logger import create_logger
 
 T = TypeVar('T', bound=SQLModel)
 
-logger = create_logger(__name__)
-
+logger = structlog.get_logger()
 
 class AsyncBaseRepository(Generic[T]):
    """Base async repository with common CRUD operations."""
@@ -83,7 +82,8 @@ class AsyncBaseRepository(Generic[T]):
        Returns:
            Updated model instance or None if record not found
        """
-       logger.debug(f'Updating {self.model_class.__name__} with ID {structure_id} from dict')
+       logger.info(f'Updating {self.model_class.__name__} with ID {structure_id} from dict')
+       logger.debug(f'Updating dict: {data}')
        instance = await self.get_by_id(structure_id)
        if not instance:
            logger.warn(f'{self.model_class.__name__} with ID {structure_id} not found for update')
