@@ -2,7 +2,8 @@ FROM python:3.13-slim-bookworm
 
 # Set working directory
 WORKDIR /app
-
+ENV TZ=Europe/Prague
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
