@@ -34,6 +34,8 @@ VÝSTUP:
   * Úprava title a description (pouze při zásadních změnách)
   * Topic se pokus zachovat beze změny
 - Pokud nenajdeš žádné shody, potom nevracej nic - tohle je opravdu velmi důležité. NEVYRÁBĚJ JAKÉKOLIV NOVÉ ČLÁNKY, ALE JEN PROPOJ EXISTUJÍCÍ!!!
+- Formátuj výsledný text na sloupce, aby byl lépe přehledný a čitelný.
+- Zdroje informací můžeš uvádět, ale dělej to tak, aby tím nebyl text příliš zaplněný.
 """
 
 CREATION_PROMPT = """
@@ -78,6 +80,8 @@ VÝSTUP:
   * Citlivě kombinuj informace z různých zdrojů bez opakování
   * Upřednostňuj nejnovější informace při konfliktech a informace, které jsou uvedeny ve všech článcích
   * Uveď seznam všech ID vstupních článků použitých k vytvoření
+  * Formátuj výsledný text na sloupce, aby byl lépe přehledný a čitelný.
+  * Zdroje informací můžeš uvádět, ale dělej to tak, aby tím nebyl text příliš zaplněný.
 
 DODRŽ VŠECHNY BODY NAHOŘE! Minimální délku content, jazyk atd.
 """
