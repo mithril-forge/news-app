@@ -34,7 +34,7 @@ export default function PopularNewsSidebar() {
     return (
       <aside className="bg-white rounded-2xl p-6 shadow-lg">
         <h3 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b-2 border-gray-100">
-          Nejčtenější články za poslední měsíc
+          Nejčtenější články za poslední týden
         </h3>
         <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
@@ -57,7 +57,7 @@ export default function PopularNewsSidebar() {
     return (
       <aside className="bg-white rounded-2xl p-6 shadow-lg">
         <h3 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b-2 border-gray-100">
-          Nejčtenější články za poslední měsíc
+          Nejčtenější články za poslední týden
         </h3>
         <div className="text-center py-8 text-gray-500">
           <p>{error}</p>
@@ -69,7 +69,7 @@ export default function PopularNewsSidebar() {
   return (
     <aside className="bg-white rounded-2xl p-6 shadow-lg">
       <h3 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b-2 border-gray-100">
-        Nejčtenější články za poslední měsíc
+        Nejčtenější články za poslední týden
       </h3>
       
       <div className="space-y-4">

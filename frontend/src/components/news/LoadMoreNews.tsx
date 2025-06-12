@@ -86,7 +86,7 @@ export default function LoadMoreNews({
     <>
       {/* Additional articles loaded client-side */}
       {additionalArticles.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mt-6">
           {additionalArticles.map(item => (
             <ArticleCard key={item.id} item={item} />
           ))}

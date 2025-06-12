@@ -122,7 +122,7 @@ class AsyncBaseRepository(Generic[T]):
        Fetch latest with pagination
        """
        logger.debug(f'Getting latest {self.model_class.__name__} records (skip: {skip}, limit: {limit})')
-       query = select(self.model_class).order_by(self.model_class.created_at.desc()).offset(skip).limit(limit)
+       query = select(self.model_class).order_by(self.model_class.updated_at.desc()).offset(skip).limit(limit)
        result = await self.session.execute(query)
        records = result.scalars().all()
        logger.info(f'Retrieved {len(records)} latest {self.model_class.__name__} records')

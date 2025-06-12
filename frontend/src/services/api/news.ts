@@ -43,7 +43,7 @@ export const fetchLatestNews = async (
  * @returns Promise with array of news articles
  */
 export const fetchPopularNews = async (
-  days = 30,
+  days = 7,
   limit = 10
 ): Promise<NewsArticle[]> => {
   return fetchApi<NewsArticle[]>(

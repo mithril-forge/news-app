@@ -89,7 +89,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         stmt = (
             select(ParsedNews)
             .where(
-                ParsedNews.created_at >= cutoff_date,
+                ParsedNews.updated_at >= cutoff_date,
             )
             .order_by(ParsedNews.view_count.desc())
             .limit(limit)
@@ -135,7 +135,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         statement = (
             select(ParsedNews)
             .where(ParsedNews.topic_id == topic_id)
-            .order_by(ParsedNews.created_at.desc())  # Assuming you want newest first
+            .order_by(ParsedNews.updated_at.desc())  # Assuming you want newest first
             .offset(skip)
             .limit(limit)
         )
@@ -256,7 +256,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
             The latest timestamp or None if no records exist
         """
         logger.debug("Getting latest received timestamp")
-        statement = select(func.max(ParsedNews.created_at))
+        statement = select(func.max(ParsedNews.updated_at))
         result = await self.session.execute(statement)
         latest_timestamp = result.scalar_one_or_none()
 
