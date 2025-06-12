@@ -13,6 +13,7 @@ export const getApiBaseUrl = (): string => {
       return process.env.NEXT_PUBLIC_CONTAINER_API_URL || '';
     }
     // When running in the browser
+    console.log(process.env.NEXT_PUBLIC_API_URL)
     return process.env.NEXT_PUBLIC_API_URL;
   };
 
