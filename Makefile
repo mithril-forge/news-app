@@ -25,7 +25,7 @@ dev-down: ## Stop development environment
 dev-build: ## Rebuild development containers
 	docker compose -f compose.base.yml -f compose.yml build
 
-dev-logs: ## Show logs from all containers
+dev-logs: ## Show logs from all containers.
 	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml logs -f
 
 # Production commands

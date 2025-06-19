@@ -1,3 +1,4 @@
+import logging
 import pathlib
 from typing import TypeVar, Generic, Type, Union
 
@@ -7,7 +8,14 @@ from instructor import AsyncInstructor
 
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 import google.generativeai as genai
-
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+    before_sleep_log,
+    after_log
+)
 T = TypeVar('T')
 
 logger = structlog.get_logger()
@@ -36,6 +44,12 @@ class GeminiAIModel(AbstractAIModel, Generic[T]):
         logger.info(f"Successfully uploaded {len(results)} files to Gemini")
         return results
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=120, min=1, max=1200),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        after=after_log(logger, logging.INFO)
+    )
     async def prompt_model(self, files: dict[str, pathlib.Path], response_model: Type[T], prompt: str) -> T:
         """ Prompt model with the query and files, the preparation of files is done independently"""
         logger.info(f"Prompting Gemini model with {len(files)} files and response model: {response_model.__name__}")
