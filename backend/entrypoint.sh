@@ -2,6 +2,17 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+# Handle Docker secrets in production
+if [ "$ENVIRONMENT" = "production" ]; then
+  echo "Production environment detected, loading secrets..."
+  if [ -f /run/secrets/gemini_api_key ]; then
+    export GEMINI_API_KEY="$(cat /run/secrets/gemini_api_key)"
+    echo "Gemini API key loaded from Docker secret"
+  else
+    echo "Warning: Gemini API key secret not found at /run/secrets/gemini_api_key"
+  fi
+fi
+
 # Set up cron job to run daily at 1:00 AM
 echo "Setting up scheduled task to run daily at 1:00 AM..."
 # Create cron job

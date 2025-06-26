@@ -1,5 +1,5 @@
 # Use Node.js LTS as the base image
-FROM node:20-alpine
+FROM node:20-alpine AS base
 
 # Set working directory
 WORKDIR /app
@@ -24,8 +24,18 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV SKIP_ENV_VALIDATION 1
 
+# Development stage
+FROM base AS development
 # Expose port
 EXPOSE 3000
-
 # Start the development server
 CMD ["npm", "run", "dev"]
+
+# Production stage
+FROM base AS production
+# Build the application
+RUN npm run build
+# Expose port
+EXPOSE 3000
+# Start the production server
+CMD ["npm", "start"]
