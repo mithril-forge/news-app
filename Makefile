@@ -13,20 +13,20 @@ dev-up: ## Start development environment
 	@if [ -z "$(GEMINI_API_KEY)" ]; then \
 		echo "GEMINI_API_KEY is not set"; \
 		read -p "Enter your GEMINI_API_KEY: " input_key; \
-		GEMINI_API_KEY=$$input_key docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up -d; \
+		GEMINI_API_KEY=$$input_key docker compose -f compose.base.yml -f compose.yml up -d; \
 	else \
 		echo "Using existing GEMINI_API_KEY: $(GEMINI_API_KEY)"; \
-		GEMINI_API_KEY=$(GEMINI_API_KEY) docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml up -d; \
+		GEMINI_API_KEY=$(GEMINI_API_KEY) docker compose -f compose.base.yml -f compose.yml up -d; \
 	fi
 
 dev-down: ## Stop development environment
-	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml down
+	docker compose -f compose.base.yml -f compose.yml down
 
 dev-build: ## Rebuild development containers
-	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml build
+	docker compose -f compose.base.yml -f compose.yml build
 
-dev-logs: ## Show logs from all containers
-	docker-compose -f docker-compose.base.yml -f docker-compose.dev.yml logs -f
+dev-logs: ## Show logs from all containers.
+	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml logs -f
 
 # Production commands
 prod-build: ## Build production images

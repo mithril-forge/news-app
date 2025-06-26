@@ -2,6 +2,7 @@ import datetime
 import logging
 from typing import List, Optional
 
+import structlog
 from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -11,9 +12,7 @@ from features.api_service.database.repository import AsyncParsedNewsRepository, 
 from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate, NewsUpdate, \
     TagResponse
 
-# Configure module logger
-logger = logging.getLogger(__name__)
-
+logger = structlog.get_logger()
 
 class NewsService:
     def __init__(self, session: AsyncSession):
@@ -21,11 +20,15 @@ class NewsService:
         self.news_repo = AsyncParsedNewsRepository(session)
         self.topic_repo = AsyncTopicRepository(session)
         self.tag_repo = AsyncTagRepository(session)
-        logger.debug("NewsService initialized")
+        logger.info("NewsService initialized")
 
     async def get_tags(self) -> list[TagResponse]:
+        logger.debug("Getting all tags")
         tag_models = await self.tag_repo.get_all()
-        return orm_list_to_pydantic(tag_models, TagResponse)
+        result = orm_list_to_pydantic(tag_models, TagResponse)
+        logger.info(f"Retrieved {len(result)} tags")
+        logger.debug(f"Tags: {[tag.model_dump_json() for tag in result]}")
+        return result
 
     async def get_latest_news(self, skip: int, limit: int) -> List[NewsResponseBasic]:
         """Get the latest N news items"""
@@ -37,7 +40,9 @@ class NewsService:
     async def get_most_popular_news(self, period: datetime.timedelta, limit: int) -> List[NewsResponseBasic]:
         logger.info(f"Fetching {limit} most popular news for {period}")
         popular_news = await self.news_repo.get_most_viewed_news_by_period(period=period, limit=limit)
-        return news_list_to_response(popular_news)
+        result = news_list_to_response(popular_news)
+        logger.info(f"Retrieved {len(result)} most popular news items")
+        return result
 
     async def get_news_by_id(self, news_id: int) -> NewsResponseDetailed:
         """Get a specific news item by ID"""
@@ -47,12 +52,16 @@ class NewsService:
             logger.warning(f"News with ID {news_id} not found")
             raise HTTPException(status_code=404, detail="News not found")
 
-        return news_to_detailed_response(news)
+        result = news_to_detailed_response(news)
+        logger.info(f"Successfully retrieved news by ID: {news_id}")
+        logger.debug(f"News content: {result.model_dump_json(exclude={'content', 'description'})}")
+        return result
 
     async def add_view_to_news(self, news_id: int) -> None:
         """ Add view to the news"""
-        logger.info(f"Fetching news by ID: {news_id}")
+        logger.debug(f"Adding view to news ID: {news_id}")
         await self.news_repo.add_view_to_news(news_id=news_id)
+        logger.debug(f"Successfully added view to news ID: {news_id}")
         return None
 
     async def get_news_by_topic(self, topic_id: int, limit: int, skip: int) -> List[NewsResponseBasic]:
@@ -60,13 +69,14 @@ class NewsService:
         logger.info(f"Fetching news for topic ID {topic_id} (skip={skip}, limit={limit})")
         sorted_news = await self.news_repo.get_by_topic_id(topic_id=topic_id, limit=limit,
                                                            skip=skip)
-        logger.debug(f"Retrieved {len(sorted_news)} news items for topic {topic_id}")
+        logger.info(f"Fetched {len(sorted_news)} for topic {topic_id}")
+        logger.debug(f"Retrieved news ids: {[news.id for news in sorted_news]}")
         return news_list_to_response(sorted_news)
 
     async def create_news(self, news_data: NewsCreate) -> NewsResponseDetailed:
         """Create a new news item with tags"""
-        logger.info(f"Creating new news item: {news_data.title}")
-
+        logger.info(f"Creating new article with title: {news_data.title}")
+        logger.debug(f"News data creation content: {news_data.model_dump_json(exclude={'content', 'description'})}")
         tag_texts = news_data.tags or []
         logger.debug(f"News tags: {', '.join(tag_texts) if tag_texts else 'None'}")
 
@@ -79,7 +89,10 @@ class NewsService:
 
         complete_news = await self.news_repo.get_with_tags(news.id)
 
-        return news_to_detailed_response(complete_news)
+        result = news_to_detailed_response(complete_news)
+        logger.info(f"Successfully created and retrieved complete news item with ID: {news.id}")
+        logger.debug(f"News data: {news_data.model_dump_json(exclude={'content', 'description'})}")
+        return result
 
     async def update_news(self, news_data: NewsUpdate) -> Optional[NewsResponseDetailed]:
         """
@@ -95,6 +108,7 @@ class NewsService:
             HTTPException: If news item not found
         """
         logger.info(f"Updating news item with ID: {news_data.id}")
+        logger.debug(f"Update news_data content: {news_data.model_dump_json(exclude={'content', 'description'})}")
         existing_news = await self.news_repo.get_by_id(news_data.id)
         if not existing_news:
             logger.warning(f"News with ID {news_data.id} not found for update")
@@ -116,5 +130,15 @@ class NewsService:
         # Get the completely updated news with tags
         complete_news = await self.news_repo.get_with_tags(news_data.id)
         logger.info(f"Successfully updated news item with ID: {news_data.id}")
+        result = news_to_detailed_response(complete_news)
+        logger.debug(f"Updated news_data content: {news_data.model_dump_json(exclude={'content', 'description'})}")
+        return result
 
-        return news_to_detailed_response(complete_news)
+    async def get_latest_timestamp(self) -> Optional[datetime]:
+        """
+        Returns latest timestamp of the input news
+        """
+        logger.debug("Getting latest timestamp of the input news...")
+        result = await self.news_repo.get_latest_received_timestamp()
+        logger.info(f"Latest timestamp of input news retrieved: {result}")
+        return result

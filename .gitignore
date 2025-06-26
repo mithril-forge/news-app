@@ -6,3 +6,4 @@
 .Python
 *.so
 .pytest_cache/
+.env

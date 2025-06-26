@@ -52,7 +52,8 @@ class NewsUpdate(NewsCreate):
 
 class NewsResponseBasic(NewsBase):
     id: int
-    topic: TopicResponse
+    # TODO: Fix the issue when new article isn't connected to topic
+    topic: Optional[TopicResponse]
     created_at: datetime
     updated_at: datetime
     tags: List[TagResponse] = []

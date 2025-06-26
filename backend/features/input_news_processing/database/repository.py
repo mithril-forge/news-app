@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, List
 
+import structlog
 from sqlalchemy import func
 from sqlmodel import select, and_
 
@@ -8,20 +9,26 @@ from core.models import InputNews, ParsedNews
 from core.repository import AsyncBaseRepository
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+logger = structlog.get_logger()
+
 
 class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
     """Async repository for InputNews model."""
 
     def __init__(self, session: AsyncSession):
         super().__init__(session, InputNews)
+        logger.info("AsyncInputNewsRepository initialized")
 
     async def get_by_source_url(self, source_url: str) -> Optional[InputNews]:
         """
         Get input news by source URL.
         """
+        logger.debug(f"Getting input news by source URL: {source_url}")
         statement = select(InputNews).where(InputNews.source_url == source_url)
         result = await self.session.execute(statement)
-        return result.scalars().first()
+        input_news = result.scalars().first()
+        logger.info(f"Found input news by source URL '{source_url}': {input_news is not None}")
+        return input_news
 
     async def get_by_time_delta(
             self,
@@ -42,18 +49,21 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         Returns:
             List of InputNews within the time delta
         """
+        logger.debug(f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}")
         from_date = datetime.utcnow() - delta
 
         conditions = [InputNews.publication_date >= from_date if newer else InputNews.publication_date <= from_date]
 
         if has_parsed_news is True:
-            conditions.append(InputNews.parsed_news_id != None)
+            conditions.append(InputNews.parsed_news != None)
         elif has_parsed_news is False:
-            conditions.append(InputNews.parsed_news_id == None)
+            conditions.append(InputNews.parsed_news == None)
 
         statement = select(InputNews).where(and_(*conditions))
         result = await self.session.execute(statement)
-        return result.scalars().all()
+        input_news_list = result.scalars().all()
+        logger.info(f"Retrieved {len(input_news_list)} input news items by time delta")
+        return input_news_list
 
     async def update_parsed_news_id(self, input_id: int, parsed_news_id: int) -> InputNews:
         """
@@ -66,9 +76,10 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         Returns:
             Updated InputNews object or None if not found
         """
+        logger.debug(f"Updating parsed_news_id for input ID: {input_id} to parsed_news ID: {parsed_news_id}")
         input_news = await self.get_by_id(input_id)
         if input_news:
-            input_news.parsed_news_id = parsed_news_id
+            input_news.parsed_news = parsed_news_id
             self.session.add(input_news)
             statement = select(ParsedNews).where(ParsedNews.id == parsed_news_id)
             result = await self.session.execute(statement)
@@ -76,9 +87,12 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
             if parsed_news:
                 parsed_news.updated_at = datetime.utcnow()
                 self.session.add(parsed_news)
+                logger.debug(f"Updated ParsedNews timestamp for ID: {parsed_news_id}")
 
             await self.session.flush()
+            logger.info(f"Successfully updated parsed_news_id for input ID: {input_id}")
         else:
+            logger.error(f"Input news record not found with input_id: {input_id}")
             raise ValueError(f"Didn't find input_news record with {input_id=}")
         return input_news
 
@@ -89,8 +103,10 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         Returns:
             The latest timestamp or None if no records exist
         """
+        logger.debug("Getting latest received timestamp for input news")
         statement = select(func.max(InputNews.received_at))
         result = await self.session.execute(statement)
         latest_timestamp = result.scalar_one_or_none()
 
+        logger.info(f"Latest received timestamp for input news: {latest_timestamp}")
         return latest_timestamp

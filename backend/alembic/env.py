@@ -6,12 +6,23 @@ from sqlalchemy import engine_from_config, inspect, schema
 from sqlalchemy import pool
 
 from core.models import BaseModel
+import logging
+
+POSTGRES_USER = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+POSTGRES_DB = os.getenv("POSTGRES_DB")
+if not all([POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB]):
+    raise ValueError("One or more database environment variables are not set")
+
+DATABASE_CONNECTION_STR = f"postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
 SCHEMA_USED = "public"
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-db_url_from_env = os.getenv('DATABASE_CONNECTION_STR') # Use the exact env var name (case-sensitive on Linux)
+db_url_from_env = DATABASE_CONNECTION_STR
 
 # If the environment variable is set, override the sqlalchemy.url from alembic.ini
 if db_url_from_env:
@@ -24,7 +35,6 @@ if config.config_file_name is not None:
 # add your model's MetaData object here
 target_metadata = BaseModel.metadata
 target_metadata.schema = SCHEMA_USED
-
 
 
 def run_migrations_offline() -> None:

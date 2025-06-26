@@ -10,7 +10,7 @@ interface FeaturedArticleProps {
 export default function FeaturedArticle({ article }: FeaturedArticleProps) {
   if (!article) return null;
 
-  const categoryInfo = getCategoryEmoji(article.topic.name);
+    const categoryInfo = getCategoryEmoji(article.topic?.name || 'Vše');
 
   return (
     <article className="bg-white rounded-3xl p-8 mb-8 shadow-xl relative overflow-hidden">
@@ -36,7 +36,7 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
           </h1>
           <div className="flex gap-4 mb-6 flex-wrap justify-center md:justify-start">
             <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
-              {article.topic.name}
+              {article.topic?.name || "Vše"}
             </span>
             <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
               {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}

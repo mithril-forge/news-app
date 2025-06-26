@@ -5,8 +5,9 @@ import zipfile
 from datetime import datetime, timedelta
 from typing import List, Optional
 
+import structlog
+
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
-from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.database.repository import AsyncInputNewsRepository
 from cz_news import crawl_czech_news, Article, CrawlResult, CrawlSummary
 
@@ -15,9 +16,8 @@ from features.input_news_processing.converters import parsed_news_list_with_inpu
     input_schema_list_to_orm, input_news_to_schema
 from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsBase, \
     InputNewsWithID
-from features.input_news_processing.testing_data.common import mock_data
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 class InputNewsService:
@@ -26,7 +26,7 @@ class InputNewsService:
         self.input_news_repo = AsyncInputNewsRepository(session=session)
         self.parsed_news_repo = AsyncParsedNewsRepository(session=session)
         self.archive = archive
-        logger.debug("InputNewsService initialized")
+        logger.info("InputNewsService initialized")
 
     async def add_or_update_input_news_batch(self, input_news_list: List[InputNewsBase]) -> List[InputNewsWithID]:
         """
@@ -62,15 +62,21 @@ class InputNewsService:
 
     async def scrap_and_save_input_news(self, delta: timedelta) -> list[InputNewsWithID]:
         """ Query latest news from the corresponding websites by delta and update them in DB or create news ones"""
+        logger.info(f"Scraping and saving input news with delta: {delta}")
         input_news = await self.scrap_input_news(delta=delta)
-        return await self.add_or_update_input_news_batch(input_news_list=input_news)
+        result = await self.add_or_update_input_news_batch(input_news_list=input_news)
+        logger.info(f"Scraped and saved {len(result)} input news items")
+        return result
 
     async def clear_old_input_news(self, delta: timedelta) -> None:
         """
         Function that will archive older input news from DB that weren't used for any parsed news.
         The implementation would be probably by some JSON dump.
         """
+        logger.info(f"Clearing old input news older than delta: {delta}")
         old_input_news = await self.input_news_repo.get_by_time_delta(delta=delta, newer=False, has_parsed_news=False)
+        logger.debug(f"Found {len(old_input_news)} old input news items to archive")
+
         snapshot = await self.input_news_repo.create_snapshot(old_input_news)
         json_str = json.dumps(snapshot, indent=2, default=str)
         zip_buffer = io.BytesIO()
@@ -78,12 +84,16 @@ class InputNewsService:
             zip_file.writestr("input_news.json", json_str)
         zip_buffer.seek(0)
         zip_bytes = zip_buffer.getvalue()
-        self.archive.save_file(file_content=zip_bytes, suffix=".zip")
+        archive_path = self.archive.save_file(file_content=zip_bytes, suffix=".zip")
+        logger.info(f"Archived {len(old_input_news)} old input news items to: {archive_path}")
+
         for input_news in old_input_news:
             await self.input_news_repo.remove(id=input_news.id)
+        logger.info(f"Removed {len(old_input_news)} old input news items from database")
 
     @staticmethod
-    async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 10, websites: list[str] = None) -> list[InputNewsBase]:
+    async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 10, websites: list[str] = None) -> list[
+        InputNewsBase]:
         """
         Function that calls the Czech News Crawler to fetch input news from websites.
 
@@ -93,13 +103,16 @@ class InputNewsService:
         Returns:
             List of InputNewsBase objects with news article data
         """
+        logger.info(f"Scraping input news with delta: {delta}, max_articles_per_site: {max_articles_per_site}")
         if websites is not None:
+            logger.debug(f"Scraping from specific websites: {websites}")
             crawl_result = crawl_czech_news(
                 time_delta=delta,
                 max_articles_per_site=max_articles_per_site,
                 websites=websites
             )
         else:
+            logger.debug("Scraping from all available websites")
             crawl_result = crawl_czech_news(
                 time_delta=delta,
                 max_articles_per_site=max_articles_per_site
@@ -109,6 +122,8 @@ class InputNewsService:
         articles: list[Article] = []
         for _domain, articles_list in articles_by_domain.items():
             articles.extend(articles_list)
+
+        logger.debug(f"Retrieved {len(articles)} total articles from {len(articles_by_domain)} domains")
 
         input_news_list = []
         for article in articles:
@@ -128,9 +143,7 @@ class InputNewsService:
             input_news_list.append(input_news)
 
         logger.info(f"Scraped {len(input_news_list)} articles from {len(articles_by_domain)} domains")
-
         return input_news_list
-
 
     async def get_input_news_by_delta(self, delta: timedelta, has_parsed_news: Optional[bool] = None) -> list[
         InputNewsWithID]:
@@ -140,25 +153,37 @@ class InputNewsService:
             delta: Time period to look back from current time
             has_parsed_news: Filter by whether news has connected parsed news or not (None takes all)
         """
+        logger.debug(f"Getting input news by delta: {delta}, has_parsed_news: {has_parsed_news}")
         result = await self.input_news_repo.get_by_time_delta(delta=delta, has_parsed_news=has_parsed_news)
-        return input_news_list_to_schema(input_news_list=result)
+        converted_result = input_news_list_to_schema(input_news_list=result)
+        logger.info(f"Retrieved {len(converted_result)} input news items by delta")
+        return converted_result
 
     async def get_parsed_with_input_news(self, delta: timedelta) -> list[ParsedNewsWithInputNews]:
         """
         Retrieves parsed news with their associated input news within a specified time period.
         """
+        logger.debug(f"Getting parsed news with input by delta: {delta}")
         result = await self.parsed_news_repo.get_by_time_delta(delta=delta)
-        return parsed_news_list_with_input(parsed_news_list=result)
+        converted_result = parsed_news_list_with_input(parsed_news_list=result)
+        logger.info(f"Retrieved {len(converted_result)} parsed news with input by delta")
+        return converted_result
 
     async def connect_input_with_parsed(self, parsed_id: int, input_id: int) -> InputNewsWithID:
         """
         Links a parsed news entry with its original input news entry.
         """
+        logger.info(f"Connecting input news ID {input_id} with parsed news ID {parsed_id}")
         db_result = await self.input_news_repo.update_parsed_news_id(input_id=input_id, parsed_news_id=parsed_id)
-        return input_news_to_schema(db_result)
+        result = input_news_to_schema(db_result)
+        logger.info(f"Successfully connected input news ID {input_id} with parsed news ID {parsed_id}")
+        return result
 
     async def get_latest_timestamp(self) -> Optional[datetime]:
         """
         Returns latest timestamp of the input news
         """
-        return await self.input_news_repo.get_latest_received_timestamp()
+        logger.debug("Getting latest timestamp for input news")
+        result = await self.input_news_repo.get_latest_received_timestamp()
+        logger.info(f"Latest input news timestamp: {result}")
+        return result

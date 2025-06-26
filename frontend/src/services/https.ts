@@ -13,9 +13,10 @@ export const getApiBaseUrl = (): string => {
       return process.env.NEXT_PUBLIC_CONTAINER_API_URL || '';
     }
     // When running in the browser
-    return process.env.NEXT_PUBLIC_API_URL || '';
+    console.log(process.env.NEXT_PUBLIC_API_URL)
+    return process.env.NEXT_PUBLIC_API_URL;
   };
-  
+
   /**
    * Enhanced fetch function with error handling and type safety
    * @param endpoint - The API endpoint to call (without base URL)
@@ -23,12 +24,12 @@ export const getApiBaseUrl = (): string => {
    * @returns Promise with the parsed response data
    */
   export async function fetchApi<T>(
-    endpoint: string, 
+    endpoint: string,
     options?: RequestInit
   ): Promise<T> {
     const baseUrl = getApiBaseUrl();
     const url = `${baseUrl}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         headers: {
@@ -37,11 +38,11 @@ export const getApiBaseUrl = (): string => {
         },
         ...options,
       });
-  
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
-  
+
       return await response.json() as T;
     } catch (error) {
       console.error(`Error fetching from ${endpoint}:`, error);

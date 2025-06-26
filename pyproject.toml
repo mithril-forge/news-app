@@ -9,6 +9,7 @@ packages = [{include = "."}]
 [tool.poetry.dependencies]
 python = "^3.10"
 slowapi = "^0.1.9"
+structlog = "^25.4.0"
 
 
 [build-system]

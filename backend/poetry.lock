@@ -7,8 +7,9 @@ description = "Pipeline for creating a knowledge base source of truth for LLMs"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
-files = []
-develop = false
+files = [
+    {file = "ai_knowledge_bot-0.1.0-py3-none-any.whl", hash = "sha256:2c723e4c1e5f8e2d80bf7aaf1ac4978ff935045728c3481f7dd30d0c6a201b53"},
+]
 
 [package.dependencies]
 anthropic = "*"
@@ -18,7 +19,7 @@ instructor = "*"
 markdownify = "*"
 newspaper4k = "*"
 pydantic = "*"
-PyYAML = "*"
+pyyaml = "*"
 requests = "*"
 trafilatura = "*"
 
@@ -26,10 +27,8 @@ trafilatura = "*"
 dev = ["ruff", "uv"]
 
 [package.source]
-type = "git"
-url = "ssh://git@github.com/simonf-dev/ai-knowledge-bot.git"
-reference = "main"
-resolved_reference = "fdab477b64ea3966b6607b2e111f8f8b6572b3a7"
+type = "file"
+url = "wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl"
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -196,14 +195,14 @@ files = [
 
 [[package]]
 name = "anthropic"
-version = "0.52.0"
+version = "0.52.1"
 description = "The official Python library for the anthropic API"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "anthropic-0.52.0-py3-none-any.whl", hash = "sha256:c026daa164f0e3bde36ce9cbdd27f5f1419fff03306be1e138726f42e6a7810f"},
-    {file = "anthropic-0.52.0.tar.gz", hash = "sha256:f06bc924d7eb85f8a43fe587b875ff58b410d60251b7dc5f1387b322a35bd67b"},
+    {file = "anthropic-0.52.1-py3-none-any.whl", hash = "sha256:807cee7ebc5503753da0403a77932decf5a4c036041ddda58b4edcdb2a3da551"},
+    {file = "anthropic-0.52.1.tar.gz", hash = "sha256:da4a7c3aeac0170cb45a42dc3369ca1fcf2b3238edf845cb056505d4b0c42fcf"},
 ]
 
 [package.dependencies]
@@ -3312,6 +3311,21 @@ anyio = ">=3.6.2,<5"
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
 
 [[package]]
+name = "structlog"
+version = "25.4.0"
+description = "Structured Logging for Python"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "structlog-25.4.0-py3-none-any.whl", hash = "sha256:fe809ff5c27e557d14e613f45ca441aabda051d119ee5a0102aaba6ce40eed2c"},
+    {file = "structlog-25.4.0.tar.gz", hash = "sha256:186cd1b0a8ae762e29417095664adf1d6a31702160a46dacb7796ea82f7409e4"},
+]
+
+[package.dependencies]
+typing-extensions = {version = "*", markers = "python_version < \"3.11\""}
+
+[[package]]
 name = "tenacity"
 version = "9.1.2"
 description = "Retry code until it succeeds"
@@ -3967,4 +3981,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "33aabecee610b5524b3bcf161df7ff70349b79f2dc42cab17a77a6b897d63734"
+content-hash = "0f5a286d7b8e35f15053eae6d4242f64cc996b6512536dbbcb7a390b34b70888"

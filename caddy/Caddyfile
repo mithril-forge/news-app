@@ -1,0 +1,37 @@
+# Simple HTTP configuration for IP-based deployment
+# When you get a domain, replace this with your domain name and remove :80
+
+:80 {
+    # API routes to backend
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    # Health check endpoint
+    handle /health {
+        respond "healthy" 200
+    }
+
+    # All other routes to frontend
+    handle {
+        reverse_proxy frontend:3000
+    }
+}
+
+# Uncomment and modify when you have a domain:
+# your-domain.com {
+#     # API routes to backend
+#     handle /api/* {
+#         reverse_proxy backend:8000
+#     }
+#
+#     # Health check endpoint
+#     handle /health {
+#         respond "healthy" 200
+#     }
+#
+#     # All other routes to frontend
+#     handle {
+#         reverse_proxy frontend:3000
+#     }
+# }

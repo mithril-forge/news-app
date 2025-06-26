@@ -70,11 +70,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   
   // Prepare categories for header/footer
   const categories = ["Vše", ...topicsData.map(topic => topic.name)];
-  const activeCategory = fullArticle.topic.name;
+  const activeCategory = fullArticle.topic?.name || "Vše";
   
   // Get category emoji info
-  const categoryInfo = getCategoryEmoji(fullArticle.topic.name);
-  
+  const categoryInfo = getCategoryEmoji(fullArticle.topic?.name || 'Vše');
+
   return (
     <div className="min-h-screen flex flex-col" style={{
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
@@ -116,7 +116,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                             color: categoryInfo.color 
                           }}
                         >
-                          {fullArticle.topic.name}
+                          {fullArticle.topic?.name || "Vše"}
                         </span>
                         <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
                           {new Date(fullArticle.updated_at).toLocaleDateString('cs-CZ')}
@@ -182,10 +182,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     </Link>
                     
                     <Link 
-                      href={`/?category=${encodeURIComponent(fullArticle.topic.name)}`}
+                      href={`/?category=${encodeURIComponent(fullArticle.topic?.name || "Vše")}`}
                       className="text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-2 transition-all hover:gap-4"
                     >
-                      Zobrazit více z kategorie {fullArticle.topic.name} →
+                      Zobrazit více z kategorie {fullArticle.topic?.name || "Vše"} →
                     </Link>
                   </div>
                 </div>

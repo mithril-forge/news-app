@@ -1,31 +1,32 @@
-# Use Node.js LTS as the base image
-FROM node:20-alpine
+# Multi-target Dockerfile for both development and production
 
-# Set working directory
+# Base stage - common for both dev and prod
+FROM node:20-alpine AS base
+
 WORKDIR /app
+COPY package.json package-lock.json* ./
 
-# Copy package.json and lock file
-COPY package.json pnpm-lock.yaml* ./
-
-# Install dependencies
-RUN \
-  if [ -f pnpm-lock.yaml ]; then \
-    corepack enable pnpm && \
-    pnpm i; \
-  else \
-    # If don't have pnpm lock, fallback to using npm
-    npm i; \
-  fi
-
-# Copy the rest of the application
+RUN npm ci
 COPY . .
 
-# Set environment variables
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV SKIP_ENV_VALIDATION 1
+# Set common environment variables
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Expose port
+# === Development target ===
+FROM base AS development
+
+ENV ENVIRONMENT=development
+ENV SKIP_ENV_VALIDATION=1
+
 EXPOSE 3000
-
-# Start the development server
 CMD ["npm", "run", "dev"]
+
+# === Production target ===
+FROM base AS production
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV ENVIRONMENT=production
+RUN npm run build
+
+EXPOSE 3000
+CMD ["npm", "start"]
