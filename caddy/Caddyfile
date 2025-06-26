@@ -1,0 +1,41 @@
+# Caddyfile for News App Production Deployment
+
+# Frontend - serves the React app
+:80 {
+    # Handle frontend static files
+    handle /assets/* {
+        root * /app
+        file_server
+    }
+    
+    # Handle API requests - proxy to backend
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+    
+    # Handle all other requests - serve frontend
+    handle {
+        reverse_proxy frontend:3000
+    }
+    
+    # Enable logging
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+    
+    # Enable compression
+    encode gzip
+    
+    # Security headers
+    header {
+        # Hide server information
+        -Server
+        
+        # Security headers
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
