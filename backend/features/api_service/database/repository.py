@@ -7,6 +7,7 @@ from sqlalchemy.sql.expression import update
 from sqlmodel import select, SQLModel, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from core.repository import AsyncBaseRepository
 from core.models import Topic, Tag, ParsedNews, ParsedNewsTagLink
@@ -147,16 +148,19 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
     async def get_with_tags(self, news_id: int) -> Optional[ParsedNews]:
         """Get news with its tags preloaded."""
         logger.debug(f"Getting news with tags for ID: {news_id}")
-        news = await self.get_by_id(news_id)
+
+        statement = select(ParsedNews).options(
+            joinedload(ParsedNews.tags)
+        ).where(ParsedNews.id == news_id)
+
+        result = await self.session.execute(statement)
+        news = result.unique().scalar_one_or_none()  # unique() needed with joinedload
+
         if news:
-            # Load tags relationship
-            statement = select(Tag).join(ParsedNewsTagLink).where(
-                ParsedNewsTagLink.news_item_id == news_id)
-            result = await self.session.execute(statement)
-            news.tags = result.scalars().all()
             logger.info(f"Loaded news with {len(news.tags)} tags for ID: {news_id}")
         else:
             logger.warn(f"News with ID {news_id} not found")
+
         return news
 
     async def prepare_with_tags(self, news_data: Dict[str, Any],
@@ -181,8 +185,6 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         # Flush to ensure all objects have IDs but don't commit
         await self.session.flush()
         await self.session.refresh(news, ['tags'])
-        # DON'T try to assign to news.tags directly
-        # Instead, just return the news object without manually loading the tags
         logger.info(f"Prepared news with ID: {news.id} and {len(tag_texts)} tags")
         return news
 
