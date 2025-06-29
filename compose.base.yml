@@ -15,6 +15,20 @@ services:
     restart: unless-stopped
     ports:
       - "5432:5432"
+  redis:
+    container_name: news-app-redis
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
   backend:
     container_name: news-app-backend
     ports:
@@ -23,7 +37,18 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-
+    entrypoint:
+      - /entrypoint_backend.sh
+    command: "uvicorn main:app --host 0.0.0.0 --port 8000"
+  dramatiq:
+    container_name: dramatiq-parsing
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    entrypoint:
+      - /entrypoint_dramatiq.sh
+    command: "dramatiq dramatiq"
   frontend:
     container_name: news-app-frontend
     build:

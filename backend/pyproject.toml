@@ -21,6 +21,8 @@ jsonref = "^1.1.0"
 ai-knowledge-bot = {path = "./wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl"}
 structlog = "^25.4.0"
 tenacity = "^9.1.2"
+dramatiq = "*"
+redis = "*"
 
 [build-system]
 requires = ["poetry-core"]

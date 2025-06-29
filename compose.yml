@@ -7,7 +7,12 @@ services:
       service: postgres
     env_file:
       - envs/common_dev.env
-
+  redis:
+    extends:
+      file: compose.base.yml
+      service: redis
+    env_file:
+      - envs/common_dev.env
   backend:
     extends:
       file: compose.base.yml
@@ -19,9 +24,23 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
       - envs/common_dev.env
-
+  dramatiq:
+    extends:
+      file: compose.base.yml
+      service: dramatiq
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - envs/common_dev.env
   frontend:
     extends:
       file: compose.base.yml
@@ -41,3 +60,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
