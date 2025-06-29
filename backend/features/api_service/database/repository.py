@@ -244,6 +244,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
             self.session.add(link)
 
         await self.session.flush()
+        await self.session.refresh(news, ['tags'])
         logger.info(f"Successfully updated news ID: {news_id} with {tag_texts} tags")
 
         return news
