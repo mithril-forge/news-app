@@ -6,19 +6,25 @@ from pydantic import BaseModel, field_validator, model_validator
 from features.api_service.services.schemas import NewsResponseDetailed, NewsCreate, NewsUpdate
 
 
-class InputNewsBase(BaseModel):
+class InputNewsLiteBase(BaseModel):
     tags: list[str]
     category: str
     publication_date: datetime
     author: str
     source_site: str
     source_url: str
-    content: str
     title: str
     summary: str
+class InputNewsLite(InputNewsLiteBase):
+    id: int
+
+class InputNewsBase(InputNewsLiteBase):
+    content: str
+
 
 class InputNewsWithID(InputNewsBase):
     id: int
+
 
 class ParsedNewsWithInputNews(NewsResponseDetailed):
     input_news: list[InputNewsWithID]
@@ -28,6 +34,7 @@ class ParsedNewsWithInputNews(NewsResponseDetailed):
 class ConnectionResult(BaseModel):
     input_news_ids: list[int]
     parsed_news: NewsUpdate
+
 
 class CreationResult(BaseModel):
     input_news_ids: list[int]
@@ -42,6 +49,16 @@ class CreationResult(BaseModel):
         self.parsed_news.description = self.parsed_news.description.encode().decode("unicode_escape")
         self.parsed_news.tags = [tag.encode().decode("unicode_escape") for tag in self.parsed_news.tags]
     """
+
+
+class InitConnectionResult(BaseModel):
+    parsed_news_id: int
+    input_news_ids: list[int]
+
+
+class InitGenerationResult(BaseModel):
+    input_news_ids: list[int]
+
 
 class ImageDetail(BaseModel):
     link: str

@@ -10,7 +10,7 @@ from core.converters import orm_list_to_pydantic
 from features.api_service.converters import news_list_to_response, news_to_detailed_response
 from features.api_service.database.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
 from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate, NewsUpdate, \
-    TagResponse
+    TagResponse, NewsBase
 
 logger = structlog.get_logger()
 
@@ -134,7 +134,7 @@ class NewsService:
         logger.debug(f"Updated news_data content: {news_data.model_dump_json(exclude={'content', 'description'})}")
         return result
 
-    async def get_latest_timestamp(self) -> Optional[datetime]:
+    async def get_latest_timestamp(self) -> Optional[datetime.datetime]:
         """
         Returns latest timestamp of the input news
         """
@@ -142,3 +142,11 @@ class NewsService:
         result = await self.news_repo.get_latest_received_timestamp()
         logger.info(f"Latest timestamp of input news retrieved: {result}")
         return result
+
+    async def get_parsed_news_summary(self, delta: datetime.timedelta) -> list[NewsBase]:
+        """
+        Returns ParsedNews with minimal informationa about them
+        """
+        result = await self.news_repo.get_by_time_delta(delta=delta)
+        pydantic_structures = orm_list_to_pydantic(orm_list=result, pydantic_class=NewsBase)
+        return pydantic_structures

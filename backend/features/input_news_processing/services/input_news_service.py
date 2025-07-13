@@ -7,15 +7,16 @@ from typing import List, Optional
 
 import structlog
 
+from core.converters import orm_list_to_pydantic
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.database.repository import AsyncInputNewsRepository
 from cz_news import crawl_czech_news, Article, CrawlResult, CrawlSummary
 
 from features.api_service.database.repository import AsyncParsedNewsRepository
 from features.input_news_processing.converters import parsed_news_list_with_input, input_news_list_to_schema, \
-    input_schema_list_to_orm, input_news_to_schema
+    input_schema_list_to_orm, input_news_to_schema, input_news_lite_list_to_schema
 from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsBase, \
-    InputNewsWithID
+    InputNewsWithID, InputNewsLite
 
 logger = structlog.get_logger()
 
@@ -157,6 +158,23 @@ class InputNewsService:
         result = await self.input_news_repo.get_by_time_delta(delta=delta, has_parsed_news=has_parsed_news)
         converted_result = input_news_list_to_schema(input_news_list=result)
         logger.info(f"Retrieved {len(converted_result)} input news items by delta")
+        return converted_result
+
+    async def get_input_news_by_delta_lite(
+            self,
+            delta: timedelta,
+            has_parsed_news: Optional[bool] = None
+    ) -> list[InputNewsLite]:
+        """
+        Retrieves input news within a specified time period (lite version with less information).
+        Args:
+            delta: Time period to look back from current time
+            has_parsed_news: Filter by whether news has connected parsed news or not (None takes all)
+        """
+        logger.debug(f"Getting input news by delta (lite): {delta}, has_parsed_news: {has_parsed_news}")
+        result = await self.input_news_repo.get_by_time_delta(delta=delta, has_parsed_news=has_parsed_news)
+        converted_result = input_news_lite_list_to_schema(input_news_list=result)
+        logger.info(f"Retrieved {len(converted_result)} input news items by delta (lite)")
         return converted_result
 
     async def get_parsed_with_input_news(self, delta: timedelta) -> list[ParsedNewsWithInputNews]:

@@ -17,7 +17,6 @@ from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config import Environment
-
 from core.engine import get_session, get_session_context
 from features.api_service.services.news_service import NewsService
 from features.api_service.services.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed

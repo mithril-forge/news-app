@@ -15,14 +15,18 @@ import google.generativeai as genai
 from core.converters import orm_list_to_pydantic
 from features.api_service.database.repository import AsyncTagRepository
 from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import TagResponse, TopicResponse, NewsResponseDetailed
+from features.api_service.services.schemas import TagResponse, TopicResponse, NewsResponseDetailed, NewsCreate, \
+    NewsUpdate
 from features.api_service.services.topic_service import TopicService
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
-from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, CONNECTION_PROMPT, PICTURE_SEARCH_PROMPT
+from features.input_news_processing.converters import input_news_list_to_schema
+from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, CONNECTION_PROMPT, \
+    PICTURE_SEARCH_PROMPT, INITIAL_CONNECTION_PROMPT, INITIAL_GENERATION_PROMPT, NEW_GENERATION_PROMPT, \
+    NEW_CONNECTION_PROMPT
 from features.input_news_processing.services.input_news_service import InputNewsService
 from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, ConnectionResult, \
-    CreationResult, InputNewsWithID, ImageDetail
+    CreationResult, InputNewsWithID, ImageDetail, InitConnectionResult, InitGenerationResult
 
 logger = structlog.get_logger()
 
@@ -164,3 +168,66 @@ class ArticleGenerationService:
         else:
             logger.info(f"Found {len(result_list)} image results for news ID: {news_id}")
         logger.debug(f"Image search results: {result_list}")
+
+    async def initial_connect_new_input_news(self, input_news_hours_delta: int, parsed_news_hours_delta: int = 72) -> \
+            list[int]:
+        parsed_news_delta = timedelta(hours=parsed_news_hours_delta)
+        input_news_delta = timedelta(hours=input_news_hours_delta)
+        recent_input_news = await self.input_news_service.get_input_news_by_delta_lite(delta=input_news_delta,
+                                                                                       has_parsed_news=False)
+        recent_parsed_news = await self.parsed_news_service.get_parsed_news_summary(delta=parsed_news_delta)
+        files = self.save_pydantic_lists_as_files(parsed_news=recent_parsed_news,
+                                                  input_news=recent_input_news)
+        result = await self.ai_model.prompt_model(files=files, prompt=INITIAL_CONNECTION_PROMPT,
+                                                  response_model=Iterable[InitConnectionResult])
+        parsed_news_ids = set(news.id for news in recent_parsed_news)
+        input_news_ids = set(news.id for news in recent_input_news)
+
+        result = [
+            res for res in result
+            if res.parsed_news_id in parsed_news_ids
+               and all(input_news_id in input_news_ids for input_news_id in res.input_news_ids)
+        ]
+        for connection_result in result:
+            for input_id in connection_result.input_news_ids:
+                await self.input_news_service.connect_input_with_parsed(input_id=input_id,
+                                                                        parsed_id=connection_result.parsed_news_id)
+        return [conn_result.parsed_news_id for conn_result in result if len(conn_result.input_news_ids) > 0]
+
+    async def pick_corresponding_input_news(self, input_news_delta: timedelta) -> list[list[int]]:
+        recent_input_news = await self.input_news_service.get_input_news_by_delta_lite(delta=input_news_delta,
+                                                                                       has_parsed_news=False)
+        files = self.save_pydantic_lists_as_files(recent_input_news=recent_input_news)
+        result = await self.ai_model.prompt_model(files=files, prompt=INITIAL_GENERATION_PROMPT,
+                                                  response_model=Iterable[InitGenerationResult])
+        input_news_ids = set(news.id for news in recent_input_news)
+
+        result = [
+            res for res in result
+            if all(news_id in input_news_ids for news_id in res.input_news_ids)
+        ]
+        return [gen_result.input_news_ids for gen_result in result if len(gen_result.input_news_ids) > 0]
+
+    async def create_new_article(self, input_news_ids: list[int]) -> NewsResponseDetailed:
+        """ """
+        input_news_list = await self.input_news_service.input_news_repo.get_by_ids(ids=input_news_ids)
+        input_news_pydantic = input_news_list_to_schema(input_news_list=input_news_list)
+        files = self.save_pydantic_lists_as_files(input_news_list=input_news_pydantic)
+        result = await self.ai_model.prompt_model(files=files, prompt=NEW_GENERATION_PROMPT,
+                                                  response_model=NewsCreate)
+
+        saved_news = await self.parsed_news_service.create_news(news_data=result)
+        for input_id in input_news_ids:
+            await self.input_news_service.connect_input_with_parsed(input_id=input_id, parsed_id=saved_news.id)
+        logger.info(
+            f"Created and connected news: {saved_news.title} (ID: {saved_news.id}) with input_ids {input_news_ids}")
+        return saved_news
+
+    async def enrich_existing_article(self, parsed_news_id: int) -> NewsResponseDetailed:
+        """ """
+        parsed_news = await self.parsed_news_service.get_news_by_id(news_id=parsed_news_id)
+        files = self.save_pydantic_lists_as_files(parsed_news=parsed_news)
+        result = await self.ai_model.prompt_model(files=files, prompt=NEW_CONNECTION_PROMPT,
+                                                  response_model=NewsUpdate)
+        saved_news = await self.parsed_news_service.update_news(news_data=result)
+        return saved_news
