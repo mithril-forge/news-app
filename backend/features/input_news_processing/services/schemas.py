@@ -58,6 +58,8 @@ class InitConnectionResult(BaseModel):
 
 class InitGenerationResult(BaseModel):
     input_news_ids: list[int]
+    # TODO: Try to limit the number from 0 to 10
+    importancy: int
 
 
 class ImageDetail(BaseModel):

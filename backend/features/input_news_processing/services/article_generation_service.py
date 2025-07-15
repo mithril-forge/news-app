@@ -194,19 +194,22 @@ class ArticleGenerationService:
                                                                         parsed_id=connection_result.parsed_news_id)
         return [conn_result.parsed_news_id for conn_result in result if len(conn_result.input_news_ids) > 0]
 
-    async def pick_corresponding_input_news(self, input_news_delta: timedelta) -> list[list[int]]:
+    async def pick_corresponding_input_news(self, input_news_delta: timedelta, news_limit: int = 20) -> list[list[int]]:
+        """"""
         recent_input_news = await self.input_news_service.get_input_news_by_delta_lite(delta=input_news_delta,
                                                                                        has_parsed_news=False)
         files = self.save_pydantic_lists_as_files(recent_input_news=recent_input_news)
         result = await self.ai_model.prompt_model(files=files, prompt=INITIAL_GENERATION_PROMPT,
                                                   response_model=Iterable[InitGenerationResult])
         input_news_ids = set(news.id for news in recent_input_news)
-
         result = [
             res for res in result
-            if all(news_id in input_news_ids for news_id in res.input_news_ids)
+            if all(news_id in input_news_ids for news_id in res.input_news_ids) and len(res.input_news_ids) > 0
         ]
-        return [gen_result.input_news_ids for gen_result in result if len(gen_result.input_news_ids) > 0]
+        logger.debug(f"Initial generation results: {result}")
+        result = sorted(result, key=lambda x: x.importancy, reverse=True)[:news_limit]
+        logger.info(f"Returning generation results after importancy filtering/sorting: {result}")
+        return [gen_result.input_news_ids for gen_result in result]
 
     async def create_new_article(self, input_news_ids: list[int]) -> NewsResponseDetailed:
         """ """

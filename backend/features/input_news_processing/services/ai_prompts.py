@@ -1,4 +1,3 @@
-# TODO: Split text to paragraphs
 CONNECTION_PROMPT = """
 Analýza zpravodajských článků a jejich propojení
 
@@ -165,6 +164,7 @@ TVŮJ ÚKOL:
 - Prozkoumej nové články (input_news)
 - Identifikuj skupiny článků, které se týkají stejné události/tématu
 - Vytvoř nové parsované články pouze ze skupin, kde jsou MINIMÁLNĚ 2 související články
+- Pro každou skupinu přiřaď importancy -> jak je článek důležitý v porovnání s ostatními
 - Pokud článek nemá žádný související článek, ignoruj ho
 - Soustřeď se na skutečné události a témata, ne na obecné kategorie
 
@@ -174,10 +174,16 @@ KRITÉRIA PRO SESKUPENÍ:
 - Časová souvislost událostí (navazující události)
 - Články mají společné klíčové téma nebo informace
 
+KRITÉRIA PRO IMPORTANCY:
+- Zkus upřednostnit články z různých témat, aby byly zprávy aspoň částečně vyvážené
+- Články týkající se aktualit jsou důležité
+- Články týkající se událostí, které mají světový přesah jsou důležité
+
 VÝSTUP:
 - Pro každou identifikovanou skupinu souvisejících článků vytvoř:
   * Seznam ID nových článků, které spolu souvisejí
   * Minimálně 2 články v každé skupině
+  * Každá skupina bude mít přiřazenou importancy -> jak je článek důležitý v porovnání s ostatními
 
 - Formátování výstupu:
   * Výstup bude list listů ID nových článků
