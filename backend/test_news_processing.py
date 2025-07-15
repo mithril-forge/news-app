@@ -52,36 +52,45 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
         # First batch of input news
         input_news_raw = next(mock_data, [])
         input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
+        input_news_ids = [news.id for news in input_news]
         assert len(
             input_news) == 10, f"Application didn't load proper input news. Loaded {len(input_news)}, Expected 10"
         print(f"Input news loaded: {input_news}")
         await session.flush()
 
         # First batch of news generation
-        generated_news = await article_generation_service.connect_existing_news(delta=delta)
-        verify_generated_news(generated_news)
+        generated_news = await article_generation_service.initial_connect_new_input_news(
+            input_news_ids=input_news_ids)
         assert len(generated_news) == 0, f"The testing workflow shouldn't add any connected news. {generated_news=}"
 
-        generated_news = await article_generation_service.creates_new_news(delta=delta)
-        verify_generated_news(generated_news)
+        generated_news = await article_generation_service.pick_corresponding_input_news(
+            input_news_ids=input_news_ids)
         assert len(generated_news) == 3, f"Service should generate exactly 3 news. {generated_news=}"
         await session.flush()
+        for single_generated_news in generated_news:
+            new_article = await article_generation_service.create_new_article(input_news_ids=single_generated_news)
+            verify_generated_news([new_article])
 
         # Second batch of input news
         print("Loading additional news.")
         input_news_raw = next(mock_data, [])
         input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
+        input_news_ids = [news.id for news in input_news]
         print(f"Input news loaded: {input_news}")
 
         # Second batch of news generation
-        generated_news = await article_generation_service.connect_existing_news(delta=delta)
-        verify_generated_news(generated_news)
+        generated_news = await article_generation_service.initial_connect_new_input_news(
+            input_news_ids=input_news_ids)
         assert len(generated_news) == 1, f"The testing workflow should add exactly 1 connected news. {generated_news=}"
-
-        generated_news = await article_generation_service.creates_new_news(delta=delta)
         verify_generated_news(generated_news)
+        generated_news = await article_generation_service.pick_corresponding_input_news(
+            input_news_ids=input_news_ids)
         assert len(generated_news) == 1, f"Service should generate exactly 1 news. {generated_news=}"
         await session.flush()
+        for single_generated_news in generated_news:
+            new_article = await article_generation_service.create_new_article(input_news_ids=single_generated_news)
+            verify_generated_news([new_article])
+
 
         # Verify tags
         end_tags_len = len(await parsed_news_service.get_tags())

@@ -162,17 +162,17 @@ class InputNewsService:
 
     async def get_input_news_by_delta_lite(
             self,
-            delta: timedelta,
+            input_news_ids: list[int],
             has_parsed_news: Optional[bool] = None
     ) -> list[InputNewsLite]:
         """
         Retrieves input news within a specified time period (lite version with less information).
         Args:
-            delta: Time period to look back from current time
+            input_news_ids:
             has_parsed_news: Filter by whether news has connected parsed news or not (None takes all)
         """
         logger.debug(f"Getting input news by delta (lite): {delta}, has_parsed_news: {has_parsed_news}")
-        result = await self.input_news_repo.get_by_time_delta(delta=delta, has_parsed_news=has_parsed_news)
+        result = await self.input_news_repo.get_by_ids(ids=input_news_ids)
         converted_result = input_news_lite_list_to_schema(input_news_list=result)
         logger.info(f"Retrieved {len(converted_result)} input news items by delta (lite)")
         return converted_result

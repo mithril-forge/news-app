@@ -26,15 +26,16 @@ async def scrap_articles_task(hours_delta: int) -> None:
     Scraps new articles for passed timedelta and saves them to DB. If there is existing one,
     it adjusts the article in DB
     """
+    # TODO: Maybe input for new functions should be input_news ids
     logger.info("Starting to parse input news")
     delta = datetime.timedelta(hours=hours_delta)
-    await get_input_news_and_parse(adjust_parse_date=True, delta=delta)
-    choose_connected_articles_task.send(input_news_hours_delta=hours_delta)
+    news_ids = await get_input_news_and_parse(adjust_parse_date=True, delta=delta)
+    choose_connected_articles_task.send(input_news_ids=news_ids)
     logger.info("Successfully parsed input news")
 
 
 @dramatiq.actor
-async def choose_connected_articles_task(input_news_hours_delta: int):
+async def choose_connected_articles_task(input_news_ids: list[int]):
     """Simple data processing task"""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -45,14 +46,14 @@ async def choose_connected_articles_task(input_news_hours_delta: int):
         article_generation_service = ArticleGenerationService(session=db_session, archive=archive,
                                                               ai_model=GeminiAIModel(api_key=gemini_api_key))
         parsed_news_ids = await article_generation_service.initial_connect_new_input_news(
-            input_news_hours_delta=input_news_hours_delta + 1)
+            input_news_ids=input_news_ids)
     for parsed_news_id in parsed_news_ids:
         regenerate_parsed_news_task.send(parsed_news_id=parsed_news_id)
-    choose_new_articles_task.send()
+    choose_new_articles_task.send(input_news_ids=input_news_ids)
     logger.info(f"Successfully created regeneration tasks of {len(parsed_news_ids)} articles.")
 
 @dramatiq.actor
-async def choose_new_articles_task(input_news_hours: int = 72):
+async def choose_new_articles_task(input_news_ids: list[int]):
     """Simple data processing task"""
     input_news_delta = timedelta(hours=input_news_hours)
     gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -64,7 +65,7 @@ async def choose_new_articles_task(input_news_hours: int = 72):
         article_generation_service = ArticleGenerationService(session=db_session, archive=archive,
                                                               ai_model=GeminiAIModel(api_key=gemini_api_key))
         input_news_lists = await article_generation_service.pick_corresponding_input_news(
-            input_news_delta=input_news_delta)
+            input_news_ids=input_news_ids)
     for input_news_list in input_news_lists:
         generate_article_task.send(input_news_ids=input_news_list)
     logger.info(f"Successfully created creations tasks of {len(input_news_lists)} articles.")
