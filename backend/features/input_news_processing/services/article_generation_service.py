@@ -172,9 +172,8 @@ class ArticleGenerationService:
     async def initial_connect_new_input_news(self, input_news_ids: list[int], parsed_news_hours_delta: int = 72) -> \
             list[int]:
         parsed_news_delta = timedelta(hours=parsed_news_hours_delta)
-        input_news_delta = timedelta(hours=input_news_hours_delta)
-        recent_input_news = await self.input_news_service.get_input_news_by_delta_lite(input_news_ids=input_news_ids,
-                                                                                       has_parsed_news=False)
+        recent_input_news = await self.input_news_service.get_input_news_by_ids_lite(input_news_ids=input_news_ids,
+                                                                                     has_parsed_news=False)
         recent_parsed_news = await self.parsed_news_service.get_parsed_news_summary(delta=parsed_news_delta)
         files = self.save_pydantic_lists_as_files(parsed_news=recent_parsed_news,
                                                   input_news=recent_input_news)
@@ -196,8 +195,8 @@ class ArticleGenerationService:
 
     async def pick_corresponding_input_news(self, input_news_ids: list[int], news_limit: int = 20) -> list[list[int]]:
         """"""
-        recent_input_news = await self.input_news_service.get_input_news_by_delta_lite(input_news_ids=input_news_ids,
-                                                                                       has_parsed_news=False)
+        recent_input_news = await self.input_news_service.get_input_news_by_ids_lite(input_news_ids=input_news_ids,
+                                                                                     has_parsed_news=False)
         files = self.save_pydantic_lists_as_files(recent_input_news=recent_input_news)
         result = await self.ai_model.prompt_model(files=files, prompt=INITIAL_GENERATION_PROMPT,
                                                   response_model=Iterable[InitGenerationResult])

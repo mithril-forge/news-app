@@ -1,29 +1,33 @@
-[tool.poetry]
+[project]
 name = "news-app"
 version = "0.1.0"
 description = ""
-authors = ["Simon Foucek <sfoucek@redhat.com>"]
+authors = [
+    {name = "Simon Foucek", email = "sfoucek@redhat.com"}
+]
 readme = "README.md"
-packages = []
-package-mode = false
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi[standard]>=0.115.12",
+    "sqlmodel>=0.0.24",
+    "psycopg[binary,pool]>=3.2.6",
+    "alembic>=1.15.2",
+    "slowapi>=0.1.9",
+    "sqlalchemy>=2.0.40",
+    "instructor>=1.7.9",
+    "google-generativeai>=0.8.5",
+    "jsonref>=1.1.0",
+    "structlog>=25.4.0",
+    "tenacity>=9.1.2",
+    "dramatiq",
+    "redis",
+    "ai-knowledge-bot",
+    "greenlet>=3.2.3",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-fastapi = {extras = ["standard"], version = "^0.115.12"}
-sqlmodel = "^0.0.24"
-psycopg = {extras = ["binary", "pool"], version = "^3.2.6"}
-alembic = "^1.15.2"
-slowapi = "^0.1.9"
-sqlalchemy = "^2.0.40"
-instructor = "^1.7.9"
-google-generativeai = "^0.8.5"
-jsonref = "^1.1.0"
-ai-knowledge-bot = {path = "./wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl"}
-structlog = "^25.4.0"
-tenacity = "^9.1.2"
-dramatiq = "*"
-redis = "*"
+[tool.uv]
+package = false
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv.sources]
+ai-knowledge-bot = { path = "wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl" }
+
