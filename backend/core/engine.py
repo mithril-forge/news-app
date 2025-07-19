@@ -42,8 +42,8 @@ async def get_session(commit_transaction: bool = True) -> AsyncGenerator[AsyncSe
            logger.error(f"Database session rolled back due to error: {e}")
            raise
        finally:
-           await session.close()  # Or handled by context manager
-           logger.debug("Database session closed")
+           await session.close()
+           logger.debug("Database session is closing...")
 
 @asynccontextmanager
 async def get_session_context(commit_transaction: bool = True):

@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
     entrypoint:
       - /entrypoint_dramatiq.sh
-    command: "dramatiq dramatiq"
+    command: "dramatiq dramatiq_tasks"
   frontend:
     container_name: news-app-frontend
     build:

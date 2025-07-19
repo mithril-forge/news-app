@@ -21,10 +21,7 @@ from core.engine import get_session, get_session_context
 from features.api_service.services.news_service import NewsService
 from features.api_service.services.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
 from features.api_service.services.topic_service import TopicService
-from features.input_news_processing.archive.local_archive import LocalArchive
-from features.input_news_processing.services.input_news_service import InputNewsService
 from logger import init_logging
-from news_processing import get_input_news_and_parse, generate_and_connect_news
 
 init_logging()
 logger = structlog.get_logger()
@@ -157,59 +154,3 @@ async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
-
-
-async def scheduled_task():
-    logger.info("Starting scheduled task")
-    while True:
-        now = datetime.datetime.now()
-        logger.debug(f"Scheduled task running at: {now}")
-
-        async with get_session_context() as session:
-            tmp_dir = tempfile.mkdtemp()
-            local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
-            input_news_service = InputNewsService(session=session, archive=local_archive)
-            latest_timestamp = await input_news_service.get_latest_timestamp()
-
-        if now.hour >= 18 and latest_timestamp.day != now.day:
-            logger.info("Starting input news parsing")
-            try:
-                delta = datetime.timedelta(days=1)
-                await get_input_news_and_parse(adjust_parse_date=True, delta=delta)
-                logger.info("Successfully parsed input news")
-            except Exception as err:
-                logger.error(f"Error {err} when generating articles")
-                pass
-        else:
-            logger.debug(f"Skipping parsing of input news. Latest timestamp: {latest_timestamp}")
-
-        now = datetime.datetime.now()
-        async with get_session_context() as session:
-            news_service = NewsService(session=session)
-            latest_timestamp = await news_service.get_latest_timestamp()
-
-        if now.hour >= 18 and latest_timestamp.day != now.day:
-            logger.info("Starting AI news generation")
-            try:
-                delta = datetime.timedelta(days=1)
-                await generate_and_connect_news(delta=delta)
-                logger.info("Successfully generated and connected news")
-            except Exception as err:
-                logger.error(f"Error {err} when generating articles")
-                pass
-        else:
-            logger.debug(f"Skipping AI news generation. Latest timestamp: {latest_timestamp}")
-
-        logger.debug("Scheduled task sleeping for 6 hours")
-        await asyncio.sleep(21600)
-
-
-@app.on_event("startup")
-async def startup():
-    logger.info("FastAPI application starting up")
-    if environment == Environment.PRODUCTION.value:
-        logger.info("Running in production mode")
-        logger.info("Creating scheduled task for the input news parsing")
-        asyncio.create_task(scheduled_task())
-    else:
-        logger.info("Running in development mode")

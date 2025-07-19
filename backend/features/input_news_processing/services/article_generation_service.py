@@ -111,7 +111,7 @@ class ArticleGenerationService:
         logger.info(f"Creating new news with delta: {delta}")
         files = await self.prepare_actual_data_for_ai(delta=delta, include_parsed=False)
         result = await self.ai_model.prompt_model(files=files, prompt=CREATION_PROMPT,
-                                                  response_model=Iterable[CreationResult])
+                                                  response_model=list[CreationResult])
 
         logger.debug(f"AI model returned {len(list(result))} creation results")
         saved_news_list = []
@@ -134,7 +134,7 @@ class ArticleGenerationService:
         logger.info(f"Connecting existing news with delta: {delta}")
         files = await self.prepare_actual_data_for_ai(delta=delta)
         result = await self.ai_model.prompt_model(files=files, prompt=CONNECTION_PROMPT,
-                                                  response_model=Iterable[ConnectionResult])
+                                                  response_model=list[ConnectionResult])
         logger.debug(f"AI model returned {len(list(result))} connection results")
         updated_news_list = []
         for news_data in result:
@@ -161,7 +161,7 @@ class ArticleGenerationService:
         # TODO: I guess the issue can be that in UI AI works with multiple models and we query only one, please research and fix
         logger.debug(f"Requesting image search for news: {news.title}")
         image_result = await self.ai_model.prompt_model(files=news_as_file, prompt=PICTURE_SEARCH_PROMPT,
-                                                        response_model=Iterable[ImageDetail])
+                                                        response_model=list[ImageDetail])
         result_list = list(image_result)
         if len(result_list) == 0:
             logger.warn(f"No image results found for news ID: {news_id}")
@@ -178,7 +178,7 @@ class ArticleGenerationService:
         files = self.save_pydantic_lists_as_files(parsed_news=recent_parsed_news,
                                                   input_news=recent_input_news)
         result = await self.ai_model.prompt_model(files=files, prompt=INITIAL_CONNECTION_PROMPT,
-                                                  response_model=Iterable[InitConnectionResult])
+                                                  response_model=list[InitConnectionResult])
         parsed_news_ids = set(news.id for news in recent_parsed_news)
         input_news_ids = set(news.id for news in recent_input_news)
 
@@ -199,7 +199,7 @@ class ArticleGenerationService:
                                                                                      has_parsed_news=False)
         files = self.save_pydantic_lists_as_files(recent_input_news=recent_input_news)
         result = await self.ai_model.prompt_model(files=files, prompt=INITIAL_GENERATION_PROMPT,
-                                                  response_model=Iterable[InitGenerationResult])
+                                                  response_model=list[InitGenerationResult])
         input_news_ids = set(news.id for news in recent_input_news)
         result = [
             res for res in result
@@ -228,7 +228,7 @@ class ArticleGenerationService:
     async def enrich_existing_article(self, parsed_news_id: int) -> NewsResponseDetailed:
         """ """
         parsed_news = await self.parsed_news_service.get_news_by_id(news_id=parsed_news_id)
-        files = self.save_pydantic_lists_as_files(parsed_news=parsed_news)
+        files = self.save_pydantic_lists_as_files(parsed_news=[parsed_news])
         result = await self.ai_model.prompt_model(files=files, prompt=NEW_CONNECTION_PROMPT,
                                                   response_model=NewsUpdate)
         saved_news = await self.parsed_news_service.update_news(news_data=result)

@@ -33,6 +33,11 @@ class TagResponse(TagBase):
     class Config:
         orm_mode = True
 
+class ParsedNewsSummary(BaseModel):
+    id: int
+    title: str
+    description: str
+    image_url: str
 
 class NewsBase(BaseModel):
     title: str

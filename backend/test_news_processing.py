@@ -36,7 +36,7 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
     tmp_dir = tempfile.mkdtemp()
     local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
 
-    async with (get_session_context(commit_transaction=commit_transaction) as session):
+    async with get_session_context(commit_transaction=commit_transaction) as session:
         input_news_service = InputNewsService(session=session, archive=local_archive)
         article_generation_service = ArticleGenerationService(
             session=session,
@@ -53,6 +53,8 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
         input_news_raw = next(mock_data, [])
         input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
         input_news_ids = [news.id for news in input_news]
+        input_news_older = await input_news_service.get_input_news_by_delta(delta=timedelta(days=1000), has_parsed_news=False)
+        input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
         assert len(
             input_news) == 10, f"Application didn't load proper input news. Loaded {len(input_news)}, Expected 10"
         print(f"Input news loaded: {input_news}")
@@ -76,13 +78,17 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
         input_news_raw = next(mock_data, [])
         input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
         input_news_ids = [news.id for news in input_news]
+        input_news_older = await input_news_service.get_input_news_by_delta(delta=timedelta(days=1000), has_parsed_news=False)
+        input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
         print(f"Input news loaded: {input_news}")
 
         # Second batch of news generation
         generated_news = await article_generation_service.initial_connect_new_input_news(
             input_news_ids=input_news_ids)
         assert len(generated_news) == 1, f"The testing workflow should add exactly 1 connected news. {generated_news=}"
-        verify_generated_news(generated_news)
+        for single_generated_news in generated_news:
+            new_article = await article_generation_service.enrich_existing_article(single_generated_news)
+            verify_generated_news([new_article])
         generated_news = await article_generation_service.pick_corresponding_input_news(
             input_news_ids=input_news_ids)
         assert len(generated_news) == 1, f"Service should generate exactly 1 news. {generated_news=}"
@@ -108,13 +114,9 @@ def main():
     args = parser.parse_args()
 
     loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(test_parse_news(commit_transaction=args.commit, delta_days=args.days))
-        print("Tests completed successfully!")
-    except AssertionError as e:
-        print(f"Test failed: {e}")
-    finally:
-        loop.close()
+    loop.run_until_complete(test_parse_news(commit_transaction=args.commit, delta_days=args.days))
+    print("Tests completed successfully!")
+
 
 
 if __name__ == "__main__":

@@ -23,11 +23,7 @@ logger.info("Starting parsing")
 async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timedelta = timedelta(days=1)) -> list[int]:
     """ Official scenario that will be used to parse new input news and generates the parsed ones from them"""
     logger.info(f"Starting input news parsing with adjust_parse_date: {adjust_parse_date}, delta: {delta}")
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
     local_archive_folder = os.getenv("LOCAL_ARCHIVE_FOLDER")
-    if gemini_api_key is None:
-        logger.error("GEMINI_API_KEY environment variable not set")
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model")
     if local_archive_folder is None:
         logger.error("LOCAL_ARCHIVE_FOLDER environment variable not set")
         raise ValueError("You need to provide LOCAL_ARCHIVE_FOLDER")

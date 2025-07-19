@@ -23,6 +23,8 @@ dependencies = [
     "redis",
     "ai-knowledge-bot",
     "greenlet>=3.2.3",
+    "periodiq>=0.13.0",
+    "setuptools>=80.9.0",
 ]
 
 [tool.uv]

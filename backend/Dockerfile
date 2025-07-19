@@ -24,18 +24,11 @@ RUN apt-get update \
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 # Copy poetry configuration files and wheels directory
-COPY pyproject.toml poetry.lock* ./
+COPY pyproject.toml uv.lock ./
 COPY wheels/ wheels/
 
-RUN uv pip install --system poetry \
-    && uv pip install --system poetry-plugin-export \
-    && poetry export --without-hashes --only main --format requirements.txt > requirements.txt \
-    # Possible additional exports for development and production
-    # && poetry export --without-hashes --only dev --format requirements.txt > requirements-dev.txt \
-    # && poetry export --without-hashes --only production --format requirements.txt > requirements-production.txt \
-    && uv pip install --system -r requirements.txt \
-    && rm -rf wheels/ \
-    && rm -f pyproject.toml poetry.lock
+RUN uv export --format requirements-txt > requirements.txt
+RUN uv pip install -r requirements.txt --system
 
 # Copy application code
 COPY . .

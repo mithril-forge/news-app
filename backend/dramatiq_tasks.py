@@ -7,25 +7,31 @@ from datetime import timedelta
 import dramatiq
 import structlog
 from dramatiq.brokers.redis import RedisBroker
+from periodiq import PeriodiqMiddleware, cron
 
 from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.services.article_generation_service import ArticleGenerationService
+from features.input_news_processing.services.input_news_service import InputNewsService
 from news_processing import get_input_news_and_parse
 
 logger = structlog.get_logger()
 # Simple Redis broker setup
 redis_broker = RedisBroker(url="redis://redis:6379")
 dramatiq.set_broker(redis_broker)
+redis_broker.add_middleware(PeriodiqMiddleware(skip_delay=30))
 
-
-@dramatiq.actor
-async def scrap_articles_task(hours_delta: int) -> None:
+@dramatiq.actor(periodic=cron('25 12 * * *'))
+def scrap_articles_task(hours_delta: int = 24) -> None:
     """
     Scraps new articles for passed timedelta and saves them to DB. If there is existing one,
     it adjusts the article in DB
     """
+    asyncio.run(async_scrap_articles_task(hours_delta=hours_delta))
+
+
+async def async_scrap_articles_task(hours_delta: int) -> None:
     # TODO: Maybe input for new functions should be input_news ids
     logger.info("Starting to parse input news")
     delta = datetime.timedelta(hours=hours_delta)
@@ -34,8 +40,13 @@ async def scrap_articles_task(hours_delta: int) -> None:
     logger.info("Successfully parsed input news")
 
 
-@dramatiq.actor
-async def choose_connected_articles_task(input_news_ids: list[int]):
+@dramatiq.actor(max_retries=1)
+def choose_connected_articles_task(input_news_ids: list[int]):
+    """Simple data processing task"""
+    asyncio.run(async_choose_connected_articles_task(input_news_ids))
+
+
+async def async_choose_connected_articles_task(input_news_ids: list[int]):
     """Simple data processing task"""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -52,8 +63,14 @@ async def choose_connected_articles_task(input_news_ids: list[int]):
     choose_new_articles_task.send(input_news_ids=input_news_ids)
     logger.info(f"Successfully created regeneration tasks of {len(parsed_news_ids)} articles.")
 
-@dramatiq.actor
-async def choose_new_articles_task(input_news_ids: list[int]):
+
+@dramatiq.actor(max_retries=1)
+def choose_new_articles_task(input_news_ids: list[int], input_news_hours: int = 72):
+    """Simple data processing task"""
+    asyncio.run(async_choose_new_articles_task(input_news_ids, input_news_hours))
+
+
+async def async_choose_new_articles_task(input_news_ids: list[int], input_news_hours: int = 72):
     """Simple data processing task"""
     input_news_delta = timedelta(hours=input_news_hours)
     gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -64,14 +81,23 @@ async def choose_new_articles_task(input_news_ids: list[int]):
         archive = LocalArchive(target_location=pathlib.Path("/tmp"))
         article_generation_service = ArticleGenerationService(session=db_session, archive=archive,
                                                               ai_model=GeminiAIModel(api_key=gemini_api_key))
+        input_news_service = InputNewsService(session=db_session, archive=archive)
+        input_news_older = await input_news_service.get_input_news_by_delta(delta=input_news_delta, has_parsed_news=False)
+        input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
         input_news_lists = await article_generation_service.pick_corresponding_input_news(
-            input_news_ids=input_news_ids)
+            input_news_ids=input_news_ids, news_limit=5)
     for input_news_list in input_news_lists:
         generate_article_task.send(input_news_ids=input_news_list)
     logger.info(f"Successfully created creations tasks of {len(input_news_lists)} articles.")
 
-@dramatiq.actor
-async def generate_article_task(input_news_ids: list[int]):
+
+@dramatiq.actor(max_retries=1)
+def generate_article_task(input_news_ids: list[int]):
+    """ """
+    asyncio.run(async_generate_article_task(input_news_ids))
+
+
+async def async_generate_article_task(input_news_ids: list[int]):
     """ """
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -85,14 +111,19 @@ async def generate_article_task(input_news_ids: list[int]):
     generate_picture_for_news.send(parsed_news_id=saved_news.id)
 
 
-@dramatiq.actor
-async def regenerate_parsed_news_task(parsed_news_id: int):
+@dramatiq.actor(max_retries=1)
+def regenerate_parsed_news_task(parsed_news_id: int):
+    """"""
+    asyncio.run(async_regenerate_parsed_news_task(parsed_news_id))
+
+
+async def async_regenerate_parsed_news_task(parsed_news_id: int):
     """"""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
         logger.error("GEMINI_API_KEY environment variable not set")
         raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
-    with get_session_context() as db_session:
+    async with get_session_context() as db_session:
         archive = LocalArchive(target_location=pathlib.Path("/tmp"))
         article_generation_service = ArticleGenerationService(session=db_session, archive=archive,
                                                               ai_model=GeminiAIModel(api_key=gemini_api_key))
@@ -100,7 +131,11 @@ async def regenerate_parsed_news_task(parsed_news_id: int):
 
 
 @dramatiq.actor
-async def generate_picture_for_news(parsed_news_id: int):
+def generate_picture_for_news(parsed_news_id: int):
+    """"""
+    asyncio.run(async_generate_picture_for_news(parsed_news_id))
+
+
+async def async_generate_picture_for_news(parsed_news_id: int):
     """"""
     pass
-
