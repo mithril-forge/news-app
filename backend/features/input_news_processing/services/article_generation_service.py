@@ -103,54 +103,6 @@ class ArticleGenerationService:
         logger.info("Successfully prepared data for AI")
         return files
 
-    async def creates_new_news(self, delta: timedelta) -> list[NewsResponseDetailed]:
-        """
-        Loads present data from DB, prepares gemini client with files and then prompt.
-        Result should be newly created parsed news from Gemini model.
-        """
-        logger.info(f"Creating new news with delta: {delta}")
-        files = await self.prepare_actual_data_for_ai(delta=delta, include_parsed=False)
-        result = await self.ai_model.prompt_model(files=files, prompt=CREATION_PROMPT,
-                                                  response_model=list[CreationResult])
-
-        logger.debug(f"AI model returned {len(list(result))} creation results")
-        saved_news_list = []
-        for news_data in result:
-            logger.debug(f"Processing creation result for news: {news_data.parsed_news.title}")
-            saved_news = await self.parsed_news_service.create_news(news_data=news_data.parsed_news)
-            for input_id in news_data.input_news_ids:
-                await self.input_news_service.connect_input_with_parsed(input_id=input_id, parsed_id=saved_news.id)
-            saved_news_list.append(saved_news)
-            logger.info(f"Created and connected news: {saved_news.title} (ID: {saved_news.id})")
-
-        logger.info(f"Successfully created {len(saved_news_list)} new news articles")
-        return saved_news_list
-
-    async def connect_existing_news(self, delta: timedelta) -> list[NewsResponseDetailed]:
-        """
-        Loads present data from DB, prepares gemini client with files and then prompt.
-        Result should be only connected parsed news from Gemini model.
-        """
-        logger.info(f"Connecting existing news with delta: {delta}")
-        files = await self.prepare_actual_data_for_ai(delta=delta)
-        result = await self.ai_model.prompt_model(files=files, prompt=CONNECTION_PROMPT,
-                                                  response_model=list[ConnectionResult])
-        logger.debug(f"AI model returned {len(list(result))} connection results")
-        updated_news_list = []
-        for news_data in result:
-            logger.debug(f"Processing connection result for news ID: {news_data.parsed_news.id}")
-            saved_news = await self.parsed_news_service.update_news(news_data=news_data.parsed_news)
-            if saved_news is None:
-                logger.warn(f"Failed to update news with ID: {news_data.parsed_news.id}")
-                continue
-            for input_id in news_data.input_news_ids:
-                await self.input_news_service.connect_input_with_parsed(input_id=input_id, parsed_id=saved_news.id)
-            updated_news_list.append(saved_news)
-            logger.info(f"Connected existing news: {saved_news.title} (ID: {saved_news.id})")
-
-        logger.info(f"Successfully connected {len(updated_news_list)} existing news articles")
-        return updated_news_list
-
     async def generate_picture_for_news(self, news_id: int) -> NewsResponseDetailed:
         """ Tries to search and link picture for the existing news"""
         logger.info(f"Generating picture for news ID: {news_id}")
