@@ -4,6 +4,7 @@ set -e
 
 echo "Running database migrations..."
 alembic upgrade head
+periodiq dramatiq_tasks > /var/log/periodiq.log 2>&1 &
 exec "$@"
 
 

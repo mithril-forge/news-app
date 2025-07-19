@@ -214,7 +214,10 @@ class ArticleGenerationService:
         """ """
         input_news_list = await self.input_news_service.input_news_repo.get_by_ids(ids=input_news_ids)
         input_news_pydantic = input_news_list_to_schema(input_news_list=input_news_list)
-        files = self.save_pydantic_lists_as_files(input_news_list=input_news_pydantic)
+        existing_topics = await self.topic_service.get_all_topics()
+        existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
+        files = self.save_pydantic_lists_as_files(input_news_list=input_news_pydantic, existing_tags=existing_tags,
+                                                  existing_topics=existing_topics)
         result = await self.ai_model.prompt_model(files=files, prompt=NEW_GENERATION_PROMPT,
                                                   response_model=NewsCreate)
 
@@ -228,7 +231,10 @@ class ArticleGenerationService:
     async def enrich_existing_article(self, parsed_news_id: int) -> NewsResponseDetailed:
         """ """
         parsed_news = await self.parsed_news_service.get_news_by_id(news_id=parsed_news_id)
-        files = self.save_pydantic_lists_as_files(parsed_news=[parsed_news])
+        existing_topics = await self.topic_service.get_all_topics()
+        existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
+        files = self.save_pydantic_lists_as_files(parsed_news=[parsed_news], existing_topics=existing_topics,
+                                                  existing_tags=existing_tags)
         result = await self.ai_model.prompt_model(files=files, prompt=NEW_CONNECTION_PROMPT,
                                                   response_model=NewsUpdate)
         saved_news = await self.parsed_news_service.update_news(news_data=result)

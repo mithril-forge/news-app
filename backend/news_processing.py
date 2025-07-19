@@ -17,7 +17,6 @@ from features.input_news_processing.services.article_generation_service import A
 from features.input_news_processing.services.input_news_service import InputNewsService
 
 logger = structlog.get_logger()
-logger.info("Starting parsing")
 
 
 async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timedelta = timedelta(days=1)) -> list[int]:
