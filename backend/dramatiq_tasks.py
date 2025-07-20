@@ -10,6 +10,7 @@ from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
 from core.engine import get_session_context
+from features.api_service.services.news_service import NewsService
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.services.article_generation_service import ArticleGenerationService
@@ -66,6 +67,11 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]):
     for parsed_news_id in parsed_news_ids:
         regenerate_parsed_news_task.send(parsed_news_id=parsed_news_id)
 
+    async with get_session_context() as db_session:
+        input_news_service = InputNewsService(session=db_session, archive=archive)
+        input_news_without_parsed = await input_news_service.get_input_news_by_ids_lite(input_news_ids=input_news_ids,
+                                                                                        has_parsed_news=False)
+        input_news_ids = [inp.id for inp in input_news_without_parsed]
     choose_new_articles_task.send(input_news_ids=input_news_ids)
     logger.info(f"Successfully created regeneration tasks of {len(parsed_news_ids)} articles.")
 

@@ -61,14 +61,26 @@ async def generate_and_connect_news(delta: timedelta):
             archive=local_archive,
             ai_model=GeminiAIModel(api_key=gemini_api_key)
         )
+        input_news_service = InputNewsService(session=session, archive=local_archive)
         await session.flush()
         logger.info("Connecting existing news...")
-        connected_news = await article_generation_service.connect_existing_news(delta=delta)
-        logger.info(f"Adjusted existing news articles with ids: {[news.id for news in connected_news]}")
+        input_news = await input_news_service.get_input_news_by_delta(delta=delta, has_parsed_news=False)
+        input_news_ids = [inp.id for inp in input_news]
+        connected_news_ids = await article_generation_service.initial_connect_new_input_news(
+            input_news_ids=input_news_ids)
+        logger.info(f"Parsed existing articles with ids picked for enrichment: {[connected_news_ids]}")
+        for news_id in connected_news_ids:
+            logger.info(f"Enriching article {news_id}")
+            await article_generation_service.enrich_existing_article(parsed_news_id=news_id)
         await session.flush()
         logger.info("Creating new news...")
-        new_news = await article_generation_service.creates_new_news(delta=delta)
-        logger.info(f"Created news articles with ids: {[news.id for news in new_news]}")
+        input_news = await input_news_service.get_input_news_by_delta(delta=delta, has_parsed_news=False)
+        input_news_ids = [inp.id for inp in input_news]
+        new_news_groups = await article_generation_service.pick_corresponding_input_news(input_news_ids=input_news_ids)
+        logger.info(f"Input news groups picked for enrichment: {[new_news_groups]}")
+        for group in new_news_groups:
+            logger.info(f"Creating news articles with ids: {group}")
+            await article_generation_service.create_new_article(input_news_ids=group)
 
 
 async def generate_picture_for_news(news_id: int, commit_transaction: bool = False) -> None:

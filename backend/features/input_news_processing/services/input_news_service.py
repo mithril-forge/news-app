@@ -173,6 +173,11 @@ class InputNewsService:
         """
         logger.debug(f"Getting input news for input news ids: {input_news_ids}, has_parsed_news: {has_parsed_news}")
         result = await self.input_news_repo.get_by_ids(ids=input_news_ids)
+        match has_parsed_news:
+            case True:
+                result = [res for res in result if res.parsed_news is not None]
+            case False:
+                result = [res for res in result if res.parsed_news is None]
         converted_result = input_news_lite_list_to_schema(input_news_list=result)
         logger.info(f"Retrieved {len(converted_result)} input news items by ids (lite)")
         return converted_result
