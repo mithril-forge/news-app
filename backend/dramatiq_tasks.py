@@ -10,12 +10,10 @@ from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
 from core.engine import get_session_context
-from features.api_service.services.news_service import NewsService
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.services.article_generation_service import ArticleGenerationService
 from features.input_news_processing.services.input_news_service import InputNewsService
-from news_processing import get_input_news_and_parse
 
 logger = structlog.get_logger()
 # Simple Redis broker setup
@@ -143,7 +141,7 @@ async def async_generate_article_task(input_news_ids: list[int]):
                                                               ai_model=GeminiAIModel(api_key=gemini_api_key))
         saved_news = await article_generation_service.create_new_article_from_input_news(input_news_ids=input_news_ids)
     logger.info(f"Generated article {saved_news.id}, sending to picture generation")
-    generate_picture_for_news.send(parsed_news_id=saved_news.id)
+    generate_and_attach_image_to_news.send(parsed_news_id=saved_news.id)
 
 
 @dramatiq.actor(max_retries=1)

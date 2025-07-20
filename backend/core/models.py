@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from sqlalchemy.orm import Mapped, relationship
-from sqlmodel import Field, Relationship, SQLModel, Column
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class BaseModel(SQLModel):
