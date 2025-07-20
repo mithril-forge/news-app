@@ -30,17 +30,7 @@ async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timede
 
     async with get_session_context() as session:
         input_news_service = InputNewsService(session=session, archive=local_archive)
-        if adjust_parse_date:
-            latest_timestamp = await input_news_service.get_latest_timestamp()
-            if latest_timestamp is not None:
-                now = datetime.utcnow()
-                time_since_latest = now - latest_timestamp
-                logger.debug(f"Time of the latest input news is: {latest_timestamp}")
-                if time_since_latest < delta:
-                    delta = time_since_latest
-                    logger.info(f"Adjusted delta of parsing for input news to: {delta}")
-        result = await input_news_service.scrap_and_save_input_news(delta=delta)
-        logger.info(f"Successfully scraped and saved {len(result)} input news items")
+        result = await input_news_service.scrap_and_save_input_news(delta=delta, adjust_parse_date=adjust_parse_date)
     return [news.id for news in result]
 
 

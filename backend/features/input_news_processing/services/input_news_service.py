@@ -61,9 +61,18 @@ class InputNewsService:
         logger.info(f"Successfully processed {len(result_models)} input news items")
         return input_news_list_to_schema(result_models)
 
-    async def scrap_and_save_input_news(self, delta: timedelta) -> list[InputNewsWithID]:
+    async def scrap_and_save_input_news(self, adjust_parse_date: bool, delta: timedelta) -> list[InputNewsWithID]:
         """ Query latest news from the corresponding websites by delta and update them in DB or create news ones"""
         logger.info(f"Scraping and saving input news with delta: {delta}")
+        if adjust_parse_date:
+            latest_timestamp = await self.get_latest_timestamp()
+            if latest_timestamp is not None:
+                now = datetime.utcnow()
+                time_since_latest = now - latest_timestamp
+                logger.debug(f"Time of the latest input news is: {latest_timestamp}")
+                if time_since_latest < delta:
+                    delta = time_since_latest
+                    logger.info(f"Adjusted delta of parsing for input news to: {delta}")
         input_news = await self.scrap_input_news(delta=delta)
         result = await self.add_or_update_input_news_batch(input_news_list=input_news)
         logger.info(f"Scraped and saved {len(result)} input news items")

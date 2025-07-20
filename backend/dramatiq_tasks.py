@@ -37,7 +37,16 @@ def scrap_articles_task(hours_delta: int = 24) -> None:
 
 async def async_scrap_articles_task(hours_delta: int) -> None:
     delta = datetime.timedelta(hours=hours_delta)
-    news_ids = await get_input_news_and_parse(adjust_parse_date=True, delta=delta)
+    local_archive_folder = os.getenv("LOCAL_ARCHIVE_FOLDER")
+    if local_archive_folder is None:
+        logger.error("LOCAL_ARCHIVE_FOLDER environment variable not set")
+        raise ValueError("You need to provide LOCAL_ARCHIVE_FOLDER")
+    local_archive = LocalArchive(target_location=pathlib.Path(local_archive_folder))
+
+    async with get_session_context() as session:
+        input_news_service = InputNewsService(session=session, archive=local_archive)
+        result = await input_news_service.scrap_and_save_input_news(delta=delta, adjust_parse_date=True)
+        news_ids = [res.id for res in result]
     logger.info(f"Parsed {len(news_ids)} news items: {news_ids}, sending to connection task")
     choose_connected_articles_task.send(input_news_ids=news_ids)
 
