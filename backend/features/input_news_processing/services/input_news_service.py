@@ -62,7 +62,11 @@ class InputNewsService:
         return input_news_list_to_schema(result_models)
 
     async def scrap_and_save_input_news(self, adjust_parse_date: bool, delta: timedelta) -> list[InputNewsWithID]:
-        """ Query latest news from the corresponding websites by delta and update them in DB or create news ones"""
+        """
+        Query latest news from the corresponding websites by delta and update them in DB or create news ones.
+        adjust_parse_date parameter is to optimalize parsing delta. It will check latest timestamp in DB and if it's newer
+        than the delta, it will adjust the delat to it
+        """
         logger.info(f"Scraping and saving input news with delta: {delta}")
         if adjust_parse_date:
             latest_timestamp = await self.get_latest_timestamp()

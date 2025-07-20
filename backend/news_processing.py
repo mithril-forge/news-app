@@ -20,8 +20,8 @@ logger = structlog.get_logger()
 
 
 async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timedelta = timedelta(days=1)) -> list[int]:
-    """ Official scenario that will be used to parse new input news and generates the parsed ones from them"""
-    logger.info(f"Starting input news parsing with adjust_parse_date: {adjust_parse_date}, delta: {delta}")
+    """ Official scenario that will be used to parse new input news and generates the parsed ones from them by CLI"""
+    logger.info(f"Starting CLI input news parsing with adjust_parse_date: {adjust_parse_date}, delta: {delta}")
     local_archive_folder = os.getenv("LOCAL_ARCHIVE_FOLDER")
     if local_archive_folder is None:
         logger.error("LOCAL_ARCHIVE_FOLDER environment variable not set")
@@ -35,7 +35,7 @@ async def get_input_news_and_parse(adjust_parse_date: bool = True, delta: timede
 
 
 async def generate_and_connect_news(delta: timedelta):
-    logger.info(f"Starting news generation and connection with delta: {delta}")
+    logger.info(f"Starting CLI news generation and connection with delta: {delta}")
     local_archive_folder = os.getenv("LOCAL_ARCHIVE_FOLDER")
     if local_archive_folder is None:
         logger.error("LOCAL_ARCHIVE_FOLDER environment variable not set")
