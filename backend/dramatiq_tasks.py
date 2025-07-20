@@ -72,7 +72,7 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]):
         archive = LocalArchive(target_location=pathlib.Path("/tmp"))
         article_generation_service = ArticleGenerationService(session=db_session, archive=archive,
                                                               ai_model=GeminiAIModel(api_key=gemini_api_key))
-        parsed_news_ids = await article_generation_service.initial_connect_new_input_news(
+        parsed_news_ids = await article_generation_service.connect_input_news_to_existing_articles(
             input_news_ids=input_news_ids)
         logger.info(f"Created {len(parsed_news_ids)} regeneration tasks: {parsed_news_ids}")
         for parsed_news_id in parsed_news_ids:
@@ -114,7 +114,7 @@ async def async_choose_new_articles_task(input_news_ids: list[int], input_news_h
                                                                             has_parsed_news=False)
         input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
         logger.info(f"Processing {len(input_news_ids)} total news items: {input_news_ids}")
-        input_news_lists = await article_generation_service.pick_corresponding_input_news(
+        input_news_lists = await article_generation_service.choose_input_news_for_new_articles(
             input_news_ids=input_news_ids, news_limit=news_limit)
 
     logger.info(f"Created {len(input_news_lists)} generation tasks: {input_news_lists}")
@@ -141,7 +141,7 @@ async def async_generate_article_task(input_news_ids: list[int]):
         archive = LocalArchive(target_location=pathlib.Path("/tmp"))
         article_generation_service = ArticleGenerationService(session=db_session, archive=archive,
                                                               ai_model=GeminiAIModel(api_key=gemini_api_key))
-        saved_news = await article_generation_service.create_new_article(input_news_ids=input_news_ids)
+        saved_news = await article_generation_service.create_new_article_from_input_news(input_news_ids=input_news_ids)
     logger.info(f"Generated article {saved_news.id}, sending to picture generation")
     generate_picture_for_news.send(parsed_news_id=saved_news.id)
 
@@ -168,11 +168,11 @@ async def async_enrich_parsed_article_task(parsed_news_id: int):
 
 
 @dramatiq.actor
-def generate_picture_for_news(parsed_news_id: int):
+def generate_and_attach_image_to_news(parsed_news_id: int):
     """ Task for the picture generation"""
-    logger.info(f"Starting generate_picture_for_news for news {parsed_news_id}")
+    logger.info(f"Starting generate_and_attach_image_to_news for news {parsed_news_id}")
     asyncio.run(async_generate_picture_for_news(parsed_news_id))
-    logger.info(f"Ended generate_picture_for_news for news {parsed_news_id}")
+    logger.info(f"Ended generate_and_attach_image_to_news for news {parsed_news_id}")
 
 
 async def async_generate_picture_for_news(parsed_news_id: int):

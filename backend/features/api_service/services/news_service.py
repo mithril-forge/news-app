@@ -14,6 +14,7 @@ from features.api_service.services.schemas import NewsResponseDetailed, NewsResp
 
 logger = structlog.get_logger()
 
+
 class NewsService:
     def __init__(self, session: AsyncSession):
         self.session = session
@@ -145,7 +146,7 @@ class NewsService:
 
     async def get_parsed_news_summary(self, delta: datetime.timedelta) -> list[ParsedNewsSummary]:
         """
-        Returns ParsedNews with minimal informationa about them
+        Returns ParsedNews with minimal information about them - title, description and other information
         """
         result = await self.news_repo.get_by_time_delta(delta=delta)
         pydantic_structures = orm_list_to_pydantic(orm_list=result, pydantic_class=ParsedNewsSummary)

@@ -56,7 +56,7 @@ async def generate_and_connect_news(delta: timedelta):
         logger.info("Connecting existing news...")
         input_news = await input_news_service.get_input_news_by_delta(delta=delta, has_parsed_news=False)
         input_news_ids = [inp.id for inp in input_news]
-        connected_news_ids = await article_generation_service.initial_connect_new_input_news(
+        connected_news_ids = await article_generation_service.connect_input_news_to_existing_articles(
             input_news_ids=input_news_ids)
         logger.info(f"Parsed existing articles with ids picked for enrichment: {[connected_news_ids]}")
         for news_id in connected_news_ids:
@@ -66,11 +66,11 @@ async def generate_and_connect_news(delta: timedelta):
         logger.info("Creating new news...")
         input_news = await input_news_service.get_input_news_by_delta(delta=delta, has_parsed_news=False)
         input_news_ids = [inp.id for inp in input_news]
-        new_news_groups = await article_generation_service.pick_corresponding_input_news(input_news_ids=input_news_ids)
+        new_news_groups = await article_generation_service.choose_input_news_for_new_articles(input_news_ids=input_news_ids)
         logger.info(f"Input news groups picked for enrichment: {[new_news_groups]}")
         for group in new_news_groups:
             logger.info(f"Creating news articles with ids: {group}")
-            await article_generation_service.create_new_article(input_news_ids=group)
+            await article_generation_service.create_new_article_from_input_news(input_news_ids=group)
 
 
 async def generate_picture_for_news(news_id: int, commit_transaction: bool = False) -> None:
@@ -91,7 +91,7 @@ async def generate_picture_for_news(news_id: int, commit_transaction: bool = Fal
             archive=local_archive,
             ai_model=OpenAIModel(api_key=open_ai_key)
         )
-        await article_generation_service.generate_picture_for_news(news_id=news_id)
+        await article_generation_service.generate_and_attach_image_to_news(news_id=news_id)
         logger.info(f"Picture generation completed for news ID: {news_id}")
 
 

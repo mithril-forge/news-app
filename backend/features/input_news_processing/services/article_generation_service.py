@@ -83,28 +83,16 @@ class ArticleGenerationService:
         logger.info(f"Successfully saved {len(kwargs)} lists to temporary files")
         return paths_mapping
 
-    async def prepare_actual_data_for_ai(self, delta: timedelta, include_parsed: bool = True) -> dict[str, Path]:
-        """ Prepares needed data for the AI queries. It can be adjusted by delta by which the news are taken"""
-        logger.info(f"Preparing data for AI with delta: {delta}, include_parsed: {include_parsed}")
-        recent_parsed_news = []
-        recent_input_news = await self.input_news_service.get_input_news_by_delta(delta=delta,
-                                                                                  has_parsed_news=False)
-        if include_parsed:
-            recent_parsed_news = await self.input_news_service.get_parsed_with_input_news(delta=delta)
-        existing_topics = await self.topic_service.get_all_topics()
-        existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
+    async def generate_and_attach_image_to_news(self, news_id: int) -> NewsResponseDetailed:
+        """
+        Uses AI to search for relevant images and attach them to an existing news article.
 
-        logger.debug(
-            f"Data counts - input news: {len(recent_input_news)}, parsed news: {len(recent_parsed_news)}, topics: {len(existing_topics)}, tags: {len(existing_tags)}")
+        Args:
+            news_id: The ID of the news article to generate images for
 
-        files = self.save_pydantic_lists_as_files(tags_list=existing_tags, topics_list=existing_topics,
-                                                  recent_parsed_news=recent_parsed_news,
-                                                  recent_input_news=recent_input_news)
-        logger.info("Successfully prepared data for AI")
-        return files
-
-    async def generate_picture_for_news(self, news_id: int) -> NewsResponseDetailed:
-        """ Tries to search and link picture for the existing news"""
+        Returns:
+            Updated news article with attached images
+        """
         logger.info(f"Generating picture for news ID: {news_id}")
         news = await self.parsed_news_service.get_news_by_id(news_id=news_id)
         # TODO: Add support also for noniterable params
@@ -121,16 +109,37 @@ class ArticleGenerationService:
             logger.info(f"Found {len(result_list)} image results for news ID: {news_id}")
         logger.debug(f"Image search results: {result_list}")
 
-    async def initial_connect_new_input_news(self, input_news_ids: list[int], parsed_news_hours_delta: int = 72) -> \
-            list[int]:
+    async def connect_input_news_to_existing_articles(self, input_news_ids: list[int],
+                                                      parsed_news_hours_delta: int = 72) -> list[int]:
+        """
+        Uses AI to identify which new input news items should be connected to existing parsed articles
+        based on content similarity and relevance.
+
+        Args:
+            input_news_ids: List of input news IDs to process for connections
+            parsed_news_hours_delta: Hours to look back for existing parsed news (default: 72)
+
+        Returns:
+            List of parsed news IDs that received new connections
+        """
+        logger.info(
+            f"Connecting {len(input_news_ids)} input news items to existing articles, looking back {parsed_news_hours_delta} hours")
+
         parsed_news_delta = timedelta(hours=parsed_news_hours_delta)
         recent_input_news = await self.input_news_service.get_input_news_by_ids_lite(input_news_ids=input_news_ids,
                                                                                      has_parsed_news=False)
         recent_parsed_news = await self.parsed_news_service.get_parsed_news_summary(delta=parsed_news_delta)
+        logger.debug(
+            f"Retrieved {len(recent_input_news)} input news and {len(recent_parsed_news)} parsed news for connection analysis")
+
         files = self.save_pydantic_lists_as_files(parsed_news=recent_parsed_news,
                                                   input_news=recent_input_news)
+        logger.debug("Prepared data files for AI connection analysis")
+
         result = await self.ai_model.prompt_model(files=files, prompt=INITIAL_CONNECTION_PROMPT,
                                                   response_model=list[InitConnectionResult])
+        logger.debug(f"AI model returned {len(result)} connection suggestions")
+
         parsed_news_ids = set(news.id for news in recent_parsed_news)
         input_news_ids = set(news.id for news in recent_input_news)
 
@@ -139,14 +148,34 @@ class ArticleGenerationService:
             if res.parsed_news_id in parsed_news_ids
                and all(input_news_id in input_news_ids for input_news_id in res.input_news_ids)
         ]
+        logger.debug(f"Filtered to {len(result)} valid connection results")
+
+        connection_count = 0
         for connection_result in result:
             for input_id in connection_result.input_news_ids:
                 await self.input_news_service.connect_input_with_parsed(input_id=input_id,
                                                                         parsed_id=connection_result.parsed_news_id)
-        return [conn_result.parsed_news_id for conn_result in result if len(conn_result.input_news_ids) > 0]
+                connection_count += 1
 
-    async def pick_corresponding_input_news(self, input_news_ids: list[int], news_limit: int = 20) -> list[list[int]]:
-        """"""
+        updated_parsed_ids = [conn_result.parsed_news_id for conn_result in result if
+                              len(conn_result.input_news_ids) > 0]
+        logger.info(
+            f"Successfully created {connection_count} connections, updated {len(updated_parsed_ids)} parsed articles")
+
+        return updated_parsed_ids
+
+    async def choose_input_news_for_new_articles(self, input_news_ids: list[int], news_limit: int = 20) -> list[
+        list[int]]:
+        """
+        Uses AI to analyze input news and group related articles together, ranked by importance.
+
+        Args:
+            input_news_ids: List of input news IDs to analyze and group
+            news_limit: Maximum number of news groups to return (default: 20)
+
+        Returns:
+            List of grouped input news ID lists, ordered by importance
+        """
         recent_input_news = await self.input_news_service.get_input_news_by_ids_lite(input_news_ids=input_news_ids,
                                                                                      has_parsed_news=False)
         files = self.save_pydantic_lists_as_files(recent_input_news=recent_input_news)
@@ -160,34 +189,74 @@ class ArticleGenerationService:
         logger.debug(f"Initial generation results: {result}")
         result = sorted(result, key=lambda x: x.importancy, reverse=True)[:news_limit]
         logger.info(f"Returning generation results after importancy filtering/sorting: {result}")
-        return [gen_result.input_news_ids for gen_result in result]
+        final_groups = [gen_result.input_news_ids for gen_result in result]
+        return final_groups
 
-    async def create_new_article(self, input_news_ids: list[int]) -> NewsResponseDetailed:
-        """ """
+    async def create_new_article_from_input_news(self, input_news_ids: list[int]) -> NewsResponseDetailed:
+        """
+        Creates a new parsed article by combining and processing multiple related input news items using AI.
+
+        Args:
+            input_news_ids: List of input news IDs to combine into a single article
+
+        Returns:
+            The newly created parsed news article with all connections established
+        """
+        logger.info(f"Creating new article from {len(input_news_ids)} input news items: {input_news_ids}")
+
         input_news_list = await self.input_news_service.input_news_repo.get_by_ids(ids=input_news_ids)
+        logger.debug(f"Retrieved {len(input_news_list)} input news records from database")
+
         input_news_pydantic = input_news_list_to_schema(input_news_list=input_news_list)
         existing_topics = await self.topic_service.get_all_topics()
         existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
+        logger.debug(f"Prepared context data - topics: {len(existing_topics)}, tags: {len(existing_tags)}")
+
         files = self.save_pydantic_lists_as_files(input_news_list=input_news_pydantic, existing_tags=existing_tags,
                                                   existing_topics=existing_topics)
+        logger.debug("Generated data files for AI article creation")
+
         result = await self.ai_model.prompt_model(files=files, prompt=NEW_GENERATION_PROMPT,
                                                   response_model=NewsCreate)
+        logger.debug(f"AI model generated article: '{result.title}' with {len(result.content)} characters")
 
         saved_news = await self.parsed_news_service.create_news(news_data=result)
+        logger.info(f"Successfully created new article: '{saved_news.title}' (ID: {saved_news.id})")
+
         for input_id in input_news_ids:
             await self.input_news_service.connect_input_with_parsed(input_id=input_id, parsed_id=saved_news.id)
-        logger.info(
-            f"Created and connected news: {saved_news.title} (ID: {saved_news.id}) with input_ids {input_news_ids}")
+
+        logger.info(f"Connected {len(input_news_ids)} input news items to new article (ID: {saved_news.id})")
         return saved_news
 
     async def enrich_existing_article(self, parsed_news_id: int) -> NewsResponseDetailed:
-        """ """
+        """
+        Enhances an existing parsed article by using AI to improve content, add tags, or update topics.
+
+        Args:
+            parsed_news_id: ID of the existing parsed news article to enrich
+
+        Returns:
+            The updated news article with AI-generated enhancements
+        """
+        logger.info(f"Enriching existing article with ID: {parsed_news_id}")
+
         parsed_news = await self.parsed_news_service.get_news_by_id(news_id=parsed_news_id)
+        logger.debug(f"Retrieved article for enrichment: '{parsed_news.title}'")
+
         existing_topics = await self.topic_service.get_all_topics()
         existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
+        logger.debug(f"Loaded context data - topics: {len(existing_topics)}, tags: {len(existing_tags)}")
+
         files = self.save_pydantic_lists_as_files(parsed_news=[parsed_news], existing_topics=existing_topics,
                                                   existing_tags=existing_tags)
+        logger.debug("Prepared data files for AI article enrichment")
+
         result = await self.ai_model.prompt_model(files=files, prompt=NEW_CONNECTION_PROMPT,
                                                   response_model=NewsUpdate)
+        logger.debug(f"AI model generated enrichment updates for article ID: {parsed_news_id}")
+
         saved_news = await self.parsed_news_service.update_news(news_data=result)
+        logger.info(f"Successfully enriched article: '{saved_news.title}' (ID: {saved_news.id})")
+
         return saved_news
