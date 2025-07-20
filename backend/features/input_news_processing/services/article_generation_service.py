@@ -1,16 +1,10 @@
 import json
-import os
-import pathlib
 import tempfile
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Iterable
 
-import instructor
 import structlog
-from instructor import AsyncInstructor
 from pydantic import BaseModel
-import google.generativeai as genai
 
 from core.converters import orm_list_to_pydantic
 from features.api_service.database.repository import AsyncTagRepository
@@ -21,8 +15,8 @@ from features.api_service.services.topic_service import TopicService
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import input_news_list_to_schema
-from features.input_news_processing.services.ai_prompts import CREATION_PROMPT, CONNECTION_PROMPT, \
-    PICTURE_SEARCH_PROMPT, INITIAL_CONNECTION_PROMPT, INITIAL_GENERATION_PROMPT, NEW_GENERATION_PROMPT, \
+from features.input_news_processing.services.ai_prompts import PICTURE_SEARCH_PROMPT, INITIAL_CONNECTION_PROMPT, \
+    INITIAL_GENERATION_PROMPT, NEW_GENERATION_PROMPT, \
     NEW_CONNECTION_PROMPT
 from features.input_news_processing.services.input_news_service import InputNewsService
 from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, ConnectionResult, \
