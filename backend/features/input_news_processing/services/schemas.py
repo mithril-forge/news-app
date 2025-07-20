@@ -15,8 +15,19 @@ class InputNewsLiteBase(BaseModel):
     source_url: str
     title: str
     summary: str
-class InputNewsLite(InputNewsLiteBase):
+
+
+class InputNewsLite(BaseModel):
     id: int
+    tags: list[str]
+    category: str
+    publication_date: datetime
+    author: str
+    source_site: str
+    source_url: str
+    title: str
+    summary: str
+
 
 class InputNewsBase(InputNewsLiteBase):
     content: str
