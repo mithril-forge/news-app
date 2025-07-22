@@ -13,7 +13,7 @@ from cz_news import crawl_czech_news, Article
 from core.repository import AsyncParsedNewsRepository
 from features.input_news_processing.converters import parsed_news_list_with_input, input_news_list_to_schema, \
     input_schema_list_to_orm, input_news_to_schema, input_news_lite_list_to_schema
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNews, \
+from features.input_news_processing.domain.schemas import ParsedNewsWithInputNews, InputNews, \
     InputNewsWithID, InputNewsWithoutContent
 
 logger = structlog.get_logger()

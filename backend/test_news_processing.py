@@ -7,12 +7,12 @@ import tempfile
 from datetime import timedelta
 
 from core.engine import get_session_context
-from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import ParsedNewsResponseDetailed
+from core.domain.news_service import NewsService
+from core.domain.schemas import ParsedNewsResponseDetailed
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
-from features.input_news_processing.services.article_generation_service import ArticleGenerationService
-from features.input_news_processing.services.input_news_service import InputNewsService
+from features.input_news_processing.domain.article_generation_service import ArticleGenerationService
+from features.input_news_processing.domain.input_news_service import InputNewsService
 from features.input_news_processing.testing_data.common import mock_data
 
 

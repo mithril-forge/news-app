@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from features.input_news_processing.services.schemas import InputNews
+from features.input_news_processing.domain.schemas import InputNews
 from features.input_news_processing.testing_data.common_testing_data import sources
 
 INITIAL_INPUT_ARTICLES = [

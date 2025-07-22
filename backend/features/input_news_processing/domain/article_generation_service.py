@@ -14,11 +14,11 @@ from core.domain.topic_service import TopicService
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import input_news_list_to_schema
-from features.input_news_processing.services.ai_prompts import PICTURE_SEARCH_PROMPT, INITIAL_CONNECTION_PROMPT, \
+from features.input_news_processing.domain.ai_prompts import PICTURE_SEARCH_PROMPT, INITIAL_CONNECTION_PROMPT, \
     INITIAL_GENERATION_PROMPT, NEW_GENERATION_PROMPT, \
     NEW_CONNECTION_PROMPT
-from features.input_news_processing.services.input_news_service import InputNewsService
-from features.input_news_processing.services.schemas import ImageDetail, InitConnectionResult, InitGenerationResult
+from features.input_news_processing.domain.input_news_service import InputNewsService
+from features.input_news_processing.domain.schemas import ImageDetail, InitConnectionResult, InitGenerationResult
 
 logger = structlog.get_logger()
 

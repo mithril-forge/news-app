@@ -13,8 +13,8 @@ from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.ai_library.openai_model import OpenAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
-from features.input_news_processing.services.article_generation_service import ArticleGenerationService
-from features.input_news_processing.services.input_news_service import InputNewsService
+from features.input_news_processing.domain.article_generation_service import ArticleGenerationService
+from features.input_news_processing.domain.input_news_service import InputNewsService
 
 logger = structlog.get_logger()
 

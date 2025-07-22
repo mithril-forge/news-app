@@ -10,7 +10,7 @@ import structlog
 
 from core.models import ParsedNews, InputNews
 from core.converters import news_to_detailed_response
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsWithID, \
+from features.input_news_processing.domain.schemas import ParsedNewsWithInputNews, InputNewsWithID, \
     InputNewsWithoutContent
 
 logger = structlog.get_logger()

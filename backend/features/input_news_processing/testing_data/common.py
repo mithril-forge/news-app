@@ -1,6 +1,6 @@
 from typing import Any
 
-from features.input_news_processing.services.schemas import InputNews
+from features.input_news_processing.domain.schemas import InputNews
 from features.input_news_processing.testing_data.additional_input_news import ADDITIONAL_ARTICLES
 from features.input_news_processing.testing_data.initial_input_news import INITIAL_INPUT_ARTICLES
 
