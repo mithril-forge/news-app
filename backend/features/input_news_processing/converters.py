@@ -10,13 +10,13 @@ import structlog
 
 from core.models import ParsedNews, InputNews
 from features.api_service.converters import news_to_detailed_response
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsBase, InputNewsWithID, \
-    InputNewsLite
+from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNews, InputNewsWithID, \
+    InputNewsWithoutContent
 
 logger = structlog.get_logger()
 
 
-def input_schema_to_orm(input_metadata: InputNewsBase) -> InputNews:
+def input_schema_to_orm(input_metadata: InputNews) -> InputNews:
     """
     Convert an InputNewsMetadata Pydantic model to InputNews SQLModel instance.
 
@@ -48,7 +48,7 @@ def input_schema_to_orm(input_metadata: InputNewsBase) -> InputNews:
     return result
 
 
-def input_schema_list_to_orm(input_metadata_list: List[InputNewsBase]) -> List[InputNews]:
+def input_schema_list_to_orm(input_metadata_list: List[InputNews]) -> List[InputNews]:
     """
     Convert a list of InputNewsMetadata Pydantic models to InputNews SQLModel instances.
 
@@ -94,7 +94,7 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
     return result
 
 
-def input_news_to_lite_schema(input_news: InputNews) -> InputNewsLite:
+def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
     """
     Convert an InputNews SQLModel instance to InputNewsWithID Pydantic model.
 
@@ -111,7 +111,7 @@ def input_news_to_lite_schema(input_news: InputNews) -> InputNewsLite:
     # Convert tags string to list
     tags_list = input_news.tags.split(",") if input_news.tags else []
 
-    result = InputNewsLite(
+    result = InputNewsWithoutContent(
         id=input_news.id,
         tags=tags_list,
         category=input_news.category,
@@ -125,7 +125,7 @@ def input_news_to_lite_schema(input_news: InputNews) -> InputNewsLite:
     return result
 
 
-def input_news_lite_list_to_schema(input_news_list: List[InputNews]) -> List[InputNewsLite]:
+def input_news_lite_list_to_schema(input_news_list: List[InputNews]) -> List[InputNewsWithoutContent]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
 

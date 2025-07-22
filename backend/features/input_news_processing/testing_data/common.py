@@ -1,18 +1,18 @@
 from datetime import datetime
 from typing import Any
 
-from features.input_news_processing.services.schemas import InputNewsBase
+from features.input_news_processing.services.schemas import InputNews
 from features.input_news_processing.testing_data.additional_input_news import ADDITIONAL_ARTICLES
 from features.input_news_processing.testing_data.initial_input_news import INITIAL_INPUT_ARTICLES
 
 
-def load_testing_input_news_data(test_articles: list[str, Any]) -> list[InputNewsBase]:
+def load_testing_input_news_data(test_articles: list[str, Any]) -> list[InputNews]:
     # Convert the data back to Pydantic models
     articles = []
     for article_dict in test_articles:
 
         # Create Pydantic model
-        article = InputNewsBase(**article_dict)
+        article = InputNews(**article_dict)
         articles.append(article)
 
     return articles

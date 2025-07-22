@@ -18,7 +18,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from config import Environment
 from core.engine import get_session, get_session_context
 from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
+from features.api_service.services.schemas import TopicResponse, ParsedNewsBasic, ParsedNewsResponseDetailed
 from features.api_service.services.topic_service import TopicService
 from logger import init_logging
 
@@ -106,7 +106,7 @@ async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_sess
     return await service.get_topic_by_id(topic_id)
 
 
-@app.get("/news/topics/{topic_id}", response_model=List[NewsResponseBasic])
+@app.get("/news/topics/{topic_id}", response_model=List[ParsedNewsBasic])
 async def news_by_topic(
         topic_id: int,
         skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
@@ -118,7 +118,7 @@ async def news_by_topic(
     return await service.get_news_by_topic(topic_id, skip=skip, limit=limit)
 
 
-@app.get("/news/latest", response_model=List[NewsResponseBasic])
+@app.get("/news/latest", response_model=List[ParsedNewsBasic])
 async def latest_news(
         skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
         limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
@@ -129,7 +129,7 @@ async def latest_news(
     return await service.get_latest_news(skip=skip, limit=limit)
 
 
-@app.get("/news/popular", response_model=List[NewsResponseBasic])
+@app.get("/news/popular", response_model=List[ParsedNewsBasic])
 async def popular_news(
         limit: Optional[int] = Query(10, ge=1, le=20),
         days: Optional[int] = Query(3, ge=1, le=30),
@@ -141,7 +141,7 @@ async def popular_news(
     return await service.get_most_popular_news(period=period, limit=limit)
 
 
-@app.get("/news/{news_id}", response_model=NewsResponseDetailed)
+@app.get("/news/{news_id}", response_model=ParsedNewsResponseDetailed)
 async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
     """Get a specific news item by ID"""
     service = NewsService(session)

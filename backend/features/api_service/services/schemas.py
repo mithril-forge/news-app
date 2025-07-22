@@ -4,34 +4,26 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class TopicBase(BaseModel):
+class TopicCreate(BaseModel):
     name: str
-
-
-class TopicCreate(TopicBase):
     description: Optional[str] = None
 
 
-class TopicResponse(TopicBase):
+class TopicResponse(BaseModel):
+    name: str
     id: int
 
     class Config:
         orm_mode = True
 
 
-class TagBase(BaseModel):
+class TagResponse(BaseModel):
+    id: int
     text: str
 
-
-class TagCreate(TagBase):
-    pass
-
-
-class TagResponse(TagBase):
-    id: int
-
     class Config:
         orm_mode = True
+
 
 class ParsedNewsSummary(BaseModel):
     id: int
@@ -39,23 +31,30 @@ class ParsedNewsSummary(BaseModel):
     description: str
     image_url: str
 
-class NewsBase(BaseModel):
+
+class ParsedNewsCreate(BaseModel):
     title: str
     description: str
     image_url: str
-
-
-class NewsCreate(NewsBase):
-    topic_id: Optional[int]  # topics are stable
-    tags: List[str]  # new tags can be created
+    topic_id: Optional[int]
+    tags: List[str]
     content: str
 
 
-class NewsUpdate(NewsCreate):
+class ParsedNewsUpdate(BaseModel):
+    title: str
+    description: str
+    image_url: str
+    topic_id: Optional[int]
+    tags: List[str]
+    content: str
     id: int
 
 
-class NewsResponseBasic(NewsBase):
+class ParsedNewsBasic(BaseModel):
+    title: str
+    description: str
+    image_url: str
     id: int
     # TODO: Fix the issue when new article isn't connected to topic
     topic: Optional[TopicResponse]
@@ -67,7 +66,7 @@ class NewsResponseBasic(NewsBase):
         orm_mode = True
 
 
-class InputNewsDetailed(BaseModel):
+class InputNewsWithoutContent(BaseModel):
     publication_date: datetime
     title: str
     author: str
@@ -75,6 +74,14 @@ class InputNewsDetailed(BaseModel):
     source_url: str
 
 
-class NewsResponseDetailed(NewsResponseBasic):
+class ParsedNewsResponseDetailed(BaseModel):
+    title: str
+    description: str
+    image_url: str
+    id: int
+    topic: Optional[TopicResponse]
+    created_at: datetime
+    updated_at: datetime
+    tags: List[TagResponse] = []
     content: str
-    input_news: list[InputNewsDetailed]
+    input_news: list[InputNewsWithoutContent]
