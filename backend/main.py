@@ -14,7 +14,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from config import Environment
 from core.engine import get_session
 from core.domain.news_service import NewsService
-from core.domain.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
+from core.domain.schemas import TopicResponse, ParsedNewsBasic, ParsedNewsResponseDetailed
 from core.domain.topic_service import TopicService
 from logger import init_logging
 

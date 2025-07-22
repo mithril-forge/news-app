@@ -9,8 +9,7 @@ from pydantic import BaseModel
 from core.converters import orm_list_to_pydantic
 from core.repository import AsyncTagRepository
 from core.domain.news_service import NewsService
-from core.domain.schemas import TagResponse, NewsResponseDetailed, NewsCreate, \
-    NewsUpdate
+from core.domain.schemas import TagResponse, ParsedNewsResponseDetailed, ParsedNewsCreate, ParsedNewsUpdate
 from core.domain.topic_service import TopicService
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive

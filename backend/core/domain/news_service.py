@@ -8,8 +8,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from core.converters import orm_list_to_pydantic
 from core.converters import news_list_to_response, news_to_detailed_response
 from core.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
-from core.domain.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate, NewsUpdate, \
-    TagResponse, ParsedNewsSummary
+from core.domain.schemas import TagResponse, ParsedNewsSummary, ParsedNewsBasic, ParsedNewsResponseDetailed, \
+    ParsedNewsCreate, ParsedNewsUpdate
 
 logger = structlog.get_logger()
 

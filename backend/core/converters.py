@@ -5,7 +5,8 @@ from pydantic import BaseModel
 from sqlmodel import SQLModel
 
 from core.models import ParsedNews
-from core.domain.schemas import NewsResponseDetailed, TagResponse, InputNewsDetailed, TopicResponse, NewsResponseBasic
+from core.domain.schemas import TagResponse, TopicResponse, ParsedNewsBasic, ParsedNewsResponseDetailed, \
+    InputNewsWithoutContent
 
 M = TypeVar('M', bound=SQLModel)
 P = TypeVar('P', bound=BaseModel)
@@ -89,7 +90,7 @@ def pydantic_to_orm(pydantic_obj: P, orm_class: Type[M],
     return result
 
 
-def news_to_response(news: ParsedNews) -> NewsResponseBasic:
+def news_to_response(news: ParsedNews) -> ParsedNewsBasic:
     """
     Convert a ParsedNews ORM model to NewsResponse schema with topic_name populated.
 
@@ -112,12 +113,12 @@ def news_to_response(news: ParsedNews) -> NewsResponseBasic:
     data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
 
     # Create response model from dict
-    result = NewsResponseBasic(**data)
+    result = ParsedNewsBasic(**data)
     logger.debug(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to basic response")
     return result
 
 
-def news_list_to_response(news_list: List[ParsedNews]) -> List[NewsResponseBasic]:
+def news_list_to_response(news_list: List[ParsedNews]) -> List[ParsedNewsBasic]:
     """
     Convert a list of ParsedNews ORM models to NewsResponse schemas with topic_name populated.
 
@@ -133,7 +134,7 @@ def news_list_to_response(news_list: List[ParsedNews]) -> List[NewsResponseBasic
     return result
 
 
-def news_to_detailed_response(news: ParsedNews) -> NewsResponseDetailed:
+def news_to_detailed_response(news: ParsedNews) -> ParsedNewsResponseDetailed:
     """
     Convert a ParsedNews ORM model to NewsWithTopicResponse schema with topic relationship.
 
@@ -154,9 +155,9 @@ def news_to_detailed_response(news: ParsedNews) -> NewsResponseDetailed:
     # Add topic_name if topic is available
     data["topic"] = orm_to_pydantic(news.topic, TopicResponse)
     data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
-    data["input_news"] = orm_list_to_pydantic(news.input_news, InputNewsDetailed)
+    data["input_news"] = orm_list_to_pydantic(news.input_news, InputNewsWithoutContent)
 
     # Create response model from dict
-    result = NewsResponseDetailed(**data)
+    result = ParsedNewsResponseDetailed(**data)
     logger.debug(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to detailed response")
     return result

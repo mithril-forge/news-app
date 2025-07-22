@@ -1,6 +1,4 @@
 from datetime import datetime
-from pydantic import BaseModel
-import json
 
 from features.input_news_processing.services.schemas import InputNews
 from features.input_news_processing.testing_data.common_testing_data import sources
