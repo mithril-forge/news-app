@@ -9,9 +9,9 @@ from typing import List
 import structlog
 
 from core.models import ParsedNews, InputNews
-from features.api_service.converters import news_to_detailed_response
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNews, InputNewsWithID, \
-    InputNewsWithoutContent
+from core.converters import news_to_detailed_response
+from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsBase, InputNewsWithID, \
+    InputNewsLite
 
 logger = structlog.get_logger()
 

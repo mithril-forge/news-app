@@ -1,4 +1,3 @@
-import logging
 from typing import List
 
 import structlog
@@ -6,8 +5,8 @@ from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.converters import orm_list_to_pydantic, orm_to_pydantic
-from features.api_service.database.repository import AsyncTopicRepository
-from features.api_service.services.schemas import TopicResponse, TopicCreate
+from core.repository import AsyncTopicRepository
+from core.domain.schemas import TopicResponse, TopicCreate
 
 logger = structlog.get_logger()
 

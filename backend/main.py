@@ -1,9 +1,5 @@
-import asyncio
 import datetime
 import os
-import logging
-import pathlib
-import tempfile
 import time
 from typing import List, Optional
 
@@ -16,10 +12,10 @@ from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from config import Environment
-from core.engine import get_session, get_session_context
-from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import TopicResponse, ParsedNewsBasic, ParsedNewsResponseDetailed
-from features.api_service.services.topic_service import TopicService
+from core.engine import get_session
+from core.domain.news_service import NewsService
+from core.domain.schemas import TopicResponse, NewsResponseBasic, NewsResponseDetailed
+from core.domain.topic_service import TopicService
 from logger import init_logging
 
 init_logging()

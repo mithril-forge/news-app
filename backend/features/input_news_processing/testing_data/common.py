@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any
 
 from features.input_news_processing.services.schemas import InputNews

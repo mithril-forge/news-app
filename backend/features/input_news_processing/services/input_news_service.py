@@ -1,18 +1,16 @@
 import io
 import json
-import logging
 import zipfile
 from datetime import datetime, timedelta
 from typing import List, Optional
 
 import structlog
 
-from core.converters import orm_list_to_pydantic
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.database.repository import AsyncInputNewsRepository
-from cz_news import crawl_czech_news, Article, CrawlResult, CrawlSummary
+from cz_news import crawl_czech_news, Article
 
-from features.api_service.database.repository import AsyncParsedNewsRepository
+from core.repository import AsyncParsedNewsRepository
 from features.input_news_processing.converters import parsed_news_list_with_input, input_news_list_to_schema, \
     input_schema_list_to_orm, input_news_to_schema, input_news_lite_list_to_schema
 from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNews, \

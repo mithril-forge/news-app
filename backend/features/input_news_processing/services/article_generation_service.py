@@ -7,11 +7,11 @@ import structlog
 from pydantic import BaseModel
 
 from core.converters import orm_list_to_pydantic
-from features.api_service.database.repository import AsyncTagRepository
-from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import TagResponse, TopicResponse, ParsedNewsResponseDetailed, ParsedNewsCreate, \
-    ParsedNewsUpdate
-from features.api_service.services.topic_service import TopicService
+from core.repository import AsyncTagRepository
+from core.domain.news_service import NewsService
+from core.domain.schemas import TagResponse, NewsResponseDetailed, NewsCreate, \
+    NewsUpdate
+from core.domain.topic_service import TopicService
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import input_news_list_to_schema

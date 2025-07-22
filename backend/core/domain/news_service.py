@@ -1,5 +1,4 @@
 import datetime
-import logging
 from typing import List, Optional
 
 import structlog
@@ -7,9 +6,9 @@ from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.converters import orm_list_to_pydantic
-from features.api_service.converters import news_list_to_response, news_to_detailed_response
-from features.api_service.database.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
-from features.api_service.services.schemas import ParsedNewsResponseDetailed, ParsedNewsBasic, ParsedNewsCreate, ParsedNewsUpdate, \
+from core.converters import news_list_to_response, news_to_detailed_response
+from core.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
+from core.domain.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate, NewsUpdate, \
     TagResponse, ParsedNewsSummary
 
 logger = structlog.get_logger()
