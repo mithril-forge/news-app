@@ -9,7 +9,7 @@ from typing import (
     Optional,
     TypeVar,
     Any,
-    Dict,
+    Dict, cast,
 )
 from datetime import timedelta, datetime
 
@@ -353,7 +353,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.info(
             f"Retrieved {len(news_list)} news articles for topic ID: {topic_id}"
         )
-        return news_list
+        return cast(list[ParsedNews], news_list)
 
     async def get_with_tags(self, news_id: int) -> Optional[ParsedNews]:
         """Get news with its tags preloaded."""

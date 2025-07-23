@@ -2,6 +2,7 @@ import json
 import tempfile
 from datetime import timedelta
 from pathlib import Path
+from typing import Type, Any
 
 import structlog
 from pydantic import BaseModel
@@ -54,7 +55,7 @@ class ArticleGenerationService:
         logger.info("ArticleGenerationService initialized")
 
     @staticmethod
-    def save_pydantic_lists_as_files(**kwargs: list[BaseModel]) -> dict[str, Path]:
+    def save_pydantic_lists_as_files(**kwargs: list[Any]) -> dict[str, Path]:
         """
         Dumps data to files and returns their paths. This is a step to convert data from Pydantic models
         to files that are supported by Gemini and other AI models.
@@ -90,7 +91,7 @@ class ArticleGenerationService:
 
     async def generate_and_attach_image_to_news(
         self, news_id: int
-    ) -> ParsedNewsResponseDetailed:
+    ) -> None:
         """
         Uses AI to search for relevant images and attach them to an existing news article.
 
@@ -160,17 +161,19 @@ class ArticleGenerationService:
             prompt=INITIAL_CONNECTION_PROMPT,
             response_model=list[InitConnectionResult],
         )
+        if result is None:
+            raise ValueError(f"AI model returned empty result when connecting new articles from ids {input_news_ids}")
         logger.debug(f"AI model returned {len(result)} connection suggestions")
 
-        parsed_news_ids = set(news.id for news in recent_parsed_news)
-        input_news_ids = set(news.id for news in recent_input_news)
+        parsed_news_ids_set = set(news.id for news in recent_parsed_news)
+        input_news_ids_set = set(news.id for news in recent_input_news)
 
         result = [
             res
             for res in result
-            if res.parsed_news_id in parsed_news_ids
+            if res.parsed_news_id in parsed_news_ids_set
             and all(
-                input_news_id in input_news_ids for input_news_id in res.input_news_ids
+                input_news_id in input_news_ids_set for input_news_id in res.input_news_ids
             )
         ]
         logger.debug(f"Filtered to {len(result)} valid connection results")
@@ -216,7 +219,9 @@ class ArticleGenerationService:
             prompt=INITIAL_GENERATION_PROMPT,
             response_model=list[InitGenerationResult],
         )
-        input_news_ids = set(news.id for news in recent_input_news)
+        if result is None:
+            raise ValueError(f"AI model returned empty result when creating new articles from ids {input_news_ids}")
+        input_news_ids = [news.id for news in recent_input_news]
         result = [
             res
             for res in result
@@ -273,6 +278,8 @@ class ArticleGenerationService:
         result = await self.ai_model.prompt_model(
             files=files, prompt=NEW_GENERATION_PROMPT, response_model=ParsedNewsCreate
         )
+        if result is None:
+            raise ValueError(f"AI model didn't return proper result when creating new article from {input_news_ids}")
         logger.debug(
             f"AI model generated article: '{result.title}' with {len(result.content)} characters"
         )
@@ -332,7 +339,8 @@ class ArticleGenerationService:
         logger.debug(
             f"AI model generated enrichment updates for article ID: {parsed_news_id}"
         )
-
+        if result is None:
+            raise ValueError(f"AI model didn't return proper result when enriching article {parsed_news_id}")
         saved_news = await self.parsed_news_service.update_news(news_data=result)
         logger.info(
             f"Successfully enriched article: '{saved_news.title}' (ID: {saved_news.id})"

@@ -30,7 +30,7 @@ def verify_generated_news(generated_news: list[ParsedNewsResponseDetailed]) -> N
         )
 
 
-async def test_parse_news(commit_transaction: bool = False, delta_days: int = 365):
+async def test_parse_news(commit_transaction: bool = False) -> None:
     """Testing workflow for news parsing and generation"""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -77,7 +77,7 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
             f"The testing workflow shouldn't add any connected news. {generated_news=}"
         )
 
-        generated_news = (
+        generated_news_groups = (
             await article_generation_service.choose_input_news_for_new_articles(
                 input_news_ids=input_news_ids
             )
@@ -86,10 +86,10 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
             f"Service should generate exactly 3 news. {generated_news=}"
         )
         await session.flush()
-        for single_generated_news in generated_news:
+        for generated_news_group in generated_news_groups:
             new_article = (
                 await article_generation_service.create_new_article_from_input_news(
-                    input_news_ids=single_generated_news
+                    input_news_ids=generated_news_group
                 )
             )
             verify_generated_news([new_article])
@@ -123,7 +123,7 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
                 single_generated_news
             )
             verify_generated_news([new_article])
-        generated_news = (
+        generated_news_groups = (
             await article_generation_service.choose_input_news_for_new_articles(
                 input_news_ids=input_news_ids
             )
@@ -132,10 +132,10 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
             f"Service should generate exactly 1 news. {generated_news=}"
         )
         await session.flush()
-        for single_generated_news in generated_news:
+        for generated_news_group in generated_news_groups:
             new_article = (
                 await article_generation_service.create_new_article_from_input_news(
-                    input_news_ids=single_generated_news
+                    input_news_ids=generated_news_group
                 )
             )
             verify_generated_news([new_article])
@@ -148,7 +148,7 @@ async def test_parse_news(commit_transaction: bool = False, delta_days: int = 36
         #    f"Number of initial tags: {initial_tags_len} Number of the end tags: {end_tags_len}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Test News Processing Functionality")
     parser.add_argument(
         "--commit", action="store_true", help="Commit transactions to database"
@@ -161,7 +161,7 @@ def main():
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
-        test_parse_news(commit_transaction=args.commit, delta_days=args.days)
+        test_parse_news(commit_transaction=args.commit)
     )
     print("Tests completed successfully!")
 

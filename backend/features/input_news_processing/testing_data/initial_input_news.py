@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import cast
 
 from features.input_news_processing.domain.schemas import InputNews
 from features.input_news_processing.testing_data.common_testing_data import sources
@@ -207,7 +208,7 @@ def load_initial_input_news_data() -> list[InputNews]:
     for article_dict in INITIAL_INPUT_ARTICLES:
         # Convert string back to datetime
         article_dict["publication_date"] = datetime.fromisoformat(
-            article_dict["publication_date"]
+            cast(str, article_dict["publication_date"])
         )
 
         # Create Pydantic model

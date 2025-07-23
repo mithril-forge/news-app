@@ -33,10 +33,6 @@ def orm_to_pydantic(
     Returns:
         A Pydantic model instance
     """
-    if not orm_obj:
-        logger.warn("Received None orm_obj for conversion")
-        return None
-
     # Convert SQLModel instance to dict
     if excludes:
         # Convert to dict excluding specified fields
@@ -82,9 +78,6 @@ def pydantic_to_orm(
     Returns:
         An SQLModel instance
     """
-    if not pydantic_obj:
-        logger.warn("Received None pydantic_obj for conversion")
-        return None
 
     # Convert Pydantic model to dict
     if excludes:
@@ -109,15 +102,14 @@ def news_to_response(news: ParsedNews) -> ParsedNewsBasic:
         A NewsResponse Pydantic model instance with topic_name set
     """
     logger.debug(f"Converting news to response: {getattr(news, 'id', 'unknown')}")
-    if not news:
-        logger.warn("Received None news for conversion to response")
-        return None
 
     # Convert to dict first
     data = news.dict()
 
     # Add topic_name if topic is available
-    data["topic"] = orm_to_pydantic(news.topic, TopicResponse)
+    topic = news.topic
+    if topic is not None:
+        data["topic"] = orm_to_pydantic(topic, TopicResponse)
     data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
 
     # Create response model from dict
@@ -159,15 +151,14 @@ def news_to_detailed_response(news: ParsedNews) -> ParsedNewsResponseDetailed:
     logger.debug(
         f"Converting news to detailed response: {getattr(news, 'id', 'unknown')}"
     )
-    if not news:
-        logger.warn("Received None news for conversion to detailed response")
-        return None
 
     # Convert to dict first
     data = news.dict()
 
     # Add topic_name if topic is available
-    data["topic"] = orm_to_pydantic(news.topic, TopicResponse)
+    topic = news.topic
+    if topic is not None:
+        data["topic"] = orm_to_pydantic(topic, TopicResponse)
     data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
     data["input_news"] = orm_list_to_pydantic(news.input_news, InputNewsWithoutContent)
 

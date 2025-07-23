@@ -15,7 +15,7 @@ class AbstractAIModel(abc.ABC):
     @abc.abstractmethod
     async def prompt_model(
         self, files: dict[str, pathlib.Path], response_model: Type[T], prompt: str
-    ) -> T:
+    ) -> T | None:
         """Prompt model with files and prompt, returns result as the passed type, this is ensured by AsyncInstructor"""
         pass
 

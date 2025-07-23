@@ -27,7 +27,7 @@ class OpenAIModel(AbstractAIModel, Generic[T]):
 
     async def prompt_model(
         self, files: dict[str, pathlib.Path], response_model: Type[T], prompt: str
-    ) -> T:
+    ) -> T | None:
         """
         Prompt the model with a query and files, returning structured output.
 

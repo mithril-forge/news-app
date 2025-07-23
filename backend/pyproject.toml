@@ -3,7 +3,7 @@ name = "news-app"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Simon Foucek", email = "sfoucek@redhat.com"}
+    { name = "Simon Foucek", email = "sfoucek@redhat.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,17 +26,23 @@ dependencies = [
     "periodiq>=0.13.0",
     "setuptools>=80.9.0",
 ]
-
-[tool.uv]
-package = false
-
-[tool.uv.sources]
-ai-knowledge-bot = { path = "wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl" }
-
 [dependency-groups]
 dev = [
     "mypy>=1.17.0",
     "pylint>=3.3.7",
     "ruff>=0.12.4",
 ]
+[tool.uv]
+package = false
 
+[tool.uv.sources]
+ai-knowledge-bot = { path = "wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl" }
+
+[[tool.mypy.overrides]]
+module = [
+    "cz_news.*",
+    "google.generativeai.*",
+    "periodiq.*",
+    "genai"
+]
+ignore_missing_imports = true

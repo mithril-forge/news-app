@@ -3,7 +3,7 @@ import logging
 import sys
 
 
-def init_logging():
+def init_logging() -> None:
     # Clear ALL existing handlers and configuration
     root_logger = logging.getLogger()
     for handler in root_logger.handlers[:]:

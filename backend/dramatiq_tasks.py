@@ -56,7 +56,7 @@ async def async_scrap_articles_task(hours_delta: int) -> None:
 
 
 @dramatiq.actor(max_retries=1)
-def choose_connected_articles_task(input_news_ids: list[int]):
+def choose_connected_articles_task(input_news_ids: list[int]) -> None:
     """
     It's querying the AI model if there are any passed input_news that can be connected and enrich older parsed news.
     Then it starts new task to generate new articles from the nonconnectable input_news
@@ -68,7 +68,7 @@ def choose_connected_articles_task(input_news_ids: list[int]):
     logger.info("Ended choose_connected_articles_task")
 
 
-async def async_choose_connected_articles_task(input_news_ids: list[int]):
+async def async_choose_connected_articles_task(input_news_ids: list[int]) -> None:
     """Async wrapper"""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -107,7 +107,7 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]):
 @dramatiq.actor(max_retries=1)
 def choose_new_articles_task(
     input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20
-):
+) -> None:
     """Task that takes passed input_news_ids also query for the nonconnected older input news (by param delta).
     Then it queries AI model to choose new parsed articles and creates tasks for their generation"""
     logger.info(
@@ -125,7 +125,7 @@ def choose_new_articles_task(
 
 async def async_choose_new_articles_task(
     input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20
-):
+) -> None:
     """Async wrapper"""
     input_news_delta = timedelta(hours=input_news_hours)
     gemini_api_key = os.getenv("GEMINI_API_KEY")
@@ -164,7 +164,7 @@ async def async_choose_new_articles_task(
 
 
 @dramatiq.actor(max_retries=1)
-def generate_article_task(input_news_ids: list[int]):
+def generate_article_task(input_news_ids: list[int]) -> None:
     """Tasks that takes input_news_ids and queries the AI model for the new parsed article"""
     logger.info(
         f"Starting generate_article_task with {len(input_news_ids)} news items: {input_news_ids}"
@@ -173,7 +173,7 @@ def generate_article_task(input_news_ids: list[int]):
     logger.info("Ended generate_article_task")
 
 
-async def async_generate_article_task(input_news_ids: list[int]):
+async def async_generate_article_task(input_news_ids: list[int]) -> None:
     """Async wrapper"""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -196,14 +196,14 @@ async def async_generate_article_task(input_news_ids: list[int]):
 
 
 @dramatiq.actor(max_retries=1)
-def enrich_parsed_article_task(parsed_news_id: int):
+def enrich_parsed_article_task(parsed_news_id: int) -> None:
     """Task that takes parsed news with updated information (input_news etc.) and queries the AI model to update this article"""
     logger.info(f"Starting enrich_parsed_article_task for news {parsed_news_id}")
     asyncio.run(async_enrich_parsed_article_task(parsed_news_id))
     logger.info(f"Ended enrich_parsed_article_task for news {parsed_news_id}")
 
 
-async def async_enrich_parsed_article_task(parsed_news_id: int):
+async def async_enrich_parsed_article_task(parsed_news_id: int) -> None:
     """Aync wrapper"""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -222,13 +222,13 @@ async def async_enrich_parsed_article_task(parsed_news_id: int):
 
 
 @dramatiq.actor
-def generate_and_attach_image_to_news(parsed_news_id: int):
+def generate_and_attach_image_to_news(parsed_news_id: int) -> None:
     """Task for the picture generation"""
     logger.info(f"Starting generate_and_attach_image_to_news for news {parsed_news_id}")
     asyncio.run(async_generate_picture_for_news(parsed_news_id))
     logger.info(f"Ended generate_and_attach_image_to_news for news {parsed_news_id}")
 
 
-async def async_generate_picture_for_news(parsed_news_id: int):
+async def async_generate_picture_for_news(parsed_news_id: int) -> None:
     """Async wrapper"""
     pass

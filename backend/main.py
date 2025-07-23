@@ -1,7 +1,7 @@
 import datetime
 import os
 import time
-from typing import List, Optional
+from typing import List, Optional, Any
 
 import structlog
 from fastapi import FastAPI, Depends, Query, Request, HTTPException
@@ -53,7 +53,7 @@ app.add_middleware(
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(request: Request, exc: Any) -> JSONResponse:
     logger.error(f"HTTP exception: {exc.status_code} - {exc.detail}")
     return JSONResponse(
         status_code=exc.status_code,
@@ -62,7 +62,7 @@ async def http_exception_handler(request, exc):
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
+async def validation_exception_handler(request: Request, exc: Any) -> JSONResponse:
     logger.error(f"Validation error: {exc.errors()}")
     return JSONResponse(
         status_code=422,
@@ -71,7 +71,7 @@ async def validation_exception_handler(request, exc):
 
 
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def log_requests(request: Request, call_next: Any) -> Any:
     """Add basic logging to the request with user tracking."""
     client_ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("user-agent", "unknown")
@@ -96,7 +96,7 @@ async def log_requests(request: Request, call_next):
 
 # API endpoints
 @app.get("/topics", response_model=List[TopicResponse])
-async def all_topics(session: AsyncSession = Depends(get_session)):
+async def all_topics(session: AsyncSession = Depends(get_session)) -> List[TopicResponse]:
     """Get all topics"""
     service = TopicService(session)
     result = await service.get_all_topics()
@@ -104,7 +104,7 @@ async def all_topics(session: AsyncSession = Depends(get_session)):
 
 
 @app.get("/topics/{topic_id}", response_model=TopicResponse)
-async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_session)):
+async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_session)) -> List[TopicResponse]:
     """Get a specific topic by ID"""
     service = TopicService(session)
     return await service.get_topic_by_id(topic_id)
@@ -113,12 +113,12 @@ async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_sess
 @app.get("/news/topics/{topic_id}", response_model=List[ParsedNewsBasic])
 async def news_by_topic(
     topic_id: int,
-    skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
-    limit: Optional[int] = Query(
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(
         10, ge=1, le=100, description="Max number of records to return"
     ),
     session: AsyncSession = Depends(get_session),
-):
+) -> List[ParsedNewsBasic]:
     """Get news for a specific topic with pagination"""
     service = NewsService(session)
     return await service.get_news_by_topic(topic_id, skip=skip, limit=limit)
@@ -126,12 +126,12 @@ async def news_by_topic(
 
 @app.get("/news/latest", response_model=List[ParsedNewsBasic])
 async def latest_news(
-    skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
-    limit: Optional[int] = Query(
+    skip: int = Query(0, ge=0, description="Number of records to skip"),
+    limit: int = Query(
         10, ge=1, le=100, description="Max number of records to return"
     ),
     session: AsyncSession = Depends(get_session),
-):
+) -> List[ParsedNewsBasic]:
     """Get the latest news items with pagination"""
     service = NewsService(session)
     return await service.get_latest_news(skip=skip, limit=limit)
@@ -139,10 +139,10 @@ async def latest_news(
 
 @app.get("/news/popular", response_model=List[ParsedNewsBasic])
 async def popular_news(
-    limit: Optional[int] = Query(10, ge=1, le=20),
-    days: Optional[int] = Query(3, ge=1, le=30),
+    limit: int = Query(10, ge=1, le=20),
+    days: int = Query(3, ge=1, le=30),
     session: AsyncSession = Depends(get_session),
-):
+) -> List[ParsedNewsBasic]:
     """Get the most popular news by views"""
     service = NewsService(session=session)
     period = datetime.timedelta(days=days)
@@ -150,7 +150,7 @@ async def popular_news(
 
 
 @app.get("/news/{news_id}", response_model=ParsedNewsResponseDetailed)
-async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
+async def read_news(news_id: int, session: AsyncSession = Depends(get_session)) -> ParsedNewsResponseDetailed:
     """Get a specific news item by ID"""
     service = NewsService(session)
     result = await service.get_news_by_id(news_id=news_id)
@@ -159,5 +159,5 @@ async def read_news(news_id: int, session: AsyncSession = Depends(get_session)):
 
 
 @app.get("/health")
-async def health_check():
+async def health_check() -> dict[str, str]:
     return {"status": "healthy"}

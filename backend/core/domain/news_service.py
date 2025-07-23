@@ -126,7 +126,7 @@ class NewsService:
 
     async def update_news(
         self, news_data: ParsedNewsUpdate
-    ) -> Optional[ParsedNewsResponseDetailed]:
+    ) -> ParsedNewsResponseDetailed:
         """
         Update an existing news item including its tags
 
@@ -145,8 +145,7 @@ class NewsService:
         )
         existing_news = await self.news_repo.get_by_id(news_data.id)
         if not existing_news:
-            logger.warning(f"News with ID {news_data.id} not found for update")
-            return None
+            raise ValueError(f"News with ID {news_data.id} not found for update")
 
         # TODO: Image url due to unsupported images right now, this will be fixed
         update_data = news_data.dict(exclude={"tags", "id", "image_url"})

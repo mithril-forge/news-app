@@ -41,7 +41,7 @@ async def get_input_news_and_parse(
     return [news.id for news in result]
 
 
-async def generate_and_connect_news(delta: timedelta):
+async def generate_and_connect_news(delta: timedelta) -> None:
     logger.info(f"Starting CLI news generation and connection with delta: {delta}")
     local_archive_folder = os.getenv("LOCAL_ARCHIVE_FOLDER")
     if local_archive_folder is None:
@@ -140,7 +140,7 @@ async def clear_old_input_news(delta: timedelta) -> None:
         logger.info("Successfully cleared old input news")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="News Processing CLI")
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 

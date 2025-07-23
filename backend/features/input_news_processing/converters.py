@@ -29,10 +29,6 @@ def input_schema_to_orm(input_metadata: InputNews) -> InputNews:
     Returns:
         An InputNews SQLModel instance ready to be added to the database
     """
-    if not input_metadata:
-        logger.warn("Received None input_metadata for conversion to ORM")
-        return None
-
     # Convert tags list to string representation (comma-separated)
     tags_str = ",".join(input_metadata.tags) if input_metadata.tags else None
 
@@ -75,13 +71,11 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
     Returns:
         An InputNewsWithID Pydantic model instance
     """
-    if not input_news:
-        logger.warn("Received None input_news for conversion to schema")
-        return None
-
     # Convert tags string to list
     tags_list = input_news.tags.split(",") if input_news.tags else []
-
+    input_news_id = input_news.id
+    if input_news_id is None:
+        raise ValueError("Trying to convert input news without id when required.")
     result = InputNewsWithID(
         id=input_news.id,
         tags=tags_list,
@@ -107,10 +101,6 @@ def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
     Returns:
         An InputNewsWithID Pydantic model instance
     """
-    if not input_news:
-        logger.warn("Received None input_news for conversion to schema")
-        return None
-
     # Convert tags string to list
     tags_list = input_news.tags.split(",") if input_news.tags else []
 

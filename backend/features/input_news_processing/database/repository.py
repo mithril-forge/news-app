@@ -55,7 +55,6 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
             f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}"
         )
         from_date = datetime.utcnow() - delta
-
         conditions = [
             InputNews.publication_date >= from_date
             if newer
