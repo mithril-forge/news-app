@@ -7,20 +7,18 @@ import structlog
 from pydantic import BaseModel
 
 from core.converters import orm_list_to_pydantic
-from features.api_service.database.repository import AsyncTagRepository
-from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import TagResponse, TopicResponse, NewsResponseDetailed, NewsCreate, \
-    NewsUpdate
-from features.api_service.services.topic_service import TopicService
+from core.repository import AsyncTagRepository
+from core.domain.news_service import NewsService
+from core.domain.schemas import TagResponse, ParsedNewsResponseDetailed, ParsedNewsCreate, ParsedNewsUpdate
+from core.domain.topic_service import TopicService
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import input_news_list_to_schema
-from features.input_news_processing.services.ai_prompts import PICTURE_SEARCH_PROMPT, INITIAL_CONNECTION_PROMPT, \
+from features.input_news_processing.domain.ai_prompts import PICTURE_SEARCH_PROMPT, INITIAL_CONNECTION_PROMPT, \
     INITIAL_GENERATION_PROMPT, NEW_GENERATION_PROMPT, \
     NEW_CONNECTION_PROMPT
-from features.input_news_processing.services.input_news_service import InputNewsService
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, ConnectionResult, \
-    CreationResult, InputNewsWithID, ImageDetail, InitConnectionResult, InitGenerationResult
+from features.input_news_processing.domain.input_news_service import InputNewsService
+from features.input_news_processing.domain.schemas import ImageDetail, InitConnectionResult, InitGenerationResult
 
 logger = structlog.get_logger()
 
@@ -77,7 +75,7 @@ class ArticleGenerationService:
         logger.info(f"Successfully saved {len(kwargs)} lists to temporary files")
         return paths_mapping
 
-    async def generate_and_attach_image_to_news(self, news_id: int) -> NewsResponseDetailed:
+    async def generate_and_attach_image_to_news(self, news_id: int) -> ParsedNewsResponseDetailed:
         """
         Uses AI to search for relevant images and attach them to an existing news article.
 
@@ -186,7 +184,7 @@ class ArticleGenerationService:
         final_groups = [gen_result.input_news_ids for gen_result in result]
         return final_groups
 
-    async def create_new_article_from_input_news(self, input_news_ids: list[int]) -> NewsResponseDetailed:
+    async def create_new_article_from_input_news(self, input_news_ids: list[int]) -> ParsedNewsResponseDetailed:
         """
         Creates a new parsed article by combining and processing multiple related input news items using AI.
 
@@ -211,7 +209,7 @@ class ArticleGenerationService:
         logger.debug("Generated data files for AI article creation")
 
         result = await self.ai_model.prompt_model(files=files, prompt=NEW_GENERATION_PROMPT,
-                                                  response_model=NewsCreate)
+                                                  response_model=ParsedNewsCreate)
         logger.debug(f"AI model generated article: '{result.title}' with {len(result.content)} characters")
 
         saved_news = await self.parsed_news_service.create_news(news_data=result)
@@ -223,7 +221,7 @@ class ArticleGenerationService:
         logger.info(f"Connected {len(input_news_ids)} input news items to new article (ID: {saved_news.id})")
         return saved_news
 
-    async def enrich_existing_article(self, parsed_news_id: int) -> NewsResponseDetailed:
+    async def enrich_existing_article(self, parsed_news_id: int) -> ParsedNewsResponseDetailed:
         """
         Enhances an existing parsed article by using AI to improve content, add tags, or update topics.
 
@@ -247,7 +245,7 @@ class ArticleGenerationService:
         logger.debug("Prepared data files for AI article enrichment")
 
         result = await self.ai_model.prompt_model(files=files, prompt=NEW_CONNECTION_PROMPT,
-                                                  response_model=NewsUpdate)
+                                                  response_model=ParsedNewsUpdate)
         logger.debug(f"AI model generated enrichment updates for article ID: {parsed_news_id}")
 
         saved_news = await self.parsed_news_service.update_news(news_data=result)

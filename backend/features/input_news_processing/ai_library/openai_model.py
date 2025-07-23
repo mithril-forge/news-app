@@ -1,10 +1,8 @@
-import os
 import pathlib
-from typing import TypeVar, Generic, Type, Union, Dict
+from typing import TypeVar, Generic, Type
 
 import instructor
 from instructor import AsyncInstructor
-from pydantic import BaseModel
 from openai import AsyncOpenAI
 
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel

@@ -1,5 +1,4 @@
 import datetime
-import logging
 from typing import List, Optional
 
 import structlog
@@ -7,10 +6,10 @@ from fastapi import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.converters import orm_list_to_pydantic
-from features.api_service.converters import news_list_to_response, news_to_detailed_response
-from features.api_service.database.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
-from features.api_service.services.schemas import NewsResponseDetailed, NewsResponseBasic, NewsCreate, NewsUpdate, \
-    TagResponse, NewsBase, ParsedNewsSummary
+from core.converters import news_list_to_response, news_to_detailed_response
+from core.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
+from core.domain.schemas import TagResponse, ParsedNewsSummary, ParsedNewsBasic, ParsedNewsResponseDetailed, \
+    ParsedNewsCreate, ParsedNewsUpdate
 
 logger = structlog.get_logger()
 
@@ -31,21 +30,21 @@ class NewsService:
         logger.debug(f"Tags: {[tag.model_dump_json() for tag in result]}")
         return result
 
-    async def get_latest_news(self, skip: int, limit: int) -> List[NewsResponseBasic]:
+    async def get_latest_news(self, skip: int, limit: int) -> List[ParsedNewsBasic]:
         """Get the latest N news items"""
         logger.info(f"Fetching latest news (skip={skip}, limit={limit})")
         latest_news = await self.news_repo.get_latest(skip=skip, limit=limit)
         logger.debug(f"Retrieved {len(latest_news)} latest news items")
         return news_list_to_response(latest_news)
 
-    async def get_most_popular_news(self, period: datetime.timedelta, limit: int) -> List[NewsResponseBasic]:
+    async def get_most_popular_news(self, period: datetime.timedelta, limit: int) -> List[ParsedNewsBasic]:
         logger.info(f"Fetching {limit} most popular news for {period}")
         popular_news = await self.news_repo.get_most_viewed_news_by_period(period=period, limit=limit)
         result = news_list_to_response(popular_news)
         logger.info(f"Retrieved {len(result)} most popular news items")
         return result
 
-    async def get_news_by_id(self, news_id: int) -> NewsResponseDetailed:
+    async def get_news_by_id(self, news_id: int) -> ParsedNewsResponseDetailed:
         """Get a specific news item by ID"""
         logger.info(f"Fetching news by ID: {news_id}")
         news = await self.news_repo.get_with_tags(news_id)
@@ -65,7 +64,7 @@ class NewsService:
         logger.debug(f"Successfully added view to news ID: {news_id}")
         return None
 
-    async def get_news_by_topic(self, topic_id: int, limit: int, skip: int) -> List[NewsResponseBasic]:
+    async def get_news_by_topic(self, topic_id: int, limit: int, skip: int) -> List[ParsedNewsBasic]:
         """Get all news for a specific topic"""
         logger.info(f"Fetching news for topic ID {topic_id} (skip={skip}, limit={limit})")
         sorted_news = await self.news_repo.get_by_topic_id(topic_id=topic_id, limit=limit,
@@ -74,7 +73,7 @@ class NewsService:
         logger.debug(f"Retrieved news ids: {[news.id for news in sorted_news]}")
         return news_list_to_response(sorted_news)
 
-    async def create_news(self, news_data: NewsCreate) -> NewsResponseDetailed:
+    async def create_news(self, news_data: ParsedNewsCreate) -> ParsedNewsResponseDetailed:
         """Create a new news item with tags"""
         logger.info(f"Creating new article with title: {news_data.title}")
         logger.debug(f"News data creation content: {news_data.model_dump_json(exclude={'content', 'description'})}")
@@ -95,7 +94,7 @@ class NewsService:
         logger.debug(f"News data: {news_data.model_dump_json(exclude={'content', 'description'})}")
         return result
 
-    async def update_news(self, news_data: NewsUpdate) -> Optional[NewsResponseDetailed]:
+    async def update_news(self, news_data: ParsedNewsUpdate) -> Optional[ParsedNewsResponseDetailed]:
         """
         Update an existing news item including its tags
 

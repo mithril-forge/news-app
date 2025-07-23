@@ -1,22 +1,20 @@
 import io
 import json
-import logging
 import zipfile
 from datetime import datetime, timedelta
 from typing import List, Optional
 
 import structlog
 
-from core.converters import orm_list_to_pydantic
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.database.repository import AsyncInputNewsRepository
-from cz_news import crawl_czech_news, Article, CrawlResult, CrawlSummary
+from cz_news import crawl_czech_news, Article
 
-from features.api_service.database.repository import AsyncParsedNewsRepository
+from core.repository import AsyncParsedNewsRepository
 from features.input_news_processing.converters import parsed_news_list_with_input, input_news_list_to_schema, \
     input_schema_list_to_orm, input_news_to_schema, input_news_lite_list_to_schema
-from features.input_news_processing.services.schemas import ParsedNewsWithInputNews, InputNewsBase, \
-    InputNewsWithID, InputNewsLite
+from features.input_news_processing.domain.schemas import ParsedNewsWithInputNews, InputNews, \
+    InputNewsWithID, InputNewsWithoutContent
 
 logger = structlog.get_logger()
 
@@ -29,7 +27,7 @@ class InputNewsService:
         self.archive = archive
         logger.info("InputNewsService initialized")
 
-    async def add_or_update_input_news_batch(self, input_news_list: List[InputNewsBase]) -> List[InputNewsWithID]:
+    async def add_or_update_input_news_batch(self, input_news_list: List[InputNews]) -> List[InputNewsWithID]:
         """
         Add a batch of input news items to the database.
 
@@ -107,7 +105,7 @@ class InputNewsService:
 
     @staticmethod
     async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 10, websites: list[str] = None) -> list[
-        InputNewsBase]:
+        InputNews]:
         """
         Function that calls the Czech News Crawler to fetch input news from websites.
 
@@ -143,7 +141,7 @@ class InputNewsService:
         for article in articles:
             author = ",".join(article.authors)
             publish_date = article.publish_date if article.publish_date else datetime.now()
-            input_news = InputNewsBase(
+            input_news = InputNews(
                 tags=article.tags,
                 category="",
                 publication_date=publish_date,
@@ -177,7 +175,7 @@ class InputNewsService:
             self,
             input_news_ids: list[int],
             has_parsed_news: Optional[bool] = None
-    ) -> list[InputNewsLite]:
+    ) -> list[InputNewsWithoutContent]:
         """
         Retrieves input news within a specified time period (lite version with less information).
         Args:

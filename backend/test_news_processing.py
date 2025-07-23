@@ -7,16 +7,16 @@ import tempfile
 from datetime import timedelta
 
 from core.engine import get_session_context
-from features.api_service.services.news_service import NewsService
-from features.api_service.services.schemas import NewsResponseDetailed
+from core.domain.news_service import NewsService
+from core.domain.schemas import ParsedNewsResponseDetailed
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
-from features.input_news_processing.services.article_generation_service import ArticleGenerationService
-from features.input_news_processing.services.input_news_service import InputNewsService
+from features.input_news_processing.domain.article_generation_service import ArticleGenerationService
+from features.input_news_processing.domain.input_news_service import InputNewsService
 from features.input_news_processing.testing_data.common import mock_data
 
 
-def verify_generated_news(generated_news: list[NewsResponseDetailed]) -> None:
+def verify_generated_news(generated_news: list[ParsedNewsResponseDetailed]) -> None:
     """Verify that generated news meets the quality criteria"""
     for single_generated_news in generated_news:
         content_len = len(single_generated_news.content.split(" "))
