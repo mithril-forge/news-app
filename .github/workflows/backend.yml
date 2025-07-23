@@ -36,12 +36,12 @@ jobs:
     - name: Format check with Ruff
       working-directory: backend
       run: |
-        ruff format --check .
+        uv run ruff format --check .
 
     - name: Type check with MyPy
       working-directory: backend
       run: |
-        mypy . --ignore-missing-imports --strict-optional --warn-redundant-casts --warn-unused-ignores
+        uv run mypy --strict .
 
     - name: Lint with Pylint
       working-directory: backend
