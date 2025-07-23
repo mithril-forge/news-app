@@ -33,3 +33,10 @@ package = false
 [tool.uv.sources]
 ai-knowledge-bot = { path = "wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl" }
 
+[dependency-groups]
+dev = [
+    "mypy>=1.17.0",
+    "pylint>=3.3.7",
+    "ruff>=0.12.4",
+]
+
