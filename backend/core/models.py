@@ -23,7 +23,8 @@ class Topic(BaseModel, table=True):
     description: Optional[str] = Field(default=None)
 
     news_items: Mapped[list["ParsedNews"]] = Relationship(
-        sa_relationship=relationship(back_populates="topic", lazy='selectin'))
+        sa_relationship=relationship(back_populates="topic", lazy="selectin")
+    )
 
 
 class ParsedNewsTagLink(BaseModel, table=True):
@@ -32,9 +33,7 @@ class ParsedNewsTagLink(BaseModel, table=True):
     news_item_id: Optional[int] = Field(
         default=None, foreign_key="parsed_news.id", primary_key=True
     )
-    tag_id: Optional[int] = Field(
-        default=None, foreign_key="tags.id", primary_key=True
-    )
+    tag_id: Optional[int] = Field(default=None, foreign_key="tags.id", primary_key=True)
 
 
 class Tag(BaseModel, table=True):
@@ -43,10 +42,15 @@ class Tag(BaseModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     text: str = Field()
 
-    news_items: Mapped[List["ParsedNews"]] = Relationship(link_model=ParsedNewsTagLink, back_populates="tags",
-                                                          sa_relationship_kwargs={'lazy': 'selectin',
-                                                                                  'cascade': "all, delete",
-                                                                                  'passive_deletes': True})
+    news_items: Mapped[List["ParsedNews"]] = Relationship(
+        link_model=ParsedNewsTagLink,
+        back_populates="tags",
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+            "cascade": "all, delete",
+            "passive_deletes": True,
+        },
+    )
 
 
 class ParsedNews(BaseModel, table=True):
@@ -64,18 +68,21 @@ class ParsedNews(BaseModel, table=True):
     tags: Mapped[List["Tag"]] = Relationship(
         back_populates="news_items",
         link_model=ParsedNewsTagLink,
-        sa_relationship_kwargs={'lazy': 'selectin', 'cascade': "all, delete",
-                                'passive_deletes': True}
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+            "cascade": "all, delete",
+            "passive_deletes": True,
+        },
     )
 
     topic_id: Optional[int] = Field(default=None, foreign_key="topics.id")
     topic: Mapped[Optional["Topic"]] = Relationship(
-        sa_relationship=relationship(back_populates="news_items", lazy='selectin')
+        sa_relationship=relationship(back_populates="news_items", lazy="selectin")
     )
 
     input_news: Mapped[List["InputNews"]] = Relationship(
         back_populates="parsed_news_relation",
-        sa_relationship_kwargs={'lazy': 'selectin'}
+        sa_relationship_kwargs={"lazy": "selectin"},
     )
 
 
@@ -83,7 +90,9 @@ class InputNews(BaseModel, table=True):
     __tablename__ = "input_news"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    tags: Optional[str] = Field(default=None)  # This is a string field, not a relationship
+    tags: Optional[str] = Field(
+        default=None
+    )  # This is a string field, not a relationship
     category: str = Field()
     source_url: str = Field()
     source_site: str = Field()
@@ -93,14 +102,11 @@ class InputNews(BaseModel, table=True):
     title: str = Field()
 
     parsed_news: Optional[int] = Field(
-        default=None,
-        foreign_key="parsed_news.id",
-        nullable=True
+        default=None, foreign_key="parsed_news.id", nullable=True
     )
 
     parsed_news_relation: Mapped[Optional["ParsedNews"]] = Relationship(
-        back_populates="input_news",
-        sa_relationship_kwargs={'lazy': 'selectin'}
+        back_populates="input_news", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
     received_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)

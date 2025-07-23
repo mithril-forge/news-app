@@ -5,17 +5,23 @@ from pydantic import BaseModel
 from sqlmodel import SQLModel
 
 from core.models import ParsedNews
-from core.domain.schemas import TagResponse, TopicResponse, ParsedNewsBasic, ParsedNewsResponseDetailed, \
-    InputNewsWithoutContent
+from core.domain.schemas import (
+    TagResponse,
+    TopicResponse,
+    ParsedNewsBasic,
+    ParsedNewsResponseDetailed,
+    InputNewsWithoutContent,
+)
 
-M = TypeVar('M', bound=SQLModel)
-P = TypeVar('P', bound=BaseModel)
+M = TypeVar("M", bound=SQLModel)
+P = TypeVar("P", bound=BaseModel)
 
 logger = structlog.get_logger()
 
 
-def orm_to_pydantic(orm_obj: M, pydantic_class: Type[P],
-                    excludes: Optional[List[str]] = None) -> P:
+def orm_to_pydantic(
+    orm_obj: M, pydantic_class: Type[P], excludes: Optional[List[str]] = None
+) -> P:
     """
     Convert an ORM model instance to a Pydantic model instance.
 
@@ -44,8 +50,9 @@ def orm_to_pydantic(orm_obj: M, pydantic_class: Type[P],
     return result
 
 
-def orm_list_to_pydantic(orm_list: List[M], pydantic_class: Type[P],
-                         excludes: Optional[List[str]] = None) -> List[P]:
+def orm_list_to_pydantic(
+    orm_list: List[M], pydantic_class: Type[P], excludes: Optional[List[str]] = None
+) -> List[P]:
     """
     Convert a list of ORM model instances to a list of Pydantic model instances.
 
@@ -61,8 +68,9 @@ def orm_list_to_pydantic(orm_list: List[M], pydantic_class: Type[P],
     return result
 
 
-def pydantic_to_orm(pydantic_obj: P, orm_class: Type[M],
-                    excludes: Optional[List[str]] = None) -> M:
+def pydantic_to_orm(
+    pydantic_obj: P, orm_class: Type[M], excludes: Optional[List[str]] = None
+) -> M:
     """
     Convert a Pydantic model instance to an ORM model instance.
 
@@ -114,7 +122,9 @@ def news_to_response(news: ParsedNews) -> ParsedNewsBasic:
 
     # Create response model from dict
     result = ParsedNewsBasic(**data)
-    logger.debug(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to basic response")
+    logger.debug(
+        f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to basic response"
+    )
     return result
 
 
@@ -130,7 +140,9 @@ def news_list_to_response(news_list: List[ParsedNews]) -> List[ParsedNewsBasic]:
     """
     logger.debug(f"Converting list of {len(news_list)} news items to response")
     result = [news_to_response(news) for news in news_list]
-    logger.debug(f"Successfully converted {len(result)} news items to basic response list")
+    logger.debug(
+        f"Successfully converted {len(result)} news items to basic response list"
+    )
     return result
 
 
@@ -144,7 +156,9 @@ def news_to_detailed_response(news: ParsedNews) -> ParsedNewsResponseDetailed:
     Returns:
         A NewsWithTopicResponse Pydantic model instance
     """
-    logger.debug(f"Converting news to detailed response: {getattr(news, 'id', 'unknown')}")
+    logger.debug(
+        f"Converting news to detailed response: {getattr(news, 'id', 'unknown')}"
+    )
     if not news:
         logger.warn("Received None news for conversion to detailed response")
         return None
@@ -159,5 +173,7 @@ def news_to_detailed_response(news: ParsedNews) -> ParsedNewsResponseDetailed:
 
     # Create response model from dict
     result = ParsedNewsResponseDetailed(**data)
-    logger.debug(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to detailed response")
+    logger.debug(
+        f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to detailed response"
+    )
     return result

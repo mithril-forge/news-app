@@ -14,7 +14,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from config import Environment
 from core.engine import get_session
 from core.domain.news_service import NewsService
-from core.domain.schemas import TopicResponse, ParsedNewsBasic, ParsedNewsResponseDetailed
+from core.domain.schemas import (
+    TopicResponse,
+    ParsedNewsBasic,
+    ParsedNewsResponseDetailed,
+)
 from core.domain.topic_service import TopicService
 from logger import init_logging
 
@@ -68,19 +72,23 @@ async def validation_exception_handler(request, exc):
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """ Add basic logging to the request with user tracking."""
+    """Add basic logging to the request with user tracking."""
     client_ip = request.client.host if request.client else "unknown"
     user_agent = request.headers.get("user-agent", "unknown")
 
     start_time = time.time()
-    logger.debug(f"Request started: {request.method} {request.url.path} from IP: {client_ip}")
+    logger.debug(
+        f"Request started: {request.method} {request.url.path} from IP: {client_ip}"
+    )
 
     response = await call_next(request)
 
     process_time = time.time() - start_time
-    logger.info(f"Request: {request.method} {request.url.path} {request.query_params} "
-                f"| IP: {client_ip} | UA: {user_agent[:50]}... "
-                f"| Params: {request.query_params} took {process_time:.2f}s")
+    logger.info(
+        f"Request: {request.method} {request.url.path} {request.query_params} "
+        f"| IP: {client_ip} | UA: {user_agent[:50]}... "
+        f"| Params: {request.query_params} took {process_time:.2f}s"
+    )
 
     logger.debug(f"Response for the request: {response}")
     return response
@@ -104,10 +112,12 @@ async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_sess
 
 @app.get("/news/topics/{topic_id}", response_model=List[ParsedNewsBasic])
 async def news_by_topic(
-        topic_id: int,
-        skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
-        limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
-        session: AsyncSession = Depends(get_session)
+    topic_id: int,
+    skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
+    limit: Optional[int] = Query(
+        10, ge=1, le=100, description="Max number of records to return"
+    ),
+    session: AsyncSession = Depends(get_session),
 ):
     """Get news for a specific topic with pagination"""
     service = NewsService(session)
@@ -116,9 +126,11 @@ async def news_by_topic(
 
 @app.get("/news/latest", response_model=List[ParsedNewsBasic])
 async def latest_news(
-        skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
-        limit: Optional[int] = Query(10, ge=1, le=100, description="Max number of records to return"),
-        session: AsyncSession = Depends(get_session)
+    skip: Optional[int] = Query(0, ge=0, description="Number of records to skip"),
+    limit: Optional[int] = Query(
+        10, ge=1, le=100, description="Max number of records to return"
+    ),
+    session: AsyncSession = Depends(get_session),
 ):
     """Get the latest news items with pagination"""
     service = NewsService(session)
@@ -127,11 +139,11 @@ async def latest_news(
 
 @app.get("/news/popular", response_model=List[ParsedNewsBasic])
 async def popular_news(
-        limit: Optional[int] = Query(10, ge=1, le=20),
-        days: Optional[int] = Query(3, ge=1, le=30),
-        session: AsyncSession = Depends(get_session)
+    limit: Optional[int] = Query(10, ge=1, le=20),
+    days: Optional[int] = Query(3, ge=1, le=30),
+    session: AsyncSession = Depends(get_session),
 ):
-    """ Get the most popular news by views"""
+    """Get the most popular news by views"""
     service = NewsService(session=session)
     period = datetime.timedelta(days=days)
     return await service.get_most_popular_news(period=period, limit=limit)

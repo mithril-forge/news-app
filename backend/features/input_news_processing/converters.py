@@ -10,8 +10,11 @@ import structlog
 
 from core.models import ParsedNews, InputNews
 from core.converters import news_to_detailed_response
-from features.input_news_processing.domain.schemas import ParsedNewsWithInputNews, InputNewsWithID, \
-    InputNewsWithoutContent
+from features.input_news_processing.domain.schemas import (
+    ParsedNewsWithInputNews,
+    InputNewsWithID,
+    InputNewsWithoutContent,
+)
 
 logger = structlog.get_logger()
 
@@ -125,7 +128,9 @@ def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
     return result
 
 
-def input_news_lite_list_to_schema(input_news_list: List[InputNews]) -> List[InputNewsWithoutContent]:
+def input_news_lite_list_to_schema(
+    input_news_list: List[InputNews],
+) -> List[InputNewsWithoutContent]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
 
@@ -139,7 +144,9 @@ def input_news_lite_list_to_schema(input_news_list: List[InputNews]) -> List[Inp
     return result
 
 
-def input_news_list_to_schema(input_news_list: List[InputNews]) -> List[InputNewsWithID]:
+def input_news_list_to_schema(
+    input_news_list: List[InputNews],
+) -> List[InputNewsWithID]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
 
@@ -154,7 +161,7 @@ def input_news_list_to_schema(input_news_list: List[InputNews]) -> List[InputNew
 
 
 def parsed_news_with_input(parsed_news: ParsedNews) -> ParsedNewsWithInputNews:
-    """ Connects also input news schema to the parsed news one"""
+    """Connects also input news schema to the parsed news one"""
     detailed_response = news_to_detailed_response(parsed_news).dict()
     # TODO: workaround for dependency on converter for the FE, we should probably separate it
     del detailed_response["input_news"]
@@ -163,7 +170,9 @@ def parsed_news_with_input(parsed_news: ParsedNews) -> ParsedNewsWithInputNews:
     return result
 
 
-def parsed_news_list_with_input(parsed_news_list: List[ParsedNews]) -> List[ParsedNewsWithInputNews]:
-    """ Converts a lit of parsed_news_list with input news also"""
+def parsed_news_list_with_input(
+    parsed_news_list: List[ParsedNews],
+) -> List[ParsedNewsWithInputNews]:
+    """Converts a lit of parsed_news_list with input news also"""
     result = [parsed_news_with_input(item) for item in parsed_news_list if item]
     return result

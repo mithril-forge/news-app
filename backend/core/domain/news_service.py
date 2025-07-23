@@ -7,9 +7,19 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.converters import orm_list_to_pydantic
 from core.converters import news_list_to_response, news_to_detailed_response
-from core.repository import AsyncParsedNewsRepository, AsyncTopicRepository, AsyncTagRepository
-from core.domain.schemas import TagResponse, ParsedNewsSummary, ParsedNewsBasic, ParsedNewsResponseDetailed, \
-    ParsedNewsCreate, ParsedNewsUpdate
+from core.repository import (
+    AsyncParsedNewsRepository,
+    AsyncTopicRepository,
+    AsyncTagRepository,
+)
+from core.domain.schemas import (
+    TagResponse,
+    ParsedNewsSummary,
+    ParsedNewsBasic,
+    ParsedNewsResponseDetailed,
+    ParsedNewsCreate,
+    ParsedNewsUpdate,
+)
 
 logger = structlog.get_logger()
 
@@ -37,9 +47,13 @@ class NewsService:
         logger.debug(f"Retrieved {len(latest_news)} latest news items")
         return news_list_to_response(latest_news)
 
-    async def get_most_popular_news(self, period: datetime.timedelta, limit: int) -> List[ParsedNewsBasic]:
+    async def get_most_popular_news(
+        self, period: datetime.timedelta, limit: int
+    ) -> List[ParsedNewsBasic]:
         logger.info(f"Fetching {limit} most popular news for {period}")
-        popular_news = await self.news_repo.get_most_viewed_news_by_period(period=period, limit=limit)
+        popular_news = await self.news_repo.get_most_viewed_news_by_period(
+            period=period, limit=limit
+        )
         result = news_list_to_response(popular_news)
         logger.info(f"Retrieved {len(result)} most popular news items")
         return result
@@ -54,47 +68,65 @@ class NewsService:
 
         result = news_to_detailed_response(news)
         logger.info(f"Successfully retrieved news by ID: {news_id}")
-        logger.debug(f"News content: {result.model_dump_json(exclude={'content', 'description'})}")
+        logger.debug(
+            f"News content: {result.model_dump_json(exclude={'content', 'description'})}"
+        )
         return result
 
     async def add_view_to_news(self, news_id: int) -> None:
-        """ Add view to the news"""
+        """Add view to the news"""
         logger.debug(f"Adding view to news ID: {news_id}")
         await self.news_repo.add_view_to_news(news_id=news_id)
         logger.debug(f"Successfully added view to news ID: {news_id}")
         return None
 
-    async def get_news_by_topic(self, topic_id: int, limit: int, skip: int) -> List[ParsedNewsBasic]:
+    async def get_news_by_topic(
+        self, topic_id: int, limit: int, skip: int
+    ) -> List[ParsedNewsBasic]:
         """Get all news for a specific topic"""
-        logger.info(f"Fetching news for topic ID {topic_id} (skip={skip}, limit={limit})")
-        sorted_news = await self.news_repo.get_by_topic_id(topic_id=topic_id, limit=limit,
-                                                           skip=skip)
+        logger.info(
+            f"Fetching news for topic ID {topic_id} (skip={skip}, limit={limit})"
+        )
+        sorted_news = await self.news_repo.get_by_topic_id(
+            topic_id=topic_id, limit=limit, skip=skip
+        )
         logger.info(f"Fetched {len(sorted_news)} for topic {topic_id}")
         logger.debug(f"Retrieved news ids: {[news.id for news in sorted_news]}")
         return news_list_to_response(sorted_news)
 
-    async def create_news(self, news_data: ParsedNewsCreate) -> ParsedNewsResponseDetailed:
+    async def create_news(
+        self, news_data: ParsedNewsCreate
+    ) -> ParsedNewsResponseDetailed:
         """Create a new news item with tags"""
         logger.info(f"Creating new article with title: {news_data.title}")
-        logger.debug(f"News data creation content: {news_data.model_dump_json(exclude={'content', 'description'})}")
+        logger.debug(
+            f"News data creation content: {news_data.model_dump_json(exclude={'content', 'description'})}"
+        )
         tag_texts = news_data.tags or []
         logger.debug(f"News tags: {', '.join(tag_texts) if tag_texts else 'None'}")
 
         # TODO: Image url ignored now and made static
         news_dict = news_data.dict(exclude={"tags", "image_url"})
-        news_dict[
-            "image_url"] = "https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg"
+        news_dict["image_url"] = (
+            "https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg"
+        )
         news = await self.news_repo.prepare_with_tags(news_dict, tag_texts)
         logger.info(f"Created news item with ID: {news.id}")
 
         complete_news = await self.news_repo.get_with_tags(news.id)
 
         result = news_to_detailed_response(complete_news)
-        logger.info(f"Successfully created and retrieved complete news item with ID: {news.id}")
-        logger.debug(f"News data: {news_data.model_dump_json(exclude={'content', 'description'})}")
+        logger.info(
+            f"Successfully created and retrieved complete news item with ID: {news.id}"
+        )
+        logger.debug(
+            f"News data: {news_data.model_dump_json(exclude={'content', 'description'})}"
+        )
         return result
 
-    async def update_news(self, news_data: ParsedNewsUpdate) -> Optional[ParsedNewsResponseDetailed]:
+    async def update_news(
+        self, news_data: ParsedNewsUpdate
+    ) -> Optional[ParsedNewsResponseDetailed]:
         """
         Update an existing news item including its tags
 
@@ -108,7 +140,9 @@ class NewsService:
             HTTPException: If news item not found
         """
         logger.info(f"Updating news item with ID: {news_data.id}")
-        logger.debug(f"Update news_data content: {news_data.model_dump_json(exclude={'content', 'description'})}")
+        logger.debug(
+            f"Update news_data content: {news_data.model_dump_json(exclude={'content', 'description'})}"
+        )
         existing_news = await self.news_repo.get_by_id(news_data.id)
         if not existing_news:
             logger.warning(f"News with ID {news_data.id} not found for update")
@@ -118,20 +152,22 @@ class NewsService:
         update_data = news_data.dict(exclude={"tags", "id", "image_url"})
 
         tag_texts = news_data.tags or []
-        logger.debug(f"Updating news tags to: {', '.join(tag_texts) if tag_texts else 'None'}")
+        logger.debug(
+            f"Updating news tags to: {', '.join(tag_texts) if tag_texts else 'None'}"
+        )
 
         # Call repository method to handle the update and tag linking
         await self.news_repo.update_with_tags(
-            news_id=news_data.id,
-            news_data=update_data,
-            tag_texts=tag_texts
+            news_id=news_data.id, news_data=update_data, tag_texts=tag_texts
         )
 
         # Get the completely updated news with tags
         complete_news = await self.news_repo.get_with_tags(news_data.id)
         logger.info(f"Successfully updated news item with ID: {news_data.id}")
         result = news_to_detailed_response(complete_news)
-        logger.debug(f"Updated news_data content: {news_data.model_dump_json(exclude={'content', 'description'})}")
+        logger.debug(
+            f"Updated news_data content: {news_data.model_dump_json(exclude={'content', 'description'})}"
+        )
         return result
 
     async def get_latest_timestamp(self) -> Optional[datetime.datetime]:
@@ -143,10 +179,14 @@ class NewsService:
         logger.info(f"Latest timestamp of input news retrieved: {result}")
         return result
 
-    async def get_parsed_news_summary(self, delta: datetime.timedelta) -> list[ParsedNewsSummary]:
+    async def get_parsed_news_summary(
+        self, delta: datetime.timedelta
+    ) -> list[ParsedNewsSummary]:
         """
         Returns ParsedNews with minimal information about them - title, description and other information
         """
         result = await self.news_repo.get_by_time_delta(delta=delta)
-        pydantic_structures = orm_list_to_pydantic(orm_list=result, pydantic_class=ParsedNewsSummary)
+        pydantic_structures = orm_list_to_pydantic(
+            orm_list=result, pydantic_class=ParsedNewsSummary
+        )
         return pydantic_structures

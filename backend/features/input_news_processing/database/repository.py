@@ -27,14 +27,16 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         statement = select(InputNews).where(InputNews.source_url == source_url)
         result = await self.session.execute(statement)
         input_news = result.scalars().first()
-        logger.info(f"Found input news by source URL '{source_url}': {input_news is not None}")
+        logger.info(
+            f"Found input news by source URL '{source_url}': {input_news is not None}"
+        )
         return input_news
 
     async def get_by_time_delta(
-            self,
-            delta: timedelta,
-            has_parsed_news: Optional[bool] = None,
-            newer: bool = True
+        self,
+        delta: timedelta,
+        has_parsed_news: Optional[bool] = None,
+        newer: bool = True,
     ) -> List[InputNews]:
         """
         Get input news published within a time delta from now.
@@ -49,15 +51,21 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         Returns:
             List of InputNews within the time delta
         """
-        logger.debug(f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}")
+        logger.debug(
+            f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}"
+        )
         from_date = datetime.utcnow() - delta
 
-        conditions = [InputNews.publication_date >= from_date if newer else InputNews.publication_date <= from_date]
+        conditions = [
+            InputNews.publication_date >= from_date
+            if newer
+            else InputNews.publication_date <= from_date
+        ]
 
         if has_parsed_news is True:
-            conditions.append(InputNews.parsed_news != None)
+            conditions.append(InputNews.parsed_news is not None)
         elif has_parsed_news is False:
-            conditions.append(InputNews.parsed_news == None)
+            conditions.append(InputNews.parsed_news is None)
 
         statement = select(InputNews).where(and_(*conditions))
         result = await self.session.execute(statement)
@@ -65,7 +73,9 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         logger.info(f"Retrieved {len(input_news_list)} input news items by time delta")
         return input_news_list
 
-    async def update_parsed_news_id(self, input_id: int, parsed_news_id: int) -> InputNews:
+    async def update_parsed_news_id(
+        self, input_id: int, parsed_news_id: int
+    ) -> InputNews:
         """
         Update the parsed_news_id for an input news item and update the ParsedNews updated_at timestamp.
 
@@ -76,7 +86,9 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         Returns:
             Updated InputNews object or None if not found
         """
-        logger.debug(f"Updating parsed_news_id for input ID: {input_id} to parsed_news ID: {parsed_news_id}")
+        logger.debug(
+            f"Updating parsed_news_id for input ID: {input_id} to parsed_news ID: {parsed_news_id}"
+        )
         input_news = await self.get_by_id(input_id)
         if input_news:
             input_news.parsed_news = parsed_news_id
