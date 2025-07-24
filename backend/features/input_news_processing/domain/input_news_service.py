@@ -29,7 +29,7 @@ logger = structlog.get_logger()
 
 
 class InputNewsService:
-    def __init__(self, session, archive: AbstractArchive):
+    def __init__(self, session, archive: AbstractArchive) -> None:
         self.session = session
         self.input_news_repo = AsyncInputNewsRepository(session=session)
         self.parsed_news_repo = AsyncParsedNewsRepository(session=session)
@@ -119,6 +119,9 @@ class InputNewsService:
         )
 
         for input_news in old_input_news:
+            input_news_id = input_news.id
+            if input_news_id is None:
+                raise ValueError(f"Input news {input_news} doesn't have properly set id.")
             await self.input_news_repo.remove(id=input_news.id)
         logger.info(f"Removed {len(old_input_news)} old input news items from database")
 

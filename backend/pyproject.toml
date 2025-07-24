@@ -43,6 +43,7 @@ module = [
     "cz_news.*",
     "google.generativeai.*",
     "periodiq.*",
-    "genai"
+    "genai",
+    "dramatiq.*"
 ]
 ignore_missing_imports = true

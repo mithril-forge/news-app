@@ -8,7 +8,7 @@ from typing import List
 
 import structlog
 
-from core.models import ParsedNews, InputNews
+from core.models import ParsedNews, InputNews as InputNewsORM
 from core.converters import news_to_detailed_response
 from features.input_news_processing.domain.schemas import (
     ParsedNewsWithInputNews,
@@ -16,10 +16,12 @@ from features.input_news_processing.domain.schemas import (
     InputNewsWithoutContent,
 )
 
+from backend.features.input_news_processing.domain.schemas import InputNews as InputNewsSchema
+
 logger = structlog.get_logger()
 
 
-def input_schema_to_orm(input_metadata: InputNews) -> InputNews:
+def input_schema_to_orm(input_metadata: InputNewsSchema) -> InputNewsORM:
     """
     Convert an InputNewsMetadata Pydantic model to InputNews SQLModel instance.
 
@@ -33,7 +35,7 @@ def input_schema_to_orm(input_metadata: InputNews) -> InputNews:
     tags_str = ",".join(input_metadata.tags) if input_metadata.tags else None
 
     # Create InputNews instance
-    result = InputNews(
+    result = InputNewsORM(
         tags=tags_str,
         category=input_metadata.category,
         source_url=input_metadata.source_url,
@@ -47,7 +49,7 @@ def input_schema_to_orm(input_metadata: InputNews) -> InputNews:
     return result
 
 
-def input_schema_list_to_orm(input_metadata_list: List[InputNews]) -> List[InputNews]:
+def input_schema_list_to_orm(input_metadata_list: List[InputNewsSchema]) -> List[InputNewsORM]:
     """
     Convert a list of InputNewsMetadata Pydantic models to InputNews SQLModel instances.
 
@@ -61,7 +63,7 @@ def input_schema_list_to_orm(input_metadata_list: List[InputNews]) -> List[Input
     return result
 
 
-def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
+def input_news_to_schema(input_news: InputNewsORM) -> InputNewsWithID:
     """
     Convert an InputNews SQLModel instance to InputNewsWithID Pydantic model.
 
@@ -77,7 +79,7 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
     if input_news_id is None:
         raise ValueError("Trying to convert input news without id when required.")
     result = InputNewsWithID(
-        id=input_news.id,
+        id=input_news_id,
         tags=tags_list,
         category=input_news.category,
         source_url=input_news.source_url,
@@ -91,7 +93,7 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
     return result
 
 
-def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
+def input_news_to_lite_schema(input_news: InputNewsORM) -> InputNewsWithoutContent:
     """
     Convert an InputNews SQLModel instance to InputNewsWithID Pydantic model.
 
@@ -103,9 +105,11 @@ def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
     """
     # Convert tags string to list
     tags_list = input_news.tags.split(",") if input_news.tags else []
-
+    input_news_id = input_news.id
+    if input_news_id is None:
+        raise ValueError(f"Input news id is None for input news {input_news}")
     result = InputNewsWithoutContent(
-        id=input_news.id,
+        id=input_news_id,
         tags=tags_list,
         category=input_news.category,
         source_url=input_news.source_url,
@@ -119,7 +123,7 @@ def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
 
 
 def input_news_lite_list_to_schema(
-    input_news_list: List[InputNews],
+    input_news_list: List[InputNewsORM],
 ) -> List[InputNewsWithoutContent]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
@@ -135,7 +139,7 @@ def input_news_lite_list_to_schema(
 
 
 def input_news_list_to_schema(
-    input_news_list: List[InputNews],
+    input_news_list: List[InputNewsORM],
 ) -> List[InputNewsWithID]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.

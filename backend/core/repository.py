@@ -9,7 +9,7 @@ from typing import (
     Optional,
     TypeVar,
     Any,
-    Dict, cast,
+    Dict, cast, Protocol,
 )
 from datetime import timedelta, datetime
 
@@ -23,9 +23,13 @@ from sqlalchemy.sql.expression import update
 
 from core.models import ParsedNews, Tag, Topic, ParsedNewsTagLink
 
-T = TypeVar("T", bound=SQLModel)
+T = TypeVar("T", bound=BaseModelInterface)
 
 logger = structlog.get_logger()
+
+
+class BaseModelInterface(Protocol, SQLModel):
+    id: int
 
 
 class AsyncBaseRepository(Generic[T]):
@@ -113,7 +117,7 @@ class AsyncBaseRepository(Generic[T]):
         return obj
 
     async def update_from_dict(
-        self, structure_id: int, data: Dict[str, Any]
+            self, structure_id: int, data: Dict[str, Any]
     ) -> Optional[T]:
         """
         Update an existing record with the given data.
@@ -206,7 +210,7 @@ class AsyncBaseRepository(Generic[T]):
             for field_name, field_value in instance.__dict__.items():
                 # Skip SQLAlchemy internals and relationship objects
                 if not field_name.startswith("_") and not isinstance(
-                    field_value, (list, SQLModel)
+                        field_value, (list, SQLModel)
                 ):
                     instance_data[field_name] = field_value
 
@@ -276,7 +280,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.info("AsyncParsedNewsRepository initialized")
 
     async def get_most_viewed_news_by_period(
-        self, period: timedelta, limit: int = 10
+            self, period: timedelta, limit: int = 10
     ) -> List[ParsedNews]:
         """
         Get most viewed news articles within a specified time period.
@@ -333,7 +337,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return news
 
     async def get_by_topic_id(
-        self, topic_id: int, skip: int, limit: int
+            self, topic_id: int, skip: int, limit: int
     ) -> List[ParsedNews]:
         """
         Get news for a specific topic with pagination
@@ -376,7 +380,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return news
 
     async def prepare_with_tags(
-        self, news_data: Dict[str, Any], tag_texts: List[str]
+            self, news_data: Dict[str, Any], tag_texts: List[str]
     ) -> ParsedNews:
         """
         Prepare news with tags without committing.
@@ -417,7 +421,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return news_list
 
     async def update_with_tags(
-        self, news_id: int, news_data: Dict[str, Any], tag_texts: List[str]
+            self, news_id: int, news_data: Dict[str, Any], tag_texts: List[str]
     ) -> ParsedNews:
         """
         Update news with its tags in a single transaction.

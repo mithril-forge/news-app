@@ -212,7 +212,7 @@ def load_initial_input_news_data() -> list[InputNews]:
         )
 
         # Create Pydantic model
-        article = InputNews(**article_dict)
+        article = InputNews(**article_dict)  # type: ignore
         articles.append(article)
 
     return articles

@@ -1,6 +1,6 @@
 import logging
 import pathlib
-from typing import TypeVar, Generic, Type, Union
+from typing import TypeVar, Generic, Type, Union, cast
 
 import instructor
 import structlog
@@ -77,11 +77,11 @@ class GeminiAIModel(AbstractAIModel, Generic[T]):
     def prepare_model_sdk(self) -> AsyncInstructor:
         """Prepares model encapsulated by instructor library for structured output."""
         logger.info("Preparing Gemini model SDK with instructor")
-        genai.configure(api_key=self.api_key)
+        genai.configure(api_key=self.api_key)  # type: ignore
         client = instructor.from_gemini(
-            client=genai.GenerativeModel(model_name=self.model_name),
+            client=genai.GenerativeModel(model_name=self.model_name),  # type: ignore
             mode=instructor.Mode.GEMINI_JSON,
             use_async=True,
         )
         logger.info("Gemini model SDK prepared successfully")
-        return client
+        return cast(AsyncInstructor, client)
