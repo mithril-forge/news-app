@@ -3,7 +3,7 @@ import tempfile
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 import structlog
 from pydantic import BaseModel
 
@@ -45,7 +45,9 @@ class TempFileStorage(BaseModel):
 
 
 class ArticleGenerationService:
-    def __init__(self, session: AsyncSession, archive: AbstractArchive, ai_model: AbstractAIModel) -> None:
+    def __init__(
+        self, session: AsyncSession, archive: AbstractArchive, ai_model: AbstractAIModel
+    ) -> None:
         self.session = session
         self.topic_service = TopicService(session=session)
         self.input_news_service = InputNewsService(session=session, archive=archive)
@@ -89,9 +91,7 @@ class ArticleGenerationService:
         logger.info(f"Successfully saved {len(kwargs)} lists to temporary files")
         return paths_mapping
 
-    async def generate_and_attach_image_to_news(
-        self, news_id: int
-    ) -> None:
+    async def generate_and_attach_image_to_news(self, news_id: int) -> None:
         """
         Uses AI to search for relevant images and attach them to an existing news article.
 
@@ -114,7 +114,9 @@ class ArticleGenerationService:
             response_model=list[ImageDetail],
         )
         if image_result is None:
-            raise ValueError(f"There is None result when generating new image for id {news_id}")
+            raise ValueError(
+                f"There is None result when generating new image for id {news_id}"
+            )
         result_list: list[ImageDetail] = list(image_result)
         if len(result_list) == 0:
             logger.warn(f"No image results found for news ID: {news_id}")
@@ -164,7 +166,9 @@ class ArticleGenerationService:
             response_model=list[InitConnectionResult],
         )
         if result is None:
-            raise ValueError(f"AI model returned empty result when connecting new articles from ids {input_news_ids}")
+            raise ValueError(
+                f"AI model returned empty result when connecting new articles from ids {input_news_ids}"
+            )
         logger.debug(f"AI model returned {len(result)} connection suggestions")
 
         parsed_news_ids_set = set(news.id for news in recent_parsed_news)
@@ -175,7 +179,8 @@ class ArticleGenerationService:
             for res in result
             if res.parsed_news_id in parsed_news_ids_set
             and all(
-                input_news_id in input_news_ids_set for input_news_id in res.input_news_ids
+                input_news_id in input_news_ids_set
+                for input_news_id in res.input_news_ids
             )
         ]
         logger.debug(f"Filtered to {len(result)} valid connection results")
@@ -222,7 +227,9 @@ class ArticleGenerationService:
             response_model=list[InitGenerationResult],
         )
         if result is None:
-            raise ValueError(f"AI model returned empty result when creating new articles from ids {input_news_ids}")
+            raise ValueError(
+                f"AI model returned empty result when creating new articles from ids {input_news_ids}"
+            )
         input_news_ids = [news.id for news in recent_input_news]
         result = [
             res
@@ -281,7 +288,9 @@ class ArticleGenerationService:
             files=files, prompt=NEW_GENERATION_PROMPT, response_model=ParsedNewsCreate
         )
         if result is None:
-            raise ValueError(f"AI model didn't return proper result when creating new article from {input_news_ids}")
+            raise ValueError(
+                f"AI model didn't return proper result when creating new article from {input_news_ids}"
+            )
         logger.debug(
             f"AI model generated article: '{result.title}' with {len(result.content)} characters"
         )
@@ -342,7 +351,9 @@ class ArticleGenerationService:
             f"AI model generated enrichment updates for article ID: {parsed_news_id}"
         )
         if result is None:
-            raise ValueError(f"AI model didn't return proper result when enriching article {parsed_news_id}")
+            raise ValueError(
+                f"AI model didn't return proper result when enriching article {parsed_news_id}"
+            )
         saved_news = await self.parsed_news_service.update_news(news_data=result)
         logger.info(
             f"Successfully enriched article: '{saved_news.title}' (ID: {saved_news.id})"

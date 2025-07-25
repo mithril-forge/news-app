@@ -1,7 +1,6 @@
 import datetime
 import pathlib
 import uuid
-from typing import Optional
 
 import structlog
 
@@ -28,8 +27,8 @@ class LocalArchive(AbstractArchive):
     def save_file(
         self,
         file_content: bytes,
-        suffix: Optional[str] = None,
-        name: Optional[str] = None,
+        suffix: str | None = None,
+        name: str | None = None,
     ) -> pathlib.Path:
         """
         Save file content to the local storage.

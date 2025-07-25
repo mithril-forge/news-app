@@ -1,12 +1,15 @@
 import logging
 import pathlib
-from typing import TypeVar, Generic, Type, Union, cast, Any
+from typing import cast
 
 import instructor
 import structlog
 from instructor import AsyncInstructor
 
-from features.input_news_processing.ai_library.abstract_model import AbstractAIModel, ResponseT
+from features.input_news_processing.ai_library.abstract_model import (
+    AbstractAIModel,
+    ResponseT,
+)
 from google.generativeai import configure, upload_file, types, GenerativeModel  # type: ignore[attr-defined]
 from tenacity import (
     retry,
@@ -53,24 +56,27 @@ class GeminiAIModel(AbstractAIModel):
         after=after_log(logger, logging.INFO),
     )
     async def prompt_model(
-        self, files: dict[str, pathlib.Path], response_model: type[ResponseT], prompt: str
+        self,
+        files: dict[str, pathlib.Path],
+        response_model: type[ResponseT],
+        prompt: str,
     ) -> ResponseT:
         """Prompt model with the query and files, the preparation of files is done independently"""
         logger.info(
             f"Prompting Gemini model with {len(files)} files and response model: {response_model.__name__}"
         )
-        contents: list[Union[str, types.File]] = [prompt]
+        contents: list[str | types.File] = [prompt]
         gemini_client = self.prepare_model_sdk()
         gemini_files = self.upload_files_gemini(files=files)
         contents.extend(gemini_files.values())
 
         logger.info("Sending request to Gemini model")
         logger.debug(f"Content to gemini: {contents}")
-        messages: list[dict[str, Any]] = [{"role": "user", "content": contents}]
+        messages = [{"role": "user", "content": contents}]
 
         result = await gemini_client.chat.completions.create(  # type: ignore[type-var]
             response_model=response_model,
-            messages=messages
+            messages=messages,  # type: ignore[arg-type]
         )
         typed_result: ResponseT = cast(ResponseT, result)
         logger.info("Successfully received response from Gemini model")

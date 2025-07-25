@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, List, Sequence
+from collections.abc import Sequence
 
 import structlog
 from sqlalchemy import func
@@ -7,7 +7,7 @@ from sqlmodel import select, and_
 
 from core.models import InputNews, ParsedNews
 from core.repository import AsyncBaseRepository
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger()
 
@@ -19,7 +19,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         super().__init__(session, InputNews)
         logger.info("AsyncInputNewsRepository initialized")
 
-    async def get_by_source_url(self, source_url: str) -> Optional[InputNews]:
+    async def get_by_source_url(self, source_url: str) -> InputNews | None:
         """
         Get input news by source URL.
         """
@@ -35,7 +35,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
     async def get_by_time_delta(
         self,
         delta: timedelta,
-        has_parsed_news: Optional[bool] = None,
+        has_parsed_news: bool | None = None,
         newer: bool = True,
     ) -> Sequence[InputNews]:
         """
@@ -56,9 +56,9 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         )
         from_date = datetime.utcnow() - delta
         conditions = [
-            InputNews.publication_date >= from_date
+            InputNews.publication_date >= from_date  # type: ignore[operator]
             if newer
-            else InputNews.publication_date <= from_date
+            else InputNews.publication_date <= from_date  # type: ignore[operator]
         ]
 
         if has_parsed_news:
@@ -107,7 +107,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
             raise ValueError(f"Didn't find input_news record with {input_id=}")
         return input_news
 
-    async def get_latest_received_timestamp(self) -> Optional[datetime]:
+    async def get_latest_received_timestamp(self) -> datetime | None:
         """
         Get the most recent received_at timestamp.
 

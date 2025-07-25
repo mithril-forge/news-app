@@ -1,8 +1,6 @@
-from typing import List
-
 import structlog
 from fastapi import HTTPException
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.converters import orm_list_to_pydantic, orm_to_pydantic
 from core.repository import AsyncTopicRepository
@@ -17,7 +15,7 @@ class TopicService:
         self.topic_repo = AsyncTopicRepository(session)
         logger.info("TopicService initialized")
 
-    async def get_all_topics(self) -> List[TopicResponse]:
+    async def get_all_topics(self) -> list[TopicResponse]:
         """Get all topics"""
         logger.info("Fetching all topics")
         topics = await self.topic_repo.get_all()

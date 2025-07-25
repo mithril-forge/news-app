@@ -160,9 +160,7 @@ def main() -> None:
     args = parser.parse_args()
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(
-        test_parse_news(commit_transaction=args.commit)
-    )
+    loop.run_until_complete(test_parse_news(commit_transaction=args.commit))
     print("Tests completed successfully!")
 
 

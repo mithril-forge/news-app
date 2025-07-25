@@ -2,8 +2,7 @@ import io
 import json
 import zipfile
 from datetime import datetime, timedelta
-from typing import List, Optional
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import structlog
 
@@ -38,8 +37,8 @@ class InputNewsService:
         logger.info("InputNewsService initialized")
 
     async def add_or_update_input_news_batch(
-        self, input_news_list: List[InputNews]
-    ) -> List[InputNewsWithID]:
+        self, input_news_list: list[InputNews]
+    ) -> list[InputNewsWithID]:
         """
         Add a batch of input news items to the database.
 
@@ -122,13 +121,17 @@ class InputNewsService:
         for input_news in old_input_news:
             input_news_id = input_news.id
             if input_news_id is None:
-                raise ValueError(f"Input news {input_news} doesn't have properly set id.")
+                raise ValueError(
+                    f"Input news {input_news} doesn't have properly set id."
+                )
             await self.input_news_repo.remove(id=input_news_id)
         logger.info(f"Removed {len(old_input_news)} old input news items from database")
 
     @staticmethod
     async def scrap_input_news(
-        delta: timedelta, max_articles_per_site: int = 10, websites: list[str] | None = None
+        delta: timedelta,
+        max_articles_per_site: int = 10,
+        websites: list[str] | None = None,
     ) -> list[InputNews]:
         """
         Function that calls the Czech News Crawler to fetch input news from websites.
@@ -189,7 +192,7 @@ class InputNewsService:
         return input_news_list
 
     async def get_input_news_by_delta(
-        self, delta: timedelta, has_parsed_news: Optional[bool] = None
+        self, delta: timedelta, has_parsed_news: bool | None = None
     ) -> list[InputNewsWithID]:
         """
         Retrieves input news within a specified time period.
@@ -208,7 +211,7 @@ class InputNewsService:
         return converted_result
 
     async def get_input_news_by_ids_lite(
-        self, input_news_ids: list[int], has_parsed_news: Optional[bool] = None
+        self, input_news_ids: list[int], has_parsed_news: bool | None = None
     ) -> list[InputNewsWithoutContent]:
         """
         Retrieves input news within a specified time period (lite version with less information).
@@ -261,7 +264,7 @@ class InputNewsService:
         )
         return result
 
-    async def get_latest_timestamp(self) -> Optional[datetime]:
+    async def get_latest_timestamp(self) -> datetime | None:
         """
         Returns latest timestamp of the input news
         """

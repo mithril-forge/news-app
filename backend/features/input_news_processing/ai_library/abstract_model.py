@@ -1,6 +1,6 @@
 import abc
 import pathlib
-from typing import TypeVar, Type
+from typing import TypeVar
 
 from instructor import AsyncInstructor
 
@@ -14,7 +14,10 @@ class AbstractAIModel(abc.ABC):
 
     @abc.abstractmethod
     async def prompt_model(
-        self, files: dict[str, pathlib.Path], response_model: type[ResponseT], prompt: str
+        self,
+        files: dict[str, pathlib.Path],
+        response_model: type[ResponseT],
+        prompt: str,
     ) -> ResponseT | None:
         """Prompt model with files and prompt, returns result as the passed type, this is ensured by AsyncInstructor"""
         pass

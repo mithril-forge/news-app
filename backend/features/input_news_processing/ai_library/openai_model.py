@@ -1,12 +1,14 @@
 import pathlib
-from typing import TypeVar, Generic, Type, cast
+from typing import cast
 
 import instructor
 from instructor import AsyncInstructor
 from openai import AsyncOpenAI
 
-from features.input_news_processing.ai_library.abstract_model import AbstractAIModel, ResponseT
-
+from features.input_news_processing.ai_library.abstract_model import (
+    AbstractAIModel,
+    ResponseT,
+)
 
 
 class OpenAIModel(AbstractAIModel):
@@ -25,7 +27,10 @@ class OpenAIModel(AbstractAIModel):
         super().__init__(api_key=api_key, model_name=model_name)
 
     async def prompt_model(
-        self, files: dict[str, pathlib.Path], response_model: type[ResponseT], prompt: str
+        self,
+        files: dict[str, pathlib.Path],
+        response_model: type[ResponseT],
+        prompt: str,
     ) -> ResponseT | None:
         """
         Prompt the model with a query and files, returning structured output.

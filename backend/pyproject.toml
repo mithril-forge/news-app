@@ -37,14 +37,19 @@ package = false
 
 [tool.uv.sources]
 ai-knowledge-bot = { path = "wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl" }
-
+[tool.mypy]
+plugins = ["sqlalchemy.ext.mypy.plugin"]
 [[tool.mypy.overrides]]
 module = [
     "cz_news.*",
     "google.generativeai.*",
     "periodiq.*",
-    "genai",
     "dramatiq.*",
     "google.generativeai"
 ]
 ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 120
+[tool.ruff.lint]
+select = ["E", "F", "UP"]

@@ -1,9 +1,8 @@
 import datetime
-from typing import List, Optional
 
 import structlog
 from fastapi import HTTPException
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.converters import orm_list_to_pydantic
 from core.converters import news_list_to_response, news_to_detailed_response
@@ -40,7 +39,7 @@ class NewsService:
         logger.debug(f"Tags: {[tag.model_dump_json() for tag in result]}")
         return result
 
-    async def get_latest_news(self, skip: int, limit: int) -> List[ParsedNewsBasic]:
+    async def get_latest_news(self, skip: int, limit: int) -> list[ParsedNewsBasic]:
         """Get the latest N news items"""
         logger.info(f"Fetching latest news (skip={skip}, limit={limit})")
         latest_news = await self.news_repo.get_latest(skip=skip, limit=limit)
@@ -49,7 +48,7 @@ class NewsService:
 
     async def get_most_popular_news(
         self, period: datetime.timedelta, limit: int
-    ) -> List[ParsedNewsBasic]:
+    ) -> list[ParsedNewsBasic]:
         logger.info(f"Fetching {limit} most popular news for {period}")
         popular_news = await self.news_repo.get_most_viewed_news_by_period(
             period=period, limit=limit
@@ -82,7 +81,7 @@ class NewsService:
 
     async def get_news_by_topic(
         self, topic_id: int, limit: int, skip: int
-    ) -> List[ParsedNewsBasic]:
+    ) -> list[ParsedNewsBasic]:
         """Get all news for a specific topic"""
         logger.info(
             f"Fetching news for topic ID {topic_id} (skip={skip}, limit={limit})"
@@ -117,7 +116,9 @@ class NewsService:
             raise ValueError(f"News {news} doesn't have properly set id.")
         complete_news = await self.news_repo.get_with_tags(news_id)
         if complete_news is None:
-            raise ValueError(f"News for ID {news_id} not found even when it should be newly created")
+            raise ValueError(
+                f"News for ID {news_id} not found even when it should be newly created"
+            )
         result = news_to_detailed_response(complete_news)
         logger.info(
             f"Successfully created and retrieved complete news item with ID: {news.id}"
@@ -166,7 +167,9 @@ class NewsService:
         # Get the completely updated news with tags
         complete_news = await self.news_repo.get_with_tags(news_data.id)
         if complete_news is None:
-            raise ValueError(f"News for ID {news_data.id} not found even when it should be newly updated")
+            raise ValueError(
+                f"News for ID {news_data.id} not found even when it should be newly updated"
+            )
         logger.info(f"Successfully updated news item with ID: {news_data.id}")
         result = news_to_detailed_response(complete_news)
         logger.debug(
@@ -174,7 +177,7 @@ class NewsService:
         )
         return result
 
-    async def get_latest_timestamp(self) -> Optional[datetime.datetime]:
+    async def get_latest_timestamp(self) -> datetime.datetime | None:
         """
         Returns latest timestamp of the input news
         """

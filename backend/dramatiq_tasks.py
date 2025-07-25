@@ -19,9 +19,9 @@ from features.input_news_processing.domain.input_news_service import InputNewsSe
 
 logger = structlog.get_logger()
 # Simple Redis broker setup
-redis_broker = RedisBroker(url="redis://redis:6379")
+redis_broker = RedisBroker(url="redis://redis:6379")  # type: ignore[no-untyped-call]
 dramatiq.set_broker(redis_broker)
-redis_broker.add_middleware(PeriodiqMiddleware(skip_delay=30))
+redis_broker.add_middleware(PeriodiqMiddleware(skip_delay=30))  # type: ignore[no-untyped-call]
 
 
 @dramatiq.actor(periodic=cron("00 20 * * *"))

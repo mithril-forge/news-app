@@ -8,16 +8,16 @@ Create Date: 2025-04-09 15:43:41.793850
 
 from datetime import datetime
 from datetime import timedelta
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "54ac58121805"
-down_revision: Union[str, None] = "457bd7bd915a"
-branch_labels: Union[str, Sequence[str], None] = ("dev",)
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | None = "457bd7bd915a"
+branch_labels: str | Sequence[str] | None = ("dev",)
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:

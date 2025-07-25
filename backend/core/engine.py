@@ -1,10 +1,10 @@
 import os
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import structlog
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 logger = structlog.get_logger()
@@ -53,7 +53,9 @@ async def get_session(
 
 
 @asynccontextmanager
-async def get_session_context(commit_transaction: bool = True) -> AsyncGenerator[AsyncSession, None]:
+async def get_session_context(
+    commit_transaction: bool = True,
+) -> AsyncGenerator[AsyncSession, None]:
     logger.debug(f"Getting session context (commit_transaction: {commit_transaction})")
     async for session in get_session(commit_transaction=commit_transaction):
         try:

@@ -1,12 +1,11 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel
 
 
 class TopicCreate(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class TopicResponse(BaseModel):
@@ -36,8 +35,8 @@ class ParsedNewsCreate(BaseModel):
     title: str
     description: str
     image_url: str
-    topic_id: Optional[int]
-    tags: List[str]
+    topic_id: int | None
+    tags: list[str]
     content: str
 
 
@@ -45,8 +44,8 @@ class ParsedNewsUpdate(BaseModel):
     title: str
     description: str
     image_url: str
-    topic_id: Optional[int]
-    tags: List[str]
+    topic_id: int | None
+    tags: list[str]
     content: str
     id: int
 
@@ -57,10 +56,10 @@ class ParsedNewsBasic(BaseModel):
     image_url: str
     id: int
     # TODO: Fix the issue when new article isn't connected to topic
-    topic: Optional[TopicResponse]
+    topic: TopicResponse | None
     created_at: datetime
     updated_at: datetime
-    tags: List[TagResponse] = []
+    tags: list[TagResponse] = []
 
     class Config:
         orm_mode = True
@@ -79,9 +78,9 @@ class ParsedNewsResponseDetailed(BaseModel):
     description: str
     image_url: str
     id: int
-    topic: Optional[TopicResponse]
+    topic: TopicResponse | None
     created_at: datetime
     updated_at: datetime
-    tags: List[TagResponse] = []
+    tags: list[TagResponse] = []
     content: str
     input_news: list[InputNewsWithoutContent]

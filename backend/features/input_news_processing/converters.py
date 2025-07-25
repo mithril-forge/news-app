@@ -4,7 +4,7 @@ These functions are not strictly necessary since Pydantic's orm_mode handles con
 but they can be useful for more complex transformations.
 """
 
-from typing import List, Sequence
+from collections.abc import Sequence
 
 import structlog
 
@@ -49,7 +49,9 @@ def input_schema_to_orm(input_metadata: InputNewsSchema) -> InputNewsORM:
     return result
 
 
-def input_schema_list_to_orm(input_metadata_list: List[InputNewsSchema]) -> List[InputNewsORM]:
+def input_schema_list_to_orm(
+    input_metadata_list: list[InputNewsSchema],
+) -> list[InputNewsORM]:
     """
     Convert a list of InputNewsMetadata Pydantic models to InputNews SQLModel instances.
 
@@ -123,8 +125,8 @@ def input_news_to_lite_schema(input_news: InputNewsORM) -> InputNewsWithoutConte
 
 
 def input_news_lite_list_to_schema(
-    input_news_list: List[InputNewsORM],
-) -> List[InputNewsWithoutContent]:
+    input_news_list: list[InputNewsORM],
+) -> list[InputNewsWithoutContent]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
 
@@ -139,8 +141,8 @@ def input_news_lite_list_to_schema(
 
 
 def input_news_list_to_schema(
-    input_news_list: List[InputNewsORM],
-) -> List[InputNewsWithID]:
+    input_news_list: Sequence[InputNewsORM],
+) -> list[InputNewsWithID]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
 
@@ -166,7 +168,7 @@ def parsed_news_with_input(parsed_news: ParsedNews) -> ParsedNewsWithInputNews:
 
 def parsed_news_list_with_input(
     parsed_news_list: Sequence[ParsedNews],
-) -> List[ParsedNewsWithInputNews]:
+) -> list[ParsedNewsWithInputNews]:
     """Converts a lit of parsed_news_list with input news also"""
     result = [parsed_news_with_input(item) for item in parsed_news_list if item]
     return result

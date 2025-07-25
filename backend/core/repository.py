@@ -1,44 +1,39 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import (
     Generic,
-    Type,
-    Union,
-    AsyncContextManager,
-    Sequence,
-    List,
-    Optional,
     TypeVar,
     Any,
-    Dict, cast, Protocol,
+    cast,
 )
+from collections.abc import Sequence
 from datetime import timedelta, datetime
 
 import structlog
 from sqlmodel import select, SQLModel, and_
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql.expression import update
 
-from core.models import ParsedNews, Tag, Topic, ParsedNewsTagLink
+from core.models import ParsedNews, Tag, Topic, ParsedNewsTagLink, BaseModelWithID
 
-T = TypeVar("T", bound=SQLModel)
+T = TypeVar("T", bound=BaseModelWithID)
 
 logger = structlog.get_logger()
-
 
 
 class AsyncBaseRepository(Generic[T]):
     """Base async repository with common CRUD operations."""
 
-    def __init__(self, session: AsyncSession, model_class: Type[T]):
+    def __init__(self, session: AsyncSession, model_class: type[T]):
         self.session = session
         self.model_class = model_class
         logger.info(f"Initialized repository for {model_class.__name__}")
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncContextManager[None]:
+    async def transaction(self) -> AsyncGenerator[None, None]:
         """Context manager for transactions."""
         logger.debug("Starting transaction")
         try:
@@ -50,7 +45,7 @@ class AsyncBaseRepository(Generic[T]):
             logger.error(f"Transaction rolled back due to error: {e}")
             raise
 
-    async def get_by_id(self, id: int) -> Optional[T]:
+    async def get_by_id(self, id: int) -> T | None:
         """Get a record by ID."""
         logger.debug(f"Getting {self.model_class.__name__} by ID: {id}")
         result = await self.session.get(self.model_class, id)
@@ -59,7 +54,7 @@ class AsyncBaseRepository(Generic[T]):
         )
         return result
 
-    async def get_by_ids(self, ids: Sequence[int]) -> List[T]:
+    async def get_by_ids(self, ids: Sequence[int]) -> list[T]:
         """Get records by multiple IDs."""
         if not ids:
             logger.debug(f"No IDs provided for {self.model_class.__name__}")
@@ -68,7 +63,7 @@ class AsyncBaseRepository(Generic[T]):
         logger.debug(f"Getting {self.model_class.__name__} by IDs: {list(ids)}")
 
         # Create query to select records where ID is in the provided list
-        stmt = select(self.model_class).where(self.model_class.id.in_(ids))
+        stmt = select(self.model_class).where(self.model_class.id.in_(ids))  # type: ignore
         result = await self.session.execute(stmt)
         records = result.scalars().all()
 
@@ -86,7 +81,7 @@ class AsyncBaseRepository(Generic[T]):
         logger.info(f"Retrieved {len(records)} {self.model_class.__name__} records")
         return records
 
-    async def add(self, obj_in: Union[Dict[str, Any], T]) -> T:
+    async def add(self, obj_in: dict[str, Any] | T) -> T:
         """Add a new record to the session without committing."""
         logger.debug(f"Adding new {self.model_class.__name__}")
         if isinstance(obj_in, dict):
@@ -114,8 +109,8 @@ class AsyncBaseRepository(Generic[T]):
         return obj
 
     async def update_from_dict(
-            self, structure_id: int, data: Dict[str, Any]
-    ) -> Optional[T]:
+        self, structure_id: int, data: dict[str, Any]
+    ) -> T | None:
         """
         Update an existing record with the given data.
 
@@ -157,7 +152,7 @@ class AsyncBaseRepository(Generic[T]):
         await self.session.refresh(obj)
         return obj
 
-    async def remove(self, id: int) -> Optional[T]:
+    async def remove(self, id: int) -> T | None:
         """Remove a record from the session without committing."""
         logger.debug(f"Removing {self.model_class.__name__} with ID: {id}")
         obj = await self.session.get(self.model_class, id)
@@ -171,28 +166,8 @@ class AsyncBaseRepository(Generic[T]):
             )
         return obj
 
-    async def get_latest(self, skip: int, limit: int) -> Sequence[T]:
-        """
-        Fetch latest with pagination
-        """
-        logger.debug(
-            f"Getting latest {self.model_class.__name__} records (skip: {skip}, limit: {limit})"
-        )
-        query = (
-            select(self.model_class)
-            .order_by(self.model_class.updated_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
-        result = await self.session.execute(query)
-        records = result.scalars().all()
-        logger.info(
-            f"Retrieved {len(records)} latest {self.model_class.__name__} records"
-        )
-        return records
-
     @staticmethod
-    async def create_snapshot(instances: List[T]) -> dict[str, Any]:
+    async def create_snapshot(instances: Sequence[T]) -> dict[str, Any]:
         """
         Create a simple snapshot of model instances and save to JSON.
 
@@ -207,7 +182,7 @@ class AsyncBaseRepository(Generic[T]):
             for field_name, field_value in instance.__dict__.items():
                 # Skip SQLAlchemy internals and relationship objects
                 if not field_name.startswith("_") and not isinstance(
-                        field_value, (list, SQLModel)
+                    field_value, list | SQLModel
                 ):
                     instance_data[field_name] = field_value
 
@@ -215,7 +190,7 @@ class AsyncBaseRepository(Generic[T]):
 
         snapshot = {
             "timestamp": datetime.utcnow().isoformat(),
-            "model_type": T.__name__,
+            "model_type": T.__name__,  # type: ignore[misc]
             "count": len(instances),
             "data": data,
         }
@@ -231,7 +206,7 @@ class AsyncTopicRepository(AsyncBaseRepository[Topic]):
         super().__init__(session, Topic)
         logger.info("AsyncTopicRepository initialized")
 
-    async def get_by_name(self, name: str) -> Optional[Topic]:
+    async def get_by_name(self, name: str) -> Topic | None:
         """Get a topic by its name."""
         logger.debug(f"Getting topic by name: {name}")
         statement = select(Topic).where(Topic.name == name)
@@ -248,7 +223,7 @@ class AsyncTagRepository(AsyncBaseRepository[Tag]):
         super().__init__(session, Tag)
         logger.info("AsyncTagRepository initialized")
 
-    async def get_by_text(self, text: str) -> Optional[Tag]:
+    async def get_by_text(self, text: str) -> Tag | None:
         """Get a tag by its text."""
         logger.debug(f"Getting tag by text: {text}")
         statement = select(Tag).where(Tag.text == text)
@@ -276,8 +251,28 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         super().__init__(session, ParsedNews)
         logger.info("AsyncParsedNewsRepository initialized")
 
+    async def get_latest(self, skip: int, limit: int) -> Sequence[ParsedNews]:
+        """
+        Fetch latest with pagination
+        """
+        logger.debug(
+            f"Getting latest {self.model_class.__name__} records (skip: {skip}, limit: {limit})"
+        )
+        query = (
+            select(ParsedNews)
+            .order_by(ParsedNews.updated_at.desc())  # type: ignore[attr-defined]
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.session.execute(query)
+        records = result.scalars().all()
+        logger.info(
+            f"Retrieved {len(records)} latest {self.model_class.__name__} records"
+        )
+        return records
+
     async def get_most_viewed_news_by_period(
-            self, period: timedelta, limit: int = 10
+        self, period: timedelta, limit: int = 10
     ) -> Sequence[ParsedNews]:
         """
         Get most viewed news articles within a specified time period.
@@ -298,7 +293,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
             .where(
                 ParsedNews.updated_at >= cutoff_date,
             )
-            .order_by(ParsedNews.view_count.desc())
+            .order_by(ParsedNews.view_count.desc())  # type: ignore[attr-defined]
             .limit(limit)
         )
 
@@ -312,7 +307,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.debug(f"Adding view to news ID: {news_id}")
         stmt = (
             update(ParsedNews)
-            .where(ParsedNews.id == news_id)
+            .where(ParsedNews.id == news_id)  # type: ignore[arg-type]
             .values(view_count=ParsedNews.view_count + 1)
         )
 
@@ -324,7 +319,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
 
         logger.info(f"Successfully added view to news ID: {news_id}")
 
-    async def get_by_title(self, title: str) -> Optional[ParsedNews]:
+    async def get_by_title(self, title: str) -> ParsedNews | None:
         """Get news by title."""
         logger.debug(f"Getting news by title: {title}")
         statement = select(ParsedNews).where(ParsedNews.title == title)
@@ -334,8 +329,8 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return news
 
     async def get_by_topic_id(
-            self, topic_id: int, skip: int, limit: int
-    ) -> List[ParsedNews]:
+        self, topic_id: int, skip: int, limit: int
+    ) -> list[ParsedNews]:
         """
         Get news for a specific topic with pagination
         """
@@ -345,7 +340,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         statement = (
             select(ParsedNews)
             .where(ParsedNews.topic_id == topic_id)
-            .order_by(ParsedNews.updated_at.desc())  # Assuming you want newest first
+            .order_by(ParsedNews.updated_at.desc())  # type: ignore[attr-defined]
             .offset(skip)
             .limit(limit)
         )
@@ -356,7 +351,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         )
         return cast(list[ParsedNews], news_list)
 
-    async def get_with_tags(self, news_id: int) -> Optional[ParsedNews]:
+    async def get_with_tags(self, news_id: int) -> ParsedNews | None:
         """Get news with its tags preloaded."""
         logger.debug(f"Getting news with tags for ID: {news_id}")
 
@@ -377,7 +372,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return news
 
     async def prepare_with_tags(
-            self, news_data: Dict[str, Any], tag_texts: List[str]
+        self, news_data: dict[str, Any], tag_texts: list[str]
     ) -> ParsedNews:
         """
         Prepare news with tags without committing.
@@ -418,7 +413,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return news_list
 
     async def update_with_tags(
-            self, news_id: int, news_data: Dict[str, Any], tag_texts: List[str]
+        self, news_id: int, news_data: dict[str, Any], tag_texts: list[str]
     ) -> ParsedNews:
         """
         Update news with its tags in a single transaction.
@@ -466,7 +461,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
 
         return news
 
-    async def get_latest_received_timestamp(self) -> Optional[datetime]:
+    async def get_latest_received_timestamp(self) -> datetime | None:
         """
         Get the most recent received_at timestamp.
 
