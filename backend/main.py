@@ -28,7 +28,11 @@ logger = structlog.get_logger()
 environment = os.getenv("ENVIRONMENT")
 logger.info(f"Environment: {environment}")
 default_limits: list[str] = []
-origins = ["http://185.215.165.121"]
+
+# Get CORS origins from environment variable
+cors_origins_env = os.getenv("CORS_ALLOWED_ORIGINS")
+origins = [origin.strip() for origin in cors_origins_env.split(",")] if cors_origins_env else []
+
 if environment == Environment.DEVELOPMENT.value:
     origins = [
         "*",

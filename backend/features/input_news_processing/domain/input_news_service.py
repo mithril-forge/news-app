@@ -1,5 +1,6 @@
 import io
 import json
+import os
 import zipfile
 from datetime import datetime, timedelta
 
@@ -117,7 +118,7 @@ class InputNewsService:
     @staticmethod
     async def scrap_input_news(
         delta: timedelta,
-        max_articles_per_site: int = 50,
+        max_articles_per_site: int | None = None,
         websites: list[str] | None = None,
     ) -> list[InputNews]:
         """
@@ -129,6 +130,12 @@ class InputNewsService:
         Returns:
             List of InputNewsBase objects with news article data
         """
+        if max_articles_per_site is None:
+            env_value = os.getenv("SCRAP_MAX_ARTICLES_PER_SITE")
+            if env_value is None:
+                raise ValueError("SCRAP_MAX_ARTICLES_PER_SITE environment variable is not set")
+            max_articles_per_site = int(env_value)
+
         logger.info(f"Scraping input news with delta: {delta}, max_articles_per_site: {max_articles_per_site}")
         if websites is not None:
             logger.debug(f"Scraping from specific websites: {websites}")

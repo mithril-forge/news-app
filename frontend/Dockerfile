@@ -24,9 +24,11 @@ CMD ["npm", "run", "dev"]
 # === Production target ===
 FROM base AS production
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_CONTAINER_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_CONTAINER_API_URL=$NEXT_PUBLIC_CONTAINER_API_URL
 ENV ENVIRONMENT=production
-RUN npm run build
 
+RUN npm run build
 EXPOSE 3000
 CMD ["npm", "start"]

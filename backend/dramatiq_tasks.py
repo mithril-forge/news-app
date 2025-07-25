@@ -17,14 +17,19 @@ from features.input_news_processing.domain.article_generation_service import (
 )
 from features.input_news_processing.domain.input_news_service import InputNewsService
 
+REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
+
 logger = structlog.get_logger()
 # Simple Redis broker setup
-redis_broker = RedisBroker(url="redis://redis:6379")  # type: ignore[no-untyped-call]
-dramatiq.set_broker(redis_broker)
+redis_broker = RedisBroker(url=REDIS_URL)  # type: ignore[no-untyped-call]
 redis_broker.add_middleware(PeriodiqMiddleware(skip_delay=30))  # type: ignore[no-untyped-call]
+dramatiq.set_broker(redis_broker)
+
+# Get cron schedule from environment variable (default: 8 PM daily)
+SCRAP_ARTICLES_CRON = os.getenv("SCRAP_ARTICLES_CRON", "00 20 * * *")
 
 
-@dramatiq.actor(periodic=cron("00 20 * * *"))
+@dramatiq.actor(periodic=cron(SCRAP_ARTICLES_CRON))
 def scrap_articles_task(hours_delta: int = 24) -> None:
     """
     Scraps new articles for passed timedelta and saves them to DB. If there is existing one,
@@ -93,9 +98,15 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
 
 
 @dramatiq.actor(max_retries=1)
-def choose_new_articles_task(input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20) -> None:
+def choose_new_articles_task(
+    input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
+) -> None:
     """Task that takes passed input_news_ids also query for the nonconnected older input news (by param delta).
     Then it queries AI model to choose new parsed articles and creates tasks for their generation"""
+    if input_news_hours is None:
+        input_news_hours = int(os.getenv("INPUT_NEWS_HOURS", "72"))
+    if news_limit is None:
+        news_limit = int(os.getenv("INPUT_NEWS_LIMIT", "20"))
     logger.info(f"Starting choose_new_articles_task with {len(input_news_ids)} news items: {input_news_ids}")
     asyncio.run(
         async_choose_new_articles_task(
@@ -107,9 +118,7 @@ def choose_new_articles_task(input_news_ids: list[int], input_news_hours: int = 
     logger.info("Ended choose_new_articles_task")
 
 
-async def async_choose_new_articles_task(
-    input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 25
-) -> None:
+async def async_choose_new_articles_task(input_news_ids: list[int], input_news_hours: int, news_limit: int) -> None:
     """Async wrapper"""
     input_news_delta = timedelta(hours=input_news_hours)
     gemini_api_key = os.getenv("GEMINI_API_KEY")
