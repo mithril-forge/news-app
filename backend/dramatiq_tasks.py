@@ -167,7 +167,10 @@ async def async_generate_article_task(input_news_ids: list[int]) -> None:
 
 @dramatiq.actor(max_retries=1)
 def enrich_parsed_article_task(parsed_news_id: int) -> None:
-    """Task that takes parsed news with updated information (input_news etc.) and queries the AI model to update this article"""
+    """
+    Task that takes parsed news with updated information (input_news etc.) and queries the
+    AI model to update this article
+    """
     logger.info(f"Starting enrich_parsed_article_task for news {parsed_news_id}")
     asyncio.run(async_enrich_parsed_article_task(parsed_news_id))
     logger.info(f"Ended enrich_parsed_article_task for news {parsed_news_id}")

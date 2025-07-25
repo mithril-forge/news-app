@@ -1,3 +1,4 @@
+# flake8: noqa: E501
 from datetime import datetime
 
 from features.input_news_processing.testing_data.common_testing_data import sources

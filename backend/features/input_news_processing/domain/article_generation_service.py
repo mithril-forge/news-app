@@ -99,8 +99,10 @@ class ArticleGenerationService:
         news = await self.parsed_news_service.get_news_by_id(news_id=news_id)
         # TODO: Add support also for noniterable params
         news_as_file = self.save_pydantic_lists_as_files(news_detail=[news])
-        # TODO: Fix search, somehow it doesn't work with the ChatGPT model here, but in the web UI it searches good for the query
-        # TODO: I guess the issue can be that in UI AI works with multiple models and we query only one, please research and fix
+        # TODO: Fix search, somehow it doesn't work with the ChatGPT model here,
+        #  but in the web UI it searches good for the query
+        # TODO: I guess the issue can be that in UI AI works with multiple models
+        #  and we query only one, please research and fix
         logger.debug(f"Requesting image search for news: {news.title}")
         image_result = await self.ai_model.prompt_model(
             files=news_as_file,
@@ -131,7 +133,8 @@ class ArticleGenerationService:
             List of parsed news IDs that received new connections
         """
         logger.info(
-            f"Connecting {len(input_news_ids)} input news items to existing articles, looking back {parsed_news_hours_delta} hours"
+            f"Connecting {len(input_news_ids)} input news items to existing articles, "
+            f"looking back {parsed_news_hours_delta} hours"
         )
 
         parsed_news_delta = timedelta(hours=parsed_news_hours_delta)
@@ -140,7 +143,8 @@ class ArticleGenerationService:
         )
         recent_parsed_news = await self.parsed_news_service.get_parsed_news_summary(delta=parsed_news_delta)
         logger.debug(
-            f"Retrieved {len(recent_input_news)} input news and {len(recent_parsed_news)} parsed news for connection analysis"
+            f"Retrieved {len(recent_input_news)} input news and {len(recent_parsed_news)} "
+            f"parsed news for connection analysis"
         )
 
         files = self.save_pydantic_lists_as_files(parsed_news=recent_parsed_news, input_news=recent_input_news)

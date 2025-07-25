@@ -26,7 +26,8 @@ def verify_generated_news(generated_news: list[ParsedNewsResponseDetailed]) -> N
             f"News {json_dump} don't have minimum 150 words in content. Len of content: {content_len}"
         )
         assert 1 <= len(single_generated_news.tags) <= 3, (
-            f"News {json_dump} don't have minimum of 1 and maximum of 3 tags. Len of tags: {len(single_generated_news.tags)}"
+            f"News {json_dump} don't have minimum of 1 and maximum of 3 tags. "
+            f"Len of tags: {len(single_generated_news.tags)}"
         )
 
 
