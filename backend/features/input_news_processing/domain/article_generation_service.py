@@ -45,9 +45,7 @@ class TempFileStorage(BaseModel):
 
 
 class ArticleGenerationService:
-    def __init__(
-        self, session: AsyncSession, archive: AbstractArchive, ai_model: AbstractAIModel
-    ) -> None:
+    def __init__(self, session: AsyncSession, archive: AbstractArchive, ai_model: AbstractAIModel) -> None:
         self.session = session
         self.topic_service = TopicService(session=session)
         self.input_news_service = InputNewsService(session=session, archive=archive)
@@ -76,17 +74,13 @@ class ArticleGenerationService:
             # TODO: model_dump is better, but problems with datetime
             data = [model.model_dump_json() for model in model_list]
 
-            temp_file = tempfile.NamedTemporaryFile(
-                suffix=".json", mode="w+", delete=False
-            )
+            temp_file = tempfile.NamedTemporaryFile(suffix=".json", mode="w+", delete=False)
 
             json.dump(data, temp_file, indent=2)
             temp_file.close()
 
             paths_mapping[list_name] = Path(temp_file.name)
-            logger.info(
-                f"Saved {list_name} to file: {temp_file.name} ({len(model_list)} items)"
-            )
+            logger.info(f"Saved {list_name} to file: {temp_file.name} ({len(model_list)} items)")
 
         logger.info(f"Successfully saved {len(kwargs)} lists to temporary files")
         return paths_mapping
@@ -114,16 +108,12 @@ class ArticleGenerationService:
             response_model=list[ImageDetail],
         )
         if image_result is None:
-            raise ValueError(
-                f"There is None result when generating new image for id {news_id}"
-            )
+            raise ValueError(f"There is None result when generating new image for id {news_id}")
         result_list: list[ImageDetail] = list(image_result)
         if len(result_list) == 0:
             logger.warn(f"No image results found for news ID: {news_id}")
         else:
-            logger.info(
-                f"Found {len(result_list)} image results for news ID: {news_id}"
-            )
+            logger.info(f"Found {len(result_list)} image results for news ID: {news_id}")
         logger.debug(f"Image search results: {result_list}")
 
     async def connect_input_news_to_existing_articles(
@@ -148,16 +138,12 @@ class ArticleGenerationService:
         recent_input_news = await self.input_news_service.get_input_news_by_ids_lite(
             input_news_ids=input_news_ids, has_parsed_news=False
         )
-        recent_parsed_news = await self.parsed_news_service.get_parsed_news_summary(
-            delta=parsed_news_delta
-        )
+        recent_parsed_news = await self.parsed_news_service.get_parsed_news_summary(delta=parsed_news_delta)
         logger.debug(
             f"Retrieved {len(recent_input_news)} input news and {len(recent_parsed_news)} parsed news for connection analysis"
         )
 
-        files = self.save_pydantic_lists_as_files(
-            parsed_news=recent_parsed_news, input_news=recent_input_news
-        )
+        files = self.save_pydantic_lists_as_files(parsed_news=recent_parsed_news, input_news=recent_input_news)
         logger.debug("Prepared data files for AI connection analysis")
 
         result = await self.ai_model.prompt_model(
@@ -166,9 +152,7 @@ class ArticleGenerationService:
             response_model=list[InitConnectionResult],
         )
         if result is None:
-            raise ValueError(
-                f"AI model returned empty result when connecting new articles from ids {input_news_ids}"
-            )
+            raise ValueError(f"AI model returned empty result when connecting new articles from ids {input_news_ids}")
         logger.debug(f"AI model returned {len(result)} connection suggestions")
 
         parsed_news_ids_set = set(news.id for news in recent_parsed_news)
@@ -178,10 +162,7 @@ class ArticleGenerationService:
             res
             for res in result
             if res.parsed_news_id in parsed_news_ids_set
-            and all(
-                input_news_id in input_news_ids_set
-                for input_news_id in res.input_news_ids
-            )
+            and all(input_news_id in input_news_ids_set for input_news_id in res.input_news_ids)
         ]
         logger.debug(f"Filtered to {len(result)} valid connection results")
 
@@ -194,9 +175,7 @@ class ArticleGenerationService:
                 connection_count += 1
 
         updated_parsed_ids = [
-            conn_result.parsed_news_id
-            for conn_result in result
-            if len(conn_result.input_news_ids) > 0
+            conn_result.parsed_news_id for conn_result in result if len(conn_result.input_news_ids) > 0
         ]
         logger.info(
             f"Successfully created {connection_count} connections, updated {len(updated_parsed_ids)} parsed articles"
@@ -227,27 +206,20 @@ class ArticleGenerationService:
             response_model=list[InitGenerationResult],
         )
         if result is None:
-            raise ValueError(
-                f"AI model returned empty result when creating new articles from ids {input_news_ids}"
-            )
+            raise ValueError(f"AI model returned empty result when creating new articles from ids {input_news_ids}")
         input_news_ids = [news.id for news in recent_input_news]
         result = [
             res
             for res in result
-            if all(news_id in input_news_ids for news_id in res.input_news_ids)
-            and len(res.input_news_ids) > 0
+            if all(news_id in input_news_ids for news_id in res.input_news_ids) and len(res.input_news_ids) > 0
         ]
         logger.debug(f"Initial generation results: {result}")
         result = sorted(result, key=lambda x: x.importancy, reverse=True)[:news_limit]
-        logger.info(
-            f"Returning generation results after importancy filtering/sorting: {result}"
-        )
+        logger.info(f"Returning generation results after importancy filtering/sorting: {result}")
         final_groups = [gen_result.input_news_ids for gen_result in result]
         return final_groups
 
-    async def create_new_article_from_input_news(
-        self, input_news_ids: list[int]
-    ) -> ParsedNewsResponseDetailed:
+    async def create_new_article_from_input_news(self, input_news_ids: list[int]) -> ParsedNewsResponseDetailed:
         """
         Creates a new parsed article by combining and processing multiple related input news items using AI.
 
@@ -257,25 +229,15 @@ class ArticleGenerationService:
         Returns:
             The newly created parsed news article with all connections established
         """
-        logger.info(
-            f"Creating new article from {len(input_news_ids)} input news items: {input_news_ids}"
-        )
+        logger.info(f"Creating new article from {len(input_news_ids)} input news items: {input_news_ids}")
 
-        input_news_list = await self.input_news_service.input_news_repo.get_by_ids(
-            ids=input_news_ids
-        )
-        logger.debug(
-            f"Retrieved {len(input_news_list)} input news records from database"
-        )
+        input_news_list = await self.input_news_service.input_news_repo.get_by_ids(ids=input_news_ids)
+        logger.debug(f"Retrieved {len(input_news_list)} input news records from database")
 
         input_news_pydantic = input_news_list_to_schema(input_news_list=input_news_list)
         existing_topics = await self.topic_service.get_all_topics()
-        existing_tags = orm_list_to_pydantic(
-            await self.tag_repository.get_all(), TagResponse
-        )
-        logger.debug(
-            f"Prepared context data - topics: {len(existing_topics)}, tags: {len(existing_tags)}"
-        )
+        existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
+        logger.debug(f"Prepared context data - topics: {len(existing_topics)}, tags: {len(existing_tags)}")
 
         files = self.save_pydantic_lists_as_files(
             input_news_list=input_news_pydantic,
@@ -288,31 +250,19 @@ class ArticleGenerationService:
             files=files, prompt=NEW_GENERATION_PROMPT, response_model=ParsedNewsCreate
         )
         if result is None:
-            raise ValueError(
-                f"AI model didn't return proper result when creating new article from {input_news_ids}"
-            )
-        logger.debug(
-            f"AI model generated article: '{result.title}' with {len(result.content)} characters"
-        )
+            raise ValueError(f"AI model didn't return proper result when creating new article from {input_news_ids}")
+        logger.debug(f"AI model generated article: '{result.title}' with {len(result.content)} characters")
 
         saved_news = await self.parsed_news_service.create_news(news_data=result)
-        logger.info(
-            f"Successfully created new article: '{saved_news.title}' (ID: {saved_news.id})"
-        )
+        logger.info(f"Successfully created new article: '{saved_news.title}' (ID: {saved_news.id})")
 
         for input_id in input_news_ids:
-            await self.input_news_service.connect_input_with_parsed(
-                input_id=input_id, parsed_id=saved_news.id
-            )
+            await self.input_news_service.connect_input_with_parsed(input_id=input_id, parsed_id=saved_news.id)
 
-        logger.info(
-            f"Connected {len(input_news_ids)} input news items to new article (ID: {saved_news.id})"
-        )
+        logger.info(f"Connected {len(input_news_ids)} input news items to new article (ID: {saved_news.id})")
         return saved_news
 
-    async def enrich_existing_article(
-        self, parsed_news_id: int
-    ) -> ParsedNewsResponseDetailed:
+    async def enrich_existing_article(self, parsed_news_id: int) -> ParsedNewsResponseDetailed:
         """
         Enhances an existing parsed article by using AI to improve content, add tags, or update topics.
 
@@ -324,18 +274,12 @@ class ArticleGenerationService:
         """
         logger.info(f"Enriching existing article with ID: {parsed_news_id}")
 
-        parsed_news = await self.parsed_news_service.get_news_by_id(
-            news_id=parsed_news_id
-        )
+        parsed_news = await self.parsed_news_service.get_news_by_id(news_id=parsed_news_id)
         logger.debug(f"Retrieved article for enrichment: '{parsed_news.title}'")
 
         existing_topics = await self.topic_service.get_all_topics()
-        existing_tags = orm_list_to_pydantic(
-            await self.tag_repository.get_all(), TagResponse
-        )
-        logger.debug(
-            f"Loaded context data - topics: {len(existing_topics)}, tags: {len(existing_tags)}"
-        )
+        existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
+        logger.debug(f"Loaded context data - topics: {len(existing_topics)}, tags: {len(existing_tags)}")
 
         files = self.save_pydantic_lists_as_files(
             parsed_news=[parsed_news],
@@ -347,16 +291,10 @@ class ArticleGenerationService:
         result = await self.ai_model.prompt_model(
             files=files, prompt=NEW_CONNECTION_PROMPT, response_model=ParsedNewsUpdate
         )
-        logger.debug(
-            f"AI model generated enrichment updates for article ID: {parsed_news_id}"
-        )
+        logger.debug(f"AI model generated enrichment updates for article ID: {parsed_news_id}")
         if result is None:
-            raise ValueError(
-                f"AI model didn't return proper result when enriching article {parsed_news_id}"
-            )
+            raise ValueError(f"AI model didn't return proper result when enriching article {parsed_news_id}")
         saved_news = await self.parsed_news_service.update_news(news_data=result)
-        logger.info(
-            f"Successfully enriched article: '{saved_news.title}' (ID: {saved_news.id})"
-        )
+        logger.info(f"Successfully enriched article: '{saved_news.title}' (ID: {saved_news.id})")
 
         return saved_news

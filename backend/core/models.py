@@ -32,9 +32,7 @@ class Topic(BaseModelWithID, table=True):
 class ParsedNewsTagLink(BaseModel, table=True):
     __tablename__ = "parsed_news_tag_link"
 
-    news_item_id: int | None = Field(
-        default=None, foreign_key="parsed_news.id", primary_key=True
-    )
+    news_item_id: int | None = Field(default=None, foreign_key="parsed_news.id", primary_key=True)
     tag_id: int | None = Field(default=None, foreign_key="tags.id", primary_key=True)
 
 
@@ -98,9 +96,7 @@ class InputNews(BaseModelWithID, table=True):
     content: str = Field()
     title: str = Field()
 
-    parsed_news: int | None = Field(
-        default=None, foreign_key="parsed_news.id", nullable=True
-    )
+    parsed_news: int | None = Field(default=None, foreign_key="parsed_news.id", nullable=True)
 
     parsed_news_relation: Mapped[Optional["ParsedNews"]] = Relationship(
         back_populates="input_news", sa_relationship_kwargs={"lazy": "selectin"}

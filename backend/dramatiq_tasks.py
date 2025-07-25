@@ -45,13 +45,9 @@ async def async_scrap_articles_task(hours_delta: int) -> None:
     local_archive = LocalArchive(target_location=pathlib.Path(local_archive_folder))
     async with get_session_context() as session:
         input_news_service = InputNewsService(session=session, archive=local_archive)
-        result = await input_news_service.scrap_and_save_input_news(
-            delta=delta, adjust_parse_date=True
-        )
+        result = await input_news_service.scrap_and_save_input_news(delta=delta, adjust_parse_date=True)
         news_ids = [res.id for res in result]
-    logger.info(
-        f"Parsed {len(news_ids)} news items: {news_ids}, sending to connection task"
-    )
+    logger.info(f"Parsed {len(news_ids)} news items: {news_ids}, sending to connection task")
     choose_connected_articles_task.send(input_news_ids=news_ids)
 
 
@@ -61,9 +57,7 @@ def choose_connected_articles_task(input_news_ids: list[int]) -> None:
     It's querying the AI model if there are any passed input_news that can be connected and enrich older parsed news.
     Then it starts new task to generate new articles from the nonconnectable input_news
     """
-    logger.info(
-        f"Starting choose_connected_articles_task with {len(input_news_ids)} news items: {input_news_ids}"
-    )
+    logger.info(f"Starting choose_connected_articles_task with {len(input_news_ids)} news items: {input_news_ids}")
     asyncio.run(async_choose_connected_articles_task(input_news_ids))
     logger.info("Ended choose_connected_articles_task")
 
@@ -81,14 +75,10 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
             archive=archive,
             ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
-        parsed_news_ids = (
-            await article_generation_service.connect_input_news_to_existing_articles(
-                input_news_ids=input_news_ids
-            )
+        parsed_news_ids = await article_generation_service.connect_input_news_to_existing_articles(
+            input_news_ids=input_news_ids
         )
-        logger.info(
-            f"Created {len(parsed_news_ids)} regeneration tasks: {parsed_news_ids}"
-        )
+        logger.info(f"Created {len(parsed_news_ids)} regeneration tasks: {parsed_news_ids}")
         for parsed_news_id in parsed_news_ids:
             enrich_parsed_article_task.send(parsed_news_id=parsed_news_id)
 
@@ -99,20 +89,14 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
         )
         input_news_ids = [inp.id for inp in input_news_without_parsed]
     choose_new_articles_task.send(input_news_ids=input_news_ids)
-    logger.info(
-        f"Successfully created regeneration tasks of {len(parsed_news_ids)} articles."
-    )
+    logger.info(f"Successfully created regeneration tasks of {len(parsed_news_ids)} articles.")
 
 
 @dramatiq.actor(max_retries=1)
-def choose_new_articles_task(
-    input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20
-) -> None:
+def choose_new_articles_task(input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20) -> None:
     """Task that takes passed input_news_ids also query for the nonconnected older input news (by param delta).
     Then it queries AI model to choose new parsed articles and creates tasks for their generation"""
-    logger.info(
-        f"Starting choose_new_articles_task with {len(input_news_ids)} news items: {input_news_ids}"
-    )
+    logger.info(f"Starting choose_new_articles_task with {len(input_news_ids)} news items: {input_news_ids}")
     asyncio.run(
         async_choose_new_articles_task(
             input_news_ids=input_news_ids,
@@ -143,32 +127,22 @@ async def async_choose_new_articles_task(
         input_news_older = await input_news_service.get_input_news_by_delta(
             delta=input_news_delta, has_parsed_news=False
         )
-        input_news_ids += [
-            news.id for news in input_news_older if news.id not in input_news_ids
-        ]
-        logger.info(
-            f"Processing {len(input_news_ids)} total news items: {input_news_ids}"
-        )
-        input_news_lists = (
-            await article_generation_service.choose_input_news_for_new_articles(
-                input_news_ids=input_news_ids, news_limit=news_limit
-            )
+        input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
+        logger.info(f"Processing {len(input_news_ids)} total news items: {input_news_ids}")
+        input_news_lists = await article_generation_service.choose_input_news_for_new_articles(
+            input_news_ids=input_news_ids, news_limit=news_limit
         )
 
     logger.info(f"Created {len(input_news_lists)} generation tasks: {input_news_lists}")
     for input_news_list in input_news_lists:
         generate_article_task.send(input_news_ids=input_news_list)
-    logger.info(
-        f"Successfully created creations tasks of {len(input_news_lists)} articles."
-    )
+    logger.info(f"Successfully created creations tasks of {len(input_news_lists)} articles.")
 
 
 @dramatiq.actor(max_retries=1)
 def generate_article_task(input_news_ids: list[int]) -> None:
     """Tasks that takes input_news_ids and queries the AI model for the new parsed article"""
-    logger.info(
-        f"Starting generate_article_task with {len(input_news_ids)} news items: {input_news_ids}"
-    )
+    logger.info(f"Starting generate_article_task with {len(input_news_ids)} news items: {input_news_ids}")
     asyncio.run(async_generate_article_task(input_news_ids))
     logger.info("Ended generate_article_task")
 
@@ -186,11 +160,7 @@ async def async_generate_article_task(input_news_ids: list[int]) -> None:
             archive=archive,
             ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
-        saved_news = (
-            await article_generation_service.create_new_article_from_input_news(
-                input_news_ids=input_news_ids
-            )
-        )
+        saved_news = await article_generation_service.create_new_article_from_input_news(input_news_ids=input_news_ids)
     logger.info(f"Generated article {saved_news.id}, sending to picture generation")
     generate_and_attach_image_to_news.send(parsed_news_id=saved_news.id)
 
@@ -216,9 +186,7 @@ async def async_enrich_parsed_article_task(parsed_news_id: int) -> None:
             archive=archive,
             ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
-        await article_generation_service.enrich_existing_article(
-            parsed_news_id=parsed_news_id
-        )
+        await article_generation_service.enrich_existing_article(parsed_news_id=parsed_news_id)
 
 
 @dramatiq.actor

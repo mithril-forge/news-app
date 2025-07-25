@@ -54,9 +54,7 @@ def upgrade() -> None:
         "input_news",
         sa.Column("title", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     )
-    op.add_column(
-        "input_news", sa.Column("publication_date", sa.DateTime(), nullable=True)
-    )
+    op.add_column("input_news", sa.Column("publication_date", sa.DateTime(), nullable=True))
     op.drop_column("input_news", "processed_at")
     op.drop_column("input_news", "source")
     op.drop_column("input_news", "raw_metadata")
@@ -86,9 +84,7 @@ def downgrade() -> None:
     )
     op.add_column(
         "input_news",
-        sa.Column(
-            "processed_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True
-        ),
+        sa.Column("processed_at", postgresql.TIMESTAMP(), autoincrement=False, nullable=True),
     )
     op.drop_column("input_news", "publication_date")
     op.drop_column("input_news", "title")

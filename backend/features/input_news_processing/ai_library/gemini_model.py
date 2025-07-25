@@ -41,9 +41,7 @@ class GeminiAIModel(AbstractAIModel):
             if not file_path.exists():
                 logger.error(f"File path {file_path} not found")
                 raise ValueError(f"File path {file_path} not found")
-            file_obj = upload_file(
-                path=file_path, display_name=key, mime_type="text/plain"
-            )
+            file_obj = upload_file(path=file_path, display_name=key, mime_type="text/plain")
             logger.info(f"File uploaded successfully: {key}, URI = {file_obj.uri}")
             results[key] = file_obj
         logger.info(f"Successfully uploaded {len(results)} files to Gemini")
@@ -62,9 +60,7 @@ class GeminiAIModel(AbstractAIModel):
         prompt: str,
     ) -> ResponseT:
         """Prompt model with the query and files, the preparation of files is done independently"""
-        logger.info(
-            f"Prompting Gemini model with {len(files)} files and response model: {response_model.__name__}"
-        )
+        logger.info(f"Prompting Gemini model with {len(files)} files and response model: {response_model.__name__}")
         contents: list[str | types.File] = [prompt]
         gemini_client = self.prepare_model_sdk()
         gemini_files = self.upload_files_gemini(files=files)

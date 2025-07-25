@@ -58,9 +58,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("source", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "raw_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True
-        ),
+        sa.Column("raw_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("parsed_news", sa.Integer(), nullable=True),
         sa.Column("received_at", sa.DateTime(), nullable=False),
         sa.Column("processed_at", sa.DateTime(), nullable=True),

@@ -51,16 +51,12 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
 
         # First batch of input news
         input_news_raw = next(mock_data, [])
-        input_news = await input_news_service.add_or_update_input_news_batch(
-            input_news_list=input_news_raw
-        )
+        input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
         input_news_ids = [news.id for news in input_news]
         input_news_older = await input_news_service.get_input_news_by_delta(
             delta=timedelta(days=1000), has_parsed_news=False
         )
-        input_news_ids += [
-            news.id for news in input_news_older if news.id not in input_news_ids
-        ]
+        input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
         assert len(input_news) == 10, (
             f"Application didn't load proper input news. Loaded {len(input_news)}, Expected 10"
         )
@@ -68,75 +64,49 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
         await session.flush()
 
         # First batch of news generation
-        generated_news = (
-            await article_generation_service.connect_input_news_to_existing_articles(
-                input_news_ids=input_news_ids
-            )
+        generated_news = await article_generation_service.connect_input_news_to_existing_articles(
+            input_news_ids=input_news_ids
         )
-        assert len(generated_news) == 0, (
-            f"The testing workflow shouldn't add any connected news. {generated_news=}"
-        )
+        assert len(generated_news) == 0, f"The testing workflow shouldn't add any connected news. {generated_news=}"
 
-        generated_news_groups = (
-            await article_generation_service.choose_input_news_for_new_articles(
-                input_news_ids=input_news_ids
-            )
+        generated_news_groups = await article_generation_service.choose_input_news_for_new_articles(
+            input_news_ids=input_news_ids
         )
-        assert len(generated_news) == 3, (
-            f"Service should generate exactly 3 news. {generated_news=}"
-        )
+        assert len(generated_news) == 3, f"Service should generate exactly 3 news. {generated_news=}"
         await session.flush()
         for generated_news_group in generated_news_groups:
-            new_article = (
-                await article_generation_service.create_new_article_from_input_news(
-                    input_news_ids=generated_news_group
-                )
+            new_article = await article_generation_service.create_new_article_from_input_news(
+                input_news_ids=generated_news_group
             )
             verify_generated_news([new_article])
 
         # Second batch of input news
         print("Loading additional news.")
         input_news_raw = next(mock_data, [])
-        input_news = await input_news_service.add_or_update_input_news_batch(
-            input_news_list=input_news_raw
-        )
+        input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
         input_news_ids = [news.id for news in input_news]
         input_news_older = await input_news_service.get_input_news_by_delta(
             delta=timedelta(days=1000), has_parsed_news=False
         )
-        input_news_ids += [
-            news.id for news in input_news_older if news.id not in input_news_ids
-        ]
+        input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
         print(f"Input news loaded: {input_news}")
 
         # Second batch of news generation
-        generated_news = (
-            await article_generation_service.connect_input_news_to_existing_articles(
-                input_news_ids=input_news_ids
-            )
+        generated_news = await article_generation_service.connect_input_news_to_existing_articles(
+            input_news_ids=input_news_ids
         )
-        assert len(generated_news) == 1, (
-            f"The testing workflow should add exactly 1 connected news. {generated_news=}"
-        )
+        assert len(generated_news) == 1, f"The testing workflow should add exactly 1 connected news. {generated_news=}"
         for single_generated_news in generated_news:
-            new_article = await article_generation_service.enrich_existing_article(
-                single_generated_news
-            )
+            new_article = await article_generation_service.enrich_existing_article(single_generated_news)
             verify_generated_news([new_article])
-        generated_news_groups = (
-            await article_generation_service.choose_input_news_for_new_articles(
-                input_news_ids=input_news_ids
-            )
+        generated_news_groups = await article_generation_service.choose_input_news_for_new_articles(
+            input_news_ids=input_news_ids
         )
-        assert len(generated_news) == 1, (
-            f"Service should generate exactly 1 news. {generated_news=}"
-        )
+        assert len(generated_news) == 1, f"Service should generate exactly 1 news. {generated_news=}"
         await session.flush()
         for generated_news_group in generated_news_groups:
-            new_article = (
-                await article_generation_service.create_new_article_from_input_news(
-                    input_news_ids=generated_news_group
-                )
+            new_article = await article_generation_service.create_new_article_from_input_news(
+                input_news_ids=generated_news_group
             )
             verify_generated_news([new_article])
 
@@ -150,12 +120,8 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Test News Processing Functionality")
-    parser.add_argument(
-        "--commit", action="store_true", help="Commit transactions to database"
-    )
-    parser.add_argument(
-        "--days", type=int, default=365, help="Number of days to look back for news"
-    )
+    parser.add_argument("--commit", action="store_true", help="Commit transactions to database")
+    parser.add_argument("--days", type=int, default=365, help="Number of days to look back for news")
 
     args = parser.parse_args()
 

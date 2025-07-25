@@ -65,8 +65,6 @@ class OpenAIModel(AbstractAIModel):
         """
         client = AsyncOpenAI(api_key=self.api_key)
 
-        instructor_client = instructor.from_openai(
-            client=client, mode=instructor.Mode.JSON
-        )
+        instructor_client = instructor.from_openai(client=client, mode=instructor.Mode.JSON)
 
         return instructor_client

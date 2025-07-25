@@ -33,11 +33,7 @@ def init_logging() -> None:
 
     # Configure stdlib logging separately (for FastAPI/uvicorn logs)
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s [%(levelname)-8s] %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"
-        )
-    )
+    handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)-8s] %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"))
 
     root_logger.addHandler(handler)
     root_logger.setLevel(logging.INFO)

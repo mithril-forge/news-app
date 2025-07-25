@@ -49,9 +49,7 @@ class AsyncBaseRepository(Generic[T]):
         """Get a record by ID."""
         logger.debug(f"Getting {self.model_class.__name__} by ID: {id}")
         result = await self.session.get(self.model_class, id)
-        logger.info(
-            f"Found {self.model_class.__name__} with ID {id}: {result is not None}"
-        )
+        logger.info(f"Found {self.model_class.__name__} with ID {id}: {result is not None}")
         return result
 
     async def get_by_ids(self, ids: Sequence[int]) -> list[T]:
@@ -67,9 +65,7 @@ class AsyncBaseRepository(Generic[T]):
         result = await self.session.execute(stmt)
         records = result.scalars().all()
 
-        logger.info(
-            f"Found {len(records)} {self.model_class.__name__} records out of {len(ids)} requested IDs"
-        )
+        logger.info(f"Found {len(records)} {self.model_class.__name__} records out of {len(ids)} requested IDs")
         return list(records)
 
     async def get_all(self) -> Sequence[T]:
@@ -91,26 +87,18 @@ class AsyncBaseRepository(Generic[T]):
 
         self.session.add(obj)
         await self.session.flush()  # Flush to get the ID but don't commit
-        logger.info(
-            f"Added new {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}"
-        )
+        logger.info(f"Added new {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
         return obj
 
     async def update(self, obj: T) -> T:
         """Update an existing record without committing."""
-        logger.debug(
-            f"Updating {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}"
-        )
+        logger.debug(f"Updating {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
         self.session.add(obj)
         await self.session.flush()
-        logger.info(
-            f"Updated {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}"
-        )
+        logger.info(f"Updated {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
         return obj
 
-    async def update_from_dict(
-        self, structure_id: int, data: dict[str, Any]
-    ) -> T | None:
+    async def update_from_dict(self, structure_id: int, data: dict[str, Any]) -> T | None:
         """
         Update an existing record with the given data.
 
@@ -121,15 +109,11 @@ class AsyncBaseRepository(Generic[T]):
         Returns:
             Updated model instance or None if record not found
         """
-        logger.info(
-            f"Updating {self.model_class.__name__} with ID {structure_id} from dict"
-        )
+        logger.info(f"Updating {self.model_class.__name__} with ID {structure_id} from dict")
         logger.debug(f"Updating dict: {data}")
         instance = await self.get_by_id(structure_id)
         if not instance:
-            logger.warn(
-                f"{self.model_class.__name__} with ID {structure_id} not found for update"
-            )
+            logger.warn(f"{self.model_class.__name__} with ID {structure_id} not found for update")
             return None
 
         for key, value in data.items():
@@ -138,17 +122,13 @@ class AsyncBaseRepository(Generic[T]):
 
         self.session.add(instance)
         await self.session.flush()
-        logger.info(
-            f"Updated {self.model_class.__name__} with ID {structure_id} from dict"
-        )
+        logger.info(f"Updated {self.model_class.__name__} with ID {structure_id} from dict")
 
         return instance
 
     async def refresh(self, obj: T) -> T:
         """Refresh an object from the database."""
-        logger.debug(
-            f"Refreshing {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}"
-        )
+        logger.debug(f"Refreshing {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
         await self.session.refresh(obj)
         return obj
 
@@ -161,9 +141,7 @@ class AsyncBaseRepository(Generic[T]):
             await self.session.flush()
             logger.info(f"Removed {self.model_class.__name__} with ID: {id}")
         else:
-            logger.warn(
-                f"{self.model_class.__name__} with ID {id} not found for removal"
-            )
+            logger.warn(f"{self.model_class.__name__} with ID {id} not found for removal")
         return obj
 
     @staticmethod
@@ -181,9 +159,7 @@ class AsyncBaseRepository(Generic[T]):
             instance_data = {}
             for field_name, field_value in instance.__dict__.items():
                 # Skip SQLAlchemy internals and relationship objects
-                if not field_name.startswith("_") and not isinstance(
-                    field_value, list | SQLModel
-                ):
+                if not field_name.startswith("_") and not isinstance(field_value, list | SQLModel):
                     instance_data[field_name] = field_value
 
             data.append(instance_data)
@@ -255,9 +231,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         """
         Fetch latest with pagination
         """
-        logger.debug(
-            f"Getting latest {self.model_class.__name__} records (skip: {skip}, limit: {limit})"
-        )
+        logger.debug(f"Getting latest {self.model_class.__name__} records (skip: {skip}, limit: {limit})")
         query = (
             select(ParsedNews)
             .order_by(ParsedNews.updated_at.desc())  # type: ignore[attr-defined]
@@ -266,14 +240,10 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         )
         result = await self.session.execute(query)
         records = result.scalars().all()
-        logger.info(
-            f"Retrieved {len(records)} latest {self.model_class.__name__} records"
-        )
+        logger.info(f"Retrieved {len(records)} latest {self.model_class.__name__} records")
         return records
 
-    async def get_most_viewed_news_by_period(
-        self, period: timedelta, limit: int = 10
-    ) -> Sequence[ParsedNews]:
+    async def get_most_viewed_news_by_period(self, period: timedelta, limit: int = 10) -> Sequence[ParsedNews]:
         """
         Get most viewed news articles within a specified time period.
 
@@ -328,15 +298,11 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.info(f"Found news by title '{title}': {news is not None}")
         return news
 
-    async def get_by_topic_id(
-        self, topic_id: int, skip: int, limit: int
-    ) -> list[ParsedNews]:
+    async def get_by_topic_id(self, topic_id: int, skip: int, limit: int) -> list[ParsedNews]:
         """
         Get news for a specific topic with pagination
         """
-        logger.debug(
-            f"Getting news by topic ID: {topic_id}, skip: {skip}, limit: {limit}"
-        )
+        logger.debug(f"Getting news by topic ID: {topic_id}, skip: {skip}, limit: {limit}")
         statement = (
             select(ParsedNews)
             .where(ParsedNews.topic_id == topic_id)
@@ -346,20 +312,14 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         )
         result = await self.session.execute(statement)
         news_list = result.scalars().all()
-        logger.info(
-            f"Retrieved {len(news_list)} news articles for topic ID: {topic_id}"
-        )
+        logger.info(f"Retrieved {len(news_list)} news articles for topic ID: {topic_id}")
         return cast(list[ParsedNews], news_list)
 
     async def get_with_tags(self, news_id: int) -> ParsedNews | None:
         """Get news with its tags preloaded."""
         logger.debug(f"Getting news with tags for ID: {news_id}")
 
-        statement = (
-            select(ParsedNews)
-            .options(joinedload(ParsedNews.tags))
-            .where(ParsedNews.id == news_id)
-        )
+        statement = select(ParsedNews).options(joinedload(ParsedNews.tags)).where(ParsedNews.id == news_id)
 
         result = await self.session.execute(statement)
         news = result.unique().scalar_one_or_none()  # unique() needed with joinedload
@@ -371,9 +331,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
 
         return news
 
-    async def prepare_with_tags(
-        self, news_data: dict[str, Any], tag_texts: list[str]
-    ) -> ParsedNews:
+    async def prepare_with_tags(self, news_data: dict[str, Any], tag_texts: list[str]) -> ParsedNews:
         """
         Prepare news with tags without committing.
         This allows combining with other operations in a single transaction.
@@ -407,14 +365,10 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         statement = select(ParsedNews).where(and_(*conditions))
         result = await self.session.execute(statement)
         news_list = result.scalars().all()
-        logger.info(
-            f"Retrieved {len(news_list)} news articles from time delta: {delta}"
-        )
+        logger.info(f"Retrieved {len(news_list)} news articles from time delta: {delta}")
         return news_list
 
-    async def update_with_tags(
-        self, news_id: int, news_data: dict[str, Any], tag_texts: list[str]
-    ) -> ParsedNews:
+    async def update_with_tags(self, news_id: int, news_data: dict[str, Any], tag_texts: list[str]) -> ParsedNews:
         """
         Update news with its tags in a single transaction.
 
@@ -433,15 +387,11 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         news = await self.update_from_dict(structure_id=news_id, data=news_data)
         if not news:
             logger.error(f"News with ID {news_id} not found for update")
-            raise ValueError(
-                f"Structure with id {news_id} not found even what it should be updated "
-            )
+            raise ValueError(f"Structure with id {news_id} not found even what it should be updated ")
 
         tag_repo = AsyncTagRepository(self.session)
         news.updated_at = datetime.utcnow()
-        statement = select(ParsedNewsTagLink).where(
-            ParsedNewsTagLink.news_item_id == news_id
-        )
+        statement = select(ParsedNewsTagLink).where(ParsedNewsTagLink.news_item_id == news_id)
         result = await self.session.execute(statement)
         existing_links = result.scalars().all()
 

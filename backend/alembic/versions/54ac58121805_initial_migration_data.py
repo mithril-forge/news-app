@@ -28,9 +28,7 @@ def upgrade() -> None:
     topics_table = sa.Table("topics", meta, autoload_with=bind)
     tags_table = sa.Table("tags", meta, autoload_with=bind)
     parsed_news_table = sa.Table("parsed_news", meta, autoload_with=bind)
-    parsed_news_tag_link_table = sa.Table(
-        "parsed_news_tag_link", meta, autoload_with=bind
-    )
+    parsed_news_tag_link_table = sa.Table("parsed_news_tag_link", meta, autoload_with=bind)
 
     print("Inserting initial topics...")
     op.bulk_insert(
@@ -86,14 +84,10 @@ def upgrade() -> None:
 
     # Získání ID vložených témat a štítků (jednodušší přístup než RETURNING)
     print("Fetching IDs for topics and tags...")
-    res_topics = (
-        bind.execute(sa.select(topics_table.c.id, topics_table.c.name)).mappings().all()
-    )
+    res_topics = bind.execute(sa.select(topics_table.c.id, topics_table.c.name)).mappings().all()
     topic_id_map = {r["name"]: r["id"] for r in res_topics}
 
-    res_tags = (
-        bind.execute(sa.select(tags_table.c.id, tags_table.c.text)).mappings().all()
-    )
+    res_tags = bind.execute(sa.select(tags_table.c.id, tags_table.c.text)).mappings().all()
     tag_id_map = {r["text"]: r["id"] for r in res_tags}
 
     # Basic checks for added items
@@ -246,11 +240,7 @@ def upgrade() -> None:
 
     # Získání ID vložených zpráv
     print("Fetching IDs for inserted news...")
-    res_news = (
-        bind.execute(sa.select(parsed_news_table.c.id, parsed_news_table.c.title))
-        .mappings()
-        .all()
-    )
+    res_news = bind.execute(sa.select(parsed_news_table.c.id, parsed_news_table.c.title)).mappings().all()
     news_id_map = {r["title"]: r["id"] for r in res_news}
 
     # Check some new news items
@@ -271,18 +261,12 @@ def upgrade() -> None:
     news_id_ai = news_id_map["Nový AI model od Google mění pravidla hry"]
     news_id_fotbal = news_id_map["Mistrovství světa ve fotbale: Finále"]
     news_id_film = news_id_map['Premiéra nového českého filmu "Osamělí běžci"']
-    news_id_cnb = news_id_map[
-        "ČNB překvapivě zvýšila úrokové sazby o 0.5 procentního bodu"
-    ]
+    news_id_cnb = news_id_map["ČNB překvapivě zvýšila úrokové sazby o 0.5 procentního bodu"]
     news_id_planeta = news_id_map["Objev nové exoplanety v obyvatelné zóně"]
     news_id_hory = news_id_map["Tipy na víkendový výlet do Českého Švýcarska"]
-    news_id_dieta = news_id_map[
-        "Studie potvrzuje výhody středomořské diety pro prevenci kardiovaskulárních chorob"
-    ]
+    news_id_dieta = news_id_map["Studie potvrzuje výhody středomořské diety pro prevenci kardiovaskulárních chorob"]
     news_id_vlada = news_id_map["Jednání vlády o reformě důchodového systému"]
-    news_id_startup = news_id_map[
-        "Český startup 'DataFriends' získal investici 5 milionů EUR"
-    ]
+    news_id_startup = news_id_map["Český startup 'DataFriends' získal investici 5 milionů EUR"]
     news_id_hudba = news_id_map["Nové album kapely 'Naděje' trhá rekordy"]
     news_id_ai_hw = news_id_map["Jak vybrat správný hardware pro AI vývoj"]
 
@@ -430,18 +414,14 @@ def downgrade() -> None:
     ).fetchall()
     news_ids_to_delete = [str(row[0]) for row in news_ids_res]
     if news_ids_to_delete:
-        op.execute(
-            f"DELETE FROM parsed_news_tag_link WHERE news_item_id IN ({','.join(news_ids_to_delete)})"
-        )
+        op.execute(f"DELETE FROM parsed_news_tag_link WHERE news_item_id IN ({','.join(news_ids_to_delete)})")
 
     print("Removing initial input data (InputNews)...")
     safe_input_sources_sql = ", ".join(input_sources_to_delete)
     op.execute(f"DELETE FROM input_news WHERE source IN ({safe_input_sources_sql})")
 
     print("Removing initial news (ParsedNews)...")
-    op.execute(
-        f"DELETE FROM parsed_news WHERE title IN ({safe_news_titles_sql})"
-    )  # Use safe list from above
+    op.execute(f"DELETE FROM parsed_news WHERE title IN ({safe_news_titles_sql})")  # Use safe list from above
 
     print("Removing initial tags...")
     safe_tag_texts_sql = ", ".join(tag_texts_to_delete)

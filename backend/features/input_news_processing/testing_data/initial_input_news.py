@@ -207,9 +207,7 @@ def load_initial_input_news_data() -> list[InputNews]:
     articles = []
     for article_dict in INITIAL_INPUT_ARTICLES:
         # Convert string back to datetime
-        article_dict["publication_date"] = datetime.fromisoformat(
-            cast(str, article_dict["publication_date"])
-        )
+        article_dict["publication_date"] = datetime.fromisoformat(cast(str, article_dict["publication_date"]))
 
         # Create Pydantic model
         article = InputNews(**article_dict)  # type: ignore

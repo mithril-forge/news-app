@@ -77,9 +77,7 @@ async def log_requests(request: Request, call_next: Any) -> Any:
     user_agent = request.headers.get("user-agent", "unknown")
 
     start_time = time.time()
-    logger.debug(
-        f"Request started: {request.method} {request.url.path} from IP: {client_ip}"
-    )
+    logger.debug(f"Request started: {request.method} {request.url.path} from IP: {client_ip}")
 
     response = await call_next(request)
 
@@ -106,9 +104,7 @@ async def all_topics(
 
 
 @app.get("/topics/{topic_id}", response_model=TopicResponse)
-async def specific_topic(
-    topic_id: int, session: AsyncSession = Depends(get_session)
-) -> TopicResponse:
+async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_session)) -> TopicResponse:
     """Get a specific topic by ID"""
     service = TopicService(session)
     return await service.get_topic_by_id(topic_id)
@@ -150,9 +146,7 @@ async def popular_news(
 
 
 @app.get("/news/{news_id}", response_model=ParsedNewsResponseDetailed)
-async def read_news(
-    news_id: int, session: AsyncSession = Depends(get_session)
-) -> ParsedNewsResponseDetailed:
+async def read_news(news_id: int, session: AsyncSession = Depends(get_session)) -> ParsedNewsResponseDetailed:
     """Get a specific news item by ID"""
     service = NewsService(session)
     result = await service.get_news_by_id(news_id=news_id)
