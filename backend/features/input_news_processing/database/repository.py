@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional, List, Sequence
 
 import structlog
 from sqlalchemy import func
@@ -37,7 +37,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         delta: timedelta,
         has_parsed_news: Optional[bool] = None,
         newer: bool = True,
-    ) -> List[InputNews]:
+    ) -> Sequence[InputNews]:
         """
         Get input news published within a time delta from now.
 
@@ -61,7 +61,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
             else InputNews.publication_date <= from_date
         ]
 
-        if has_parsed_news is True:
+        if has_parsed_news:
             conditions.append(InputNews.parsed_news is not None)
         elif has_parsed_news is False:
             conditions.append(InputNews.parsed_news is None)

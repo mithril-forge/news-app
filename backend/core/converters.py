@@ -1,4 +1,4 @@
-from typing import List, TypeVar, Type, Optional
+from typing import List, TypeVar, Type, Optional, Sequence
 
 import structlog
 from pydantic import BaseModel
@@ -47,7 +47,7 @@ def orm_to_pydantic(
 
 
 def orm_list_to_pydantic(
-    orm_list: List[M], pydantic_class: Type[P], excludes: Optional[List[str]] = None
+    orm_list: Sequence[M], pydantic_class: Type[P], excludes: Optional[List[str]] = None
 ) -> List[P]:
     """
     Convert a list of ORM model instances to a list of Pydantic model instances.
@@ -120,7 +120,7 @@ def news_to_response(news: ParsedNews) -> ParsedNewsBasic:
     return result
 
 
-def news_list_to_response(news_list: List[ParsedNews]) -> List[ParsedNewsBasic]:
+def news_list_to_response(news_list: Sequence[ParsedNews]) -> List[ParsedNewsBasic]:
     """
     Convert a list of ParsedNews ORM models to NewsResponse schemas with topic_name populated.
 

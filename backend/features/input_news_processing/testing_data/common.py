@@ -9,7 +9,7 @@ from features.input_news_processing.testing_data.initial_input_news import (
 )
 
 
-def load_testing_input_news_data(test_articles: list[str, Any]) -> list[InputNews]:
+def load_testing_input_news_data(test_articles: list[dict[str, Any]]) -> list[InputNews]:
     # Convert the data back to Pydantic models
     articles = []
     for article_dict in test_articles:

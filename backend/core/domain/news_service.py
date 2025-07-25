@@ -115,7 +115,7 @@ class NewsService:
         news_id = news.id
         if news_id is None:
             raise ValueError(f"News {news} doesn't have properly set id.")
-        complete_news = await self.news_repo.get_with_tags(news.id)
+        complete_news = await self.news_repo.get_with_tags(news_id)
         if complete_news is None:
             raise ValueError(f"News for ID {news_id} not found even when it should be newly created")
         result = news_to_detailed_response(complete_news)

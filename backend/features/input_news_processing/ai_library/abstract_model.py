@@ -4,7 +4,7 @@ from typing import TypeVar, Type
 
 from instructor import AsyncInstructor
 
-T = TypeVar("T")
+ResponseT = TypeVar("ResponseT")
 
 
 class AbstractAIModel(abc.ABC):
@@ -14,8 +14,8 @@ class AbstractAIModel(abc.ABC):
 
     @abc.abstractmethod
     async def prompt_model(
-        self, files: dict[str, pathlib.Path], response_model: Type[T], prompt: str
-    ) -> T | None:
+        self, files: dict[str, pathlib.Path], response_model: type[ResponseT], prompt: str
+    ) -> ResponseT | None:
         """Prompt model with files and prompt, returns result as the passed type, this is ensured by AsyncInstructor"""
         pass
 

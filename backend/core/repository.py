@@ -23,13 +23,10 @@ from sqlalchemy.sql.expression import update
 
 from core.models import ParsedNews, Tag, Topic, ParsedNewsTagLink
 
-T = TypeVar("T", bound=BaseModelInterface)
+T = TypeVar("T", bound=SQLModel)
 
 logger = structlog.get_logger()
 
-
-class BaseModelInterface(Protocol, SQLModel):
-    id: int
 
 
 class AsyncBaseRepository(Generic[T]):
@@ -80,7 +77,7 @@ class AsyncBaseRepository(Generic[T]):
         )
         return list(records)
 
-    async def get_all(self) -> List[T]:
+    async def get_all(self) -> Sequence[T]:
         """Get all records."""
         logger.debug(f"Getting all {self.model_class.__name__} records")
         statement = select(self.model_class)
@@ -174,7 +171,7 @@ class AsyncBaseRepository(Generic[T]):
             )
         return obj
 
-    async def get_latest(self, skip: int, limit: int) -> List[T]:
+    async def get_latest(self, skip: int, limit: int) -> Sequence[T]:
         """
         Fetch latest with pagination
         """
@@ -281,7 +278,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
 
     async def get_most_viewed_news_by_period(
             self, period: timedelta, limit: int = 10
-    ) -> List[ParsedNews]:
+    ) -> Sequence[ParsedNews]:
         """
         Get most viewed news articles within a specified time period.
 
@@ -405,7 +402,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.info(f"Prepared news with ID: {news.id} and {len(tag_texts)} tags")
         return news
 
-    async def get_by_time_delta(self, delta: timedelta) -> List[ParsedNews]:
+    async def get_by_time_delta(self, delta: timedelta) -> Sequence[ParsedNews]:
         """ """
         logger.debug(f"Getting news by time delta: {delta}")
         from_date = datetime.utcnow() - delta

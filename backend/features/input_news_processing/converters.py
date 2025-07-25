@@ -4,7 +4,7 @@ These functions are not strictly necessary since Pydantic's orm_mode handles con
 but they can be useful for more complex transformations.
 """
 
-from typing import List
+from typing import List, Sequence
 
 import structlog
 
@@ -16,7 +16,7 @@ from features.input_news_processing.domain.schemas import (
     InputNewsWithoutContent,
 )
 
-from backend.features.input_news_processing.domain.schemas import InputNews as InputNewsSchema
+from features.input_news_processing.domain.schemas import InputNews as InputNewsSchema
 
 logger = structlog.get_logger()
 
@@ -165,7 +165,7 @@ def parsed_news_with_input(parsed_news: ParsedNews) -> ParsedNewsWithInputNews:
 
 
 def parsed_news_list_with_input(
-    parsed_news_list: List[ParsedNews],
+    parsed_news_list: Sequence[ParsedNews],
 ) -> List[ParsedNewsWithInputNews]:
     """Converts a lit of parsed_news_list with input news also"""
     result = [parsed_news_with_input(item) for item in parsed_news_list if item]

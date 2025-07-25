@@ -2,8 +2,8 @@ import json
 import tempfile
 from datetime import timedelta
 from pathlib import Path
-from typing import Type, Any
-
+from typing import Any
+from sqlmodel.ext.asyncio.session import AsyncSession
 import structlog
 from pydantic import BaseModel
 
@@ -45,7 +45,7 @@ class TempFileStorage(BaseModel):
 
 
 class ArticleGenerationService:
-    def __init__(self, session, archive: AbstractArchive, ai_model: AbstractAIModel):
+    def __init__(self, session: AsyncSession, archive: AbstractArchive, ai_model: AbstractAIModel) -> None:
         self.session = session
         self.topic_service = TopicService(session=session)
         self.input_news_service = InputNewsService(session=session, archive=archive)
@@ -113,7 +113,9 @@ class ArticleGenerationService:
             prompt=PICTURE_SEARCH_PROMPT,
             response_model=list[ImageDetail],
         )
-        result_list = list(image_result)
+        if image_result is None:
+            raise ValueError(f"There is None result when generating new image for id {news_id}")
+        result_list: list[ImageDetail] = list(image_result)
         if len(result_list) == 0:
             logger.warn(f"No image results found for news ID: {news_id}")
         else:

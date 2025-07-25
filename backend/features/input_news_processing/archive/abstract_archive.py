@@ -14,5 +14,5 @@ class AbstractArchive(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_file(self, path: str | pathlib.Path) -> bytes:
+    def get_file(self, path: pathlib.Path) -> bytes:
         pass

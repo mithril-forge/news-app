@@ -3,6 +3,7 @@ import json
 import zipfile
 from datetime import datetime, timedelta
 from typing import List, Optional
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 import structlog
 
@@ -29,7 +30,7 @@ logger = structlog.get_logger()
 
 
 class InputNewsService:
-    def __init__(self, session, archive: AbstractArchive) -> None:
+    def __init__(self, session: AsyncSession, archive: AbstractArchive) -> None:
         self.session = session
         self.input_news_repo = AsyncInputNewsRepository(session=session)
         self.parsed_news_repo = AsyncParsedNewsRepository(session=session)
@@ -122,12 +123,12 @@ class InputNewsService:
             input_news_id = input_news.id
             if input_news_id is None:
                 raise ValueError(f"Input news {input_news} doesn't have properly set id.")
-            await self.input_news_repo.remove(id=input_news.id)
+            await self.input_news_repo.remove(id=input_news_id)
         logger.info(f"Removed {len(old_input_news)} old input news items from database")
 
     @staticmethod
     async def scrap_input_news(
-        delta: timedelta, max_articles_per_site: int = 10, websites: list[str] = None
+        delta: timedelta, max_articles_per_site: int = 10, websites: list[str] | None = None
     ) -> list[InputNews]:
         """
         Function that calls the Czech News Crawler to fetch input news from websites.

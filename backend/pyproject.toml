@@ -44,6 +44,7 @@ module = [
     "google.generativeai.*",
     "periodiq.*",
     "genai",
-    "dramatiq.*"
+    "dramatiq.*",
+    "google.generativeai"
 ]
 ignore_missing_imports = true

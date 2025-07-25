@@ -53,7 +53,7 @@ async def get_session(
 
 
 @asynccontextmanager
-async def get_session_context(commit_transaction: bool = True):
+async def get_session_context(commit_transaction: bool = True) -> AsyncGenerator[AsyncSession, None]:
     logger.debug(f"Getting session context (commit_transaction: {commit_transaction})")
     async for session in get_session(commit_transaction=commit_transaction):
         try:
