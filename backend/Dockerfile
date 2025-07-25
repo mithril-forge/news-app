@@ -33,12 +33,16 @@ RUN uv pip install -r requirements.txt --system
 # Copy application code
 COPY . .
 
-# Expose port
-EXPOSE 8000
 # Copy the entrypoint script into the container
 COPY entrypoint_backend.sh /entrypoint_backend.sh
 COPY entrypoint_dramatiq.sh /entrypoint_dramatiq.sh
 # Make the entrypoint script executable
 RUN chmod +x /entrypoint_backend.sh
 RUN chmod +x /entrypoint_dramatiq.sh
+
+# Expose port (Railway will override this with $PORT)
+EXPOSE 8000
+
+# Default command for Railway
+CMD ["bash", "/entrypoint_backend.sh"]
 
