@@ -4,7 +4,7 @@ PROJECT_NAME := app
 # Default tag is formatted as date-commit_hash
 TAG := $(shell date +%Y%m%d)-$(shell git rev-parse --short HEAD 2>/dev/null || echo 'dev')
 
-.PHONY: help dev-up dev-down dev-build dev-logs prod-build prod-deploy prod-remove
+.PHONY: help dev-up dev-down dev-build dev-logs prod-build prod-deploy prod-remove check-code build-locally
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
