@@ -2,27 +2,26 @@ import io
 import json
 import zipfile
 from datetime import datetime, timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
 
 import structlog
-
-from features.input_news_processing.archive.abstract_archive import AbstractArchive
-from features.input_news_processing.database.repository import AsyncInputNewsRepository
-from cz_news import crawl_czech_news, Article
+from cz_news import Article, crawl_czech_news
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.repository import AsyncParsedNewsRepository
+from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import (
-    parsed_news_list_with_input,
     input_news_list_to_schema,
-    input_schema_list_to_orm,
-    input_news_to_schema,
     input_news_lite_list_to_schema,
+    input_news_to_schema,
+    input_schema_list_to_orm,
+    parsed_news_list_with_input,
 )
+from features.input_news_processing.database.repository import AsyncInputNewsRepository
 from features.input_news_processing.domain.schemas import (
-    ParsedNewsWithInputNews,
     InputNews,
     InputNewsWithID,
     InputNewsWithoutContent,
+    ParsedNewsWithInputNews,
 )
 
 logger = structlog.get_logger()

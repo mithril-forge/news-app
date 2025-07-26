@@ -3,8 +3,8 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.converters import orm_list_to_pydantic, orm_to_pydantic
+from core.domain.schemas import TopicCreate, TopicResponse
 from core.repository import AsyncTopicRepository
-from core.domain.schemas import TopicResponse, TopicCreate
 
 logger = structlog.get_logger()
 

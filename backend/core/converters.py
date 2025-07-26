@@ -1,18 +1,18 @@
-from typing import TypeVar
 from collections.abc import Sequence
+from typing import TypeVar
 
 import structlog
 from pydantic import BaseModel
 from sqlmodel import SQLModel
 
-from core.models import ParsedNews
 from core.domain.schemas import (
-    TagResponse,
-    TopicResponse,
+    InputNewsWithoutContent,
     ParsedNewsBasic,
     ParsedNewsResponseDetailed,
-    InputNewsWithoutContent,
+    TagResponse,
+    TopicResponse,
 )
+from core.models import ParsedNews
 
 M = TypeVar("M", bound=SQLModel)
 P = TypeVar("P", bound=BaseModel)
@@ -20,7 +20,9 @@ P = TypeVar("P", bound=BaseModel)
 logger = structlog.get_logger()
 
 
-def orm_to_pydantic(orm_obj: M, pydantic_class: type[P], excludes: list[str] | None = None) -> P:
+def orm_to_pydantic[M: SQLModel, P: BaseModel](
+    orm_obj: M, pydantic_class: type[P], excludes: list[str] | None = None
+) -> P:
     """
     Convert an ORM model instance to a Pydantic model instance.
 
@@ -45,7 +47,9 @@ def orm_to_pydantic(orm_obj: M, pydantic_class: type[P], excludes: list[str] | N
     return result
 
 
-def orm_list_to_pydantic(orm_list: Sequence[M], pydantic_class: type[P], excludes: list[str] | None = None) -> list[P]:
+def orm_list_to_pydantic[M: SQLModel, P: BaseModel](
+    orm_list: Sequence[M], pydantic_class: type[P], excludes: list[str] | None = None
+) -> list[P]:
     """
     Convert a list of ORM model instances to a list of Pydantic model instances.
 
@@ -61,7 +65,9 @@ def orm_list_to_pydantic(orm_list: Sequence[M], pydantic_class: type[P], exclude
     return result
 
 
-def pydantic_to_orm(pydantic_obj: P, orm_class: type[M], excludes: list[str] | None = None) -> M:
+def pydantic_to_orm[P: BaseModel, M: SQLModel](
+    pydantic_obj: P, orm_class: type[M], excludes: list[str] | None = None
+) -> M:
     """
     Convert a Pydantic model instance to an ORM model instance.
 

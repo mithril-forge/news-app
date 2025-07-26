@@ -1,10 +1,9 @@
 import os
 from logging.config import fileConfig
 
-from alembic import context
-from sqlalchemy import engine_from_config, inspect, schema
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, inspect, pool, schema
 
+from alembic import context
 from core.models import BaseModel
 
 POSTGRES_USER = os.getenv("POSTGRES_USER")

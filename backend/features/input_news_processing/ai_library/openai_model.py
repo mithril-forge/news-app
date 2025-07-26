@@ -44,7 +44,7 @@ class OpenAIModel(AbstractAIModel):
             Structured response as specified by response_model
         """
         client = self.prepare_model_sdk()
-        for key, value in files.items():
+        for _key, value in files.items():
             await client.files.create(file=value, purpose="user_data")
 
         # Use instructor to get structured output

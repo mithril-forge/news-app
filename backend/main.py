@@ -1,25 +1,25 @@
 import datetime
 import os
 import time
-from typing import Any
+from typing import Annotated, Any
 
 import structlog
-from fastapi import FastAPI, Depends, Query, Request, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import Environment
-from core.engine import get_session
 from core.domain.news_service import NewsService
 from core.domain.schemas import (
-    TopicResponse,
     ParsedNewsBasic,
     ParsedNewsResponseDetailed,
+    TopicResponse,
 )
 from core.domain.topic_service import TopicService
+from core.engine import get_session
 from logger import init_logging
 
 init_logging()
@@ -93,9 +93,9 @@ async def log_requests(request: Request, call_next: Any) -> Any:
 
 
 # API endpoints
-@app.get("/topics", response_model=list[TopicResponse])
+@app.get("/topics")
 async def all_topics(
-    session: AsyncSession = Depends(get_session),
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> list[TopicResponse]:
     """Get all topics"""
     service = TopicService(session)
@@ -103,41 +103,41 @@ async def all_topics(
     return result
 
 
-@app.get("/topics/{topic_id}", response_model=TopicResponse)
-async def specific_topic(topic_id: int, session: AsyncSession = Depends(get_session)) -> TopicResponse:
+@app.get("/topics/{topic_id}")
+async def specific_topic(topic_id: int, session: Annotated[AsyncSession, Depends(get_session)]) -> TopicResponse:
     """Get a specific topic by ID"""
     service = TopicService(session)
     return await service.get_topic_by_id(topic_id)
 
 
-@app.get("/news/topics/{topic_id}", response_model=list[ParsedNewsBasic])
+@app.get("/news/topics/{topic_id}")
 async def news_by_topic(
+    session: Annotated[AsyncSession, Depends(get_session)],
     topic_id: int,
-    skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(10, ge=1, le=100, description="Max number of records to return"),
-    session: AsyncSession = Depends(get_session),
+    skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
+    limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
 ) -> list[ParsedNewsBasic]:
     """Get news for a specific topic with pagination"""
     service = NewsService(session)
     return await service.get_news_by_topic(topic_id, skip=skip, limit=limit)
 
 
-@app.get("/news/latest", response_model=list[ParsedNewsBasic])
+@app.get("/news/latest")
 async def latest_news(
-    skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(10, ge=1, le=100, description="Max number of records to return"),
-    session: AsyncSession = Depends(get_session),
+    session: Annotated[AsyncSession, Depends(get_session)],
+    skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
+    limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
 ) -> list[ParsedNewsBasic]:
     """Get the latest news items with pagination"""
     service = NewsService(session)
     return await service.get_latest_news(skip=skip, limit=limit)
 
 
-@app.get("/news/popular", response_model=list[ParsedNewsBasic])
+@app.get("/news/popular")
 async def popular_news(
-    limit: int = Query(10, ge=1, le=20),
-    days: int = Query(3, ge=1, le=30),
-    session: AsyncSession = Depends(get_session),
+    session: Annotated[AsyncSession, Depends(get_session)],
+    limit: Annotated[int, Query(ge=1, le=20)] = 10,
+    days: Annotated[int, Query(ge=1, le=30)] = 3,
 ) -> list[ParsedNewsBasic]:
     """Get the most popular news by views"""
     service = NewsService(session=session)
@@ -145,8 +145,8 @@ async def popular_news(
     return await service.get_most_popular_news(period=period, limit=limit)
 
 
-@app.get("/news/{news_id}", response_model=ParsedNewsResponseDetailed)
-async def read_news(news_id: int, session: AsyncSession = Depends(get_session)) -> ParsedNewsResponseDetailed:
+@app.get("/news/{news_id}")
+async def read_news(news_id: int, session: Annotated[AsyncSession, Depends(get_session)]) -> ParsedNewsResponseDetailed:
     """Get a specific news item by ID"""
     service = NewsService(session)
     result = await service.get_news_by_id(news_id=news_id)

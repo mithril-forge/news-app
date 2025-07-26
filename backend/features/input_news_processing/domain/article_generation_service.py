@@ -3,29 +3,30 @@ import tempfile
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
-from sqlalchemy.ext.asyncio import AsyncSession
+
 import structlog
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.converters import orm_list_to_pydantic
-from core.repository import AsyncTagRepository
 from core.domain.news_service import NewsService
 from core.domain.schemas import (
-    TagResponse,
-    ParsedNewsResponseDetailed,
     ParsedNewsCreate,
+    ParsedNewsResponseDetailed,
     ParsedNewsUpdate,
+    TagResponse,
 )
 from core.domain.topic_service import TopicService
+from core.repository import AsyncTagRepository
 from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import input_news_list_to_schema
 from features.input_news_processing.domain.ai_prompts import (
-    PICTURE_SEARCH_PROMPT,
     INITIAL_CONNECTION_PROMPT,
     INITIAL_GENERATION_PROMPT,
-    NEW_GENERATION_PROMPT,
     NEW_CONNECTION_PROMPT,
+    NEW_GENERATION_PROMPT,
+    PICTURE_SEARCH_PROMPT,
 )
 from features.input_news_processing.domain.input_news_service import InputNewsService
 from features.input_news_processing.domain.schemas import (

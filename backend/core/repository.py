@@ -1,30 +1,28 @@
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from typing import (
-    Generic,
-    TypeVar,
     Any,
+    TypeVar,
     cast,
 )
-from collections.abc import Sequence
-from datetime import timedelta, datetime
 
 import structlog
-from sqlmodel import select, SQLModel, and_
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
-from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import update
+from sqlmodel import SQLModel, and_, select
 
-from core.models import ParsedNews, Tag, Topic, ParsedNewsTagLink, BaseModelWithID
+from core.models import BaseModelWithID, ParsedNews, ParsedNewsTagLink, Tag, Topic
 
 T = TypeVar("T", bound=BaseModelWithID)
 
 logger = structlog.get_logger()
 
 
-class AsyncBaseRepository(Generic[T]):
+class AsyncBaseRepository[T: BaseModelWithID]:
     """Base async repository with common CRUD operations."""
 
     def __init__(self, session: AsyncSession, model_class: type[T]):
@@ -33,7 +31,7 @@ class AsyncBaseRepository(Generic[T]):
         logger.info(f"Initialized repository for {model_class.__name__}")
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncGenerator[None, None]:
+    async def transaction(self) -> AsyncGenerator[None]:
         """Context manager for transactions."""
         logger.debug("Starting transaction")
         try:

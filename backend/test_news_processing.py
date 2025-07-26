@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-import asyncio
 import argparse
+import asyncio
 import os
 import pathlib
 import tempfile
 from datetime import timedelta
 
-from core.engine import get_session_context
+import structlog
+
 from core.domain.schemas import ParsedNewsResponseDetailed
+from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.domain.article_generation_service import (
@@ -16,16 +18,21 @@ from features.input_news_processing.domain.article_generation_service import (
 from features.input_news_processing.domain.input_news_service import InputNewsService
 from features.input_news_processing.testing_data.common import mock_data
 
+logger = structlog.get_logger()
+
+CHARACTER_LENGTH = 150
+TAGS_LENGTH = 3
+
 
 def verify_generated_news(generated_news: list[ParsedNewsResponseDetailed]) -> None:
     """Verify that generated news meets the quality criteria"""
     for single_generated_news in generated_news:
         content_len = len(single_generated_news.content.split(" "))
         json_dump = single_generated_news.model_dump_json()
-        assert content_len >= 150, (
+        assert content_len >= CHARACTER_LENGTH, (
             f"News {json_dump} don't have minimum 150 words in content. Len of content: {content_len}"
         )
-        assert 1 <= len(single_generated_news.tags) <= 3, (
+        assert 1 <= len(single_generated_news.tags) <= TAGS_LENGTH, (
             f"News {json_dump} don't have minimum of 1 and maximum of 3 tags. "
             f"Len of tags: {len(single_generated_news.tags)}"
         )
@@ -48,7 +55,7 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
             ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
 
-        print("Loading initial data")
+        logger.info("Loading initial data")
 
         # First batch of input news
         input_news_raw = next(mock_data, [])
@@ -58,10 +65,11 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
             delta=timedelta(days=1000), has_parsed_news=False
         )
         input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
-        assert len(input_news) == 10, (
+        input_news_count = 10
+        assert len(input_news) == input_news_count, (
             f"Application didn't load proper input news. Loaded {len(input_news)}, Expected 10"
         )
-        print(f"Input news loaded: {input_news}")
+        logger.info(f"Input news loaded: {input_news}")
         await session.flush()
 
         # First batch of news generation
@@ -73,7 +81,8 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
         generated_news_groups = await article_generation_service.choose_input_news_for_new_articles(
             input_news_ids=input_news_ids
         )
-        assert len(generated_news) == 3, f"Service should generate exactly 3 news. {generated_news=}"
+        news_count = 3
+        assert len(generated_news) == news_count, f"Service should generate exactly 3 news. {generated_news=}"
         await session.flush()
         for generated_news_group in generated_news_groups:
             new_article = await article_generation_service.create_new_article_from_input_news(
@@ -82,7 +91,7 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
             verify_generated_news([new_article])
 
         # Second batch of input news
-        print("Loading additional news.")
+        logger.info("Loading additional news.")
         input_news_raw = next(mock_data, [])
         input_news = await input_news_service.add_or_update_input_news_batch(input_news_list=input_news_raw)
         input_news_ids = [news.id for news in input_news]
@@ -90,7 +99,7 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
             delta=timedelta(days=1000), has_parsed_news=False
         )
         input_news_ids += [news.id for news in input_news_older if news.id not in input_news_ids]
-        print(f"Input news loaded: {input_news}")
+        logger.info(f"Input news loaded: {input_news}")
 
         # Second batch of news generation
         generated_news = await article_generation_service.connect_input_news_to_existing_articles(
@@ -128,7 +137,7 @@ def main() -> None:
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(test_parse_news(commit_transaction=args.commit))
-    print("Tests completed successfully!")
+    logger.info("Tests completed successfully!")
 
 
 if __name__ == "__main__":

@@ -8,15 +8,15 @@ from collections.abc import Sequence
 
 import structlog
 
-from core.models import ParsedNews, InputNews as InputNewsORM
 from core.converters import news_to_detailed_response
+from core.models import InputNews as InputNewsORM
+from core.models import ParsedNews
+from features.input_news_processing.domain.schemas import InputNews as InputNewsSchema
 from features.input_news_processing.domain.schemas import (
-    ParsedNewsWithInputNews,
     InputNewsWithID,
     InputNewsWithoutContent,
+    ParsedNewsWithInputNews,
 )
-
-from features.input_news_processing.domain.schemas import InputNews as InputNewsSchema
 
 logger = structlog.get_logger()
 

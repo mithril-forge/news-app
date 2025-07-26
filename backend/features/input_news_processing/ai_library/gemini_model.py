@@ -4,21 +4,20 @@ from typing import cast
 
 import instructor
 import structlog
+from google.generativeai import GenerativeModel, configure, types, upload_file  # type: ignore[attr-defined]
 from instructor import AsyncInstructor
+from tenacity import (
+    after_log,
+    before_sleep_log,
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from features.input_news_processing.ai_library.abstract_model import (
     AbstractAIModel,
     ResponseT,
 )
-from google.generativeai import configure, upload_file, types, GenerativeModel  # type: ignore[attr-defined]
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    wait_exponential,
-    before_sleep_log,
-    after_log,
-)
-
 
 logger = structlog.get_logger()
 

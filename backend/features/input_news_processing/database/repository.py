@@ -1,13 +1,13 @@
-from datetime import datetime, timedelta
 from collections.abc import Sequence
+from datetime import datetime, timedelta
 
 import structlog
 from sqlalchemy import func
-from sqlmodel import select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import and_, select
 
 from core.models import InputNews, ParsedNews
 from core.repository import AsyncBaseRepository
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger()
 

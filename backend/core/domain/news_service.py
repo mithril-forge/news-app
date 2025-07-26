@@ -4,20 +4,19 @@ import structlog
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.converters import orm_list_to_pydantic
-from core.converters import news_list_to_response, news_to_detailed_response
+from core.converters import news_list_to_response, news_to_detailed_response, orm_list_to_pydantic
+from core.domain.schemas import (
+    ParsedNewsBasic,
+    ParsedNewsCreate,
+    ParsedNewsResponseDetailed,
+    ParsedNewsSummary,
+    ParsedNewsUpdate,
+    TagResponse,
+)
 from core.repository import (
     AsyncParsedNewsRepository,
-    AsyncTopicRepository,
     AsyncTagRepository,
-)
-from core.domain.schemas import (
-    TagResponse,
-    ParsedNewsSummary,
-    ParsedNewsBasic,
-    ParsedNewsResponseDetailed,
-    ParsedNewsCreate,
-    ParsedNewsUpdate,
+    AsyncTopicRepository,
 )
 
 logger = structlog.get_logger()
@@ -71,7 +70,6 @@ class NewsService:
         logger.debug(f"Adding view to news ID: {news_id}")
         await self.news_repo.add_view_to_news(news_id=news_id)
         logger.debug(f"Successfully added view to news ID: {news_id}")
-        return None
 
     async def get_news_by_topic(self, topic_id: int, limit: int, skip: int) -> list[ParsedNewsBasic]:
         """Get all news for a specific topic"""

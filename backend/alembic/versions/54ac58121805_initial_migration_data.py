@@ -6,12 +6,15 @@ Create Date: 2025-04-09 15:43:41.793850
 
 """
 
-from datetime import datetime
-from datetime import timedelta
 from collections.abc import Sequence
+from datetime import datetime, timedelta
 
 import sqlalchemy as sa
+import structlog
+
 from alembic import op
+
+logger = structlog.get_logger()
 
 # revision identifiers, used by Alembic.
 revision: str = "54ac58121805"
@@ -30,7 +33,7 @@ def upgrade() -> None:
     parsed_news_table = sa.Table("parsed_news", meta, autoload_with=bind)
     parsed_news_tag_link_table = sa.Table("parsed_news_tag_link", meta, autoload_with=bind)
 
-    print("Inserting initial topics...")
+    logger.info("Inserting initial topics...")
     op.bulk_insert(
         topics_table,
         [
@@ -51,7 +54,7 @@ def upgrade() -> None:
         ],
     )
 
-    print("Inserting initial tags...")
+    logger.info("Inserting initial tags...")
     op.bulk_insert(
         tags_table,
         [
@@ -83,7 +86,7 @@ def upgrade() -> None:
     )
 
     # Získání ID vložených témat a štítků (jednodušší přístup než RETURNING)
-    print("Fetching IDs for topics and tags...")
+    logger.info("Fetching IDs for topics and tags...")
     res_topics = bind.execute(sa.select(topics_table.c.id, topics_table.c.name)).mappings().all()
     topic_id_map = {r["name"]: r["id"] for r in res_topics}
 
@@ -124,7 +127,7 @@ def upgrade() -> None:
         if tag not in tag_id_map:
             raise Exception(f"Failed to load ID for initial tag '{tag}'.")
 
-    print("Inserting initial news (ParsedNews)...")
+    logger.info("Inserting initial news (ParsedNews)...")
     now = datetime.utcnow()
     news_data = [
         {
@@ -239,7 +242,7 @@ def upgrade() -> None:
     op.bulk_insert(parsed_news_table, news_data)
 
     # Získání ID vložených zpráv
-    print("Fetching IDs for inserted news...")
+    logger.info("Fetching IDs for inserted news...")
     res_news = bind.execute(sa.select(parsed_news_table.c.id, parsed_news_table.c.title)).mappings().all()
     news_id_map = {r["title"]: r["id"] for r in res_news}
 
@@ -270,7 +273,7 @@ def upgrade() -> None:
     news_id_hudba = news_id_map["Nové album kapely 'Naděje' trhá rekordy"]
     news_id_ai_hw = news_id_map["Jak vybrat správný hardware pro AI vývoj"]
 
-    print("Inserting links between news and tags...")
+    logger.info("Inserting links between news and tags...")
     op.bulk_insert(
         parsed_news_tag_link_table,
         [
@@ -328,7 +331,7 @@ def upgrade() -> None:
         ],
     )
 
-    print("All initial data inserted.")
+    logger.info("All initial data inserted.")
 
 
 def downgrade() -> None:
@@ -405,7 +408,7 @@ def downgrade() -> None:
     ]
 
     # Mazání v opačném pořadí kvůli foreign keys, začneme vazební tabulkou a input_news
-    print("Removing links between news and tags...")
+    logger.info("Removing links between news and tags...")
     # Získání ID všech zpráv určených k smazání
     # Handle potential quote issues in titles for the SQL IN clause
     safe_news_titles_sql = ", ".join(news_titles_to_delete)
@@ -416,19 +419,19 @@ def downgrade() -> None:
     if news_ids_to_delete:
         op.execute(f"DELETE FROM parsed_news_tag_link WHERE news_item_id IN ({','.join(news_ids_to_delete)})")
 
-    print("Removing initial input data (InputNews)...")
+    logger.info("Removing initial input data (InputNews)...")
     safe_input_sources_sql = ", ".join(input_sources_to_delete)
     op.execute(f"DELETE FROM input_news WHERE source IN ({safe_input_sources_sql})")
 
-    print("Removing initial news (ParsedNews)...")
+    logger.info("Removing initial news (ParsedNews)...")
     op.execute(f"DELETE FROM parsed_news WHERE title IN ({safe_news_titles_sql})")  # Use safe list from above
 
-    print("Removing initial tags...")
+    logger.info("Removing initial tags...")
     safe_tag_texts_sql = ", ".join(tag_texts_to_delete)
     op.execute(f"DELETE FROM tags WHERE text IN ({safe_tag_texts_sql})")
 
-    print("Removing initial topics...")
+    logger.info("Removing initial topics...")
     safe_topic_names_sql = ", ".join(topic_names_to_delete)
     op.execute(f"DELETE FROM topics WHERE name IN ({safe_topic_names_sql})")
 
-    print("All initial data removed.")
+    logger.info("All initial data removed.")

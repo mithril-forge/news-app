@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import asyncio
 import argparse
+import asyncio
 import os
 import pathlib
 import tempfile
