@@ -1,3 +1,4 @@
+# flake8: noqa: E501
 PICTURE_SEARCH_PROMPT = """
 Najdi mi vhodný obrázek k danému článku. Vyhledej pouze takové obrázky, které jsou licencované pro volné použití v redakčním (zpravodajském) kontextu, a to po řádném uvedení autora a licence.
 Primární a preferovaný zdroj pro vyhledávání obrázků je: https://commons.wikimedia.org.

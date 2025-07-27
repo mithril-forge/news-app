@@ -3,7 +3,7 @@ name = "news-app"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Simon Foucek", email = "sfoucek@redhat.com"}
+    { name = "Simon Foucek", email = "foucek.simon@gmail.com" }
 ]
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,10 +26,72 @@ dependencies = [
     "periodiq>=0.13.0",
     "setuptools>=80.9.0",
 ]
-
+[dependency-groups]
+dev = [
+    "mypy>=1.17.0",
+    "pylint>=3.3.7",
+    "ruff>=0.12.4",
+]
 [tool.uv]
 package = false
 
 [tool.uv.sources]
 ai-knowledge-bot = { path = "wheels/ai_knowledge_bot-0.1.0-py3-none-any.whl" }
+[tool.mypy]
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+[[tool.mypy.overrides]]
+module = [
+    "cz_news.*",
+    "google.generativeai.*",
+    "periodiq.*",
+    "dramatiq.*",
+    "google.generativeai"
+]
+ignore_missing_imports = true
 
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I", "B", "DJ", "PL", "T20", "UP", "FAST"]
+ignore = ["B008"]
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"

@@ -1,13 +1,13 @@
+from collections.abc import Sequence
 from datetime import datetime, timedelta
-from typing import Optional, List
 
 import structlog
 from sqlalchemy import func
-from sqlmodel import select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import and_, select
 
 from core.models import InputNews, ParsedNews
 from core.repository import AsyncBaseRepository
-from sqlmodel.ext.asyncio.session import AsyncSession
 
 logger = structlog.get_logger()
 
@@ -19,7 +19,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         super().__init__(session, InputNews)
         logger.info("AsyncInputNewsRepository initialized")
 
-    async def get_by_source_url(self, source_url: str) -> Optional[InputNews]:
+    async def get_by_source_url(self, source_url: str) -> InputNews | None:
         """
         Get input news by source URL.
         """
@@ -31,11 +31,11 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         return input_news
 
     async def get_by_time_delta(
-            self,
-            delta: timedelta,
-            has_parsed_news: Optional[bool] = None,
-            newer: bool = True
-    ) -> List[InputNews]:
+        self,
+        delta: timedelta,
+        has_parsed_news: bool | None = None,
+        newer: bool = True,
+    ) -> Sequence[InputNews]:
         """
         Get input news published within a time delta from now.
 
@@ -51,13 +51,16 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
         """
         logger.debug(f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}")
         from_date = datetime.utcnow() - delta
+        conditions = [
+            InputNews.publication_date >= from_date  # type: ignore[operator]
+            if newer
+            else InputNews.publication_date <= from_date  # type: ignore[operator]
+        ]
 
-        conditions = [InputNews.publication_date >= from_date if newer else InputNews.publication_date <= from_date]
-
-        if has_parsed_news is True:
-            conditions.append(InputNews.parsed_news != None)
+        if has_parsed_news:
+            conditions.append(InputNews.parsed_news is not None)
         elif has_parsed_news is False:
-            conditions.append(InputNews.parsed_news == None)
+            conditions.append(InputNews.parsed_news is None)
 
         statement = select(InputNews).where(and_(*conditions))
         result = await self.session.execute(statement)
@@ -96,7 +99,7 @@ class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
             raise ValueError(f"Didn't find input_news record with {input_id=}")
         return input_news
 
-    async def get_latest_received_timestamp(self) -> Optional[datetime]:
+    async def get_latest_received_timestamp(self) -> datetime | None:
         """
         Get the most recent received_at timestamp.
 

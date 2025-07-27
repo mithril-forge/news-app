@@ -23,7 +23,7 @@ class InputNewsWithoutContent(BaseModel):
     id: int
     tags: list[str]
     category: str
-    publication_date: datetime
+    publication_date: datetime | None
     author: str
     source_site: str
     source_url: str
@@ -46,7 +46,7 @@ class InputNews(BaseModel):
 class InputNewsWithID(BaseModel):
     tags: list[str]
     category: str
-    publication_date: datetime
+    publication_date: datetime | None
     author: str
     source_site: str
     source_url: str

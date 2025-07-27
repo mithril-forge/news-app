@@ -2,32 +2,40 @@ import io
 import json
 import zipfile
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 import structlog
-
-from features.input_news_processing.archive.abstract_archive import AbstractArchive
-from features.input_news_processing.database.repository import AsyncInputNewsRepository
-from cz_news import crawl_czech_news, Article
+from cz_news import Article, crawl_czech_news
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.repository import AsyncParsedNewsRepository
-from features.input_news_processing.converters import parsed_news_list_with_input, input_news_list_to_schema, \
-    input_schema_list_to_orm, input_news_to_schema, input_news_lite_list_to_schema
-from features.input_news_processing.domain.schemas import ParsedNewsWithInputNews, InputNews, \
-    InputNewsWithID, InputNewsWithoutContent
+from features.input_news_processing.archive.abstract_archive import AbstractArchive
+from features.input_news_processing.converters import (
+    input_news_list_to_schema,
+    input_news_lite_list_to_schema,
+    input_news_to_schema,
+    input_schema_list_to_orm,
+    parsed_news_list_with_input,
+)
+from features.input_news_processing.database.repository import AsyncInputNewsRepository
+from features.input_news_processing.domain.schemas import (
+    InputNews,
+    InputNewsWithID,
+    InputNewsWithoutContent,
+    ParsedNewsWithInputNews,
+)
 
 logger = structlog.get_logger()
 
 
 class InputNewsService:
-    def __init__(self, session, archive: AbstractArchive):
+    def __init__(self, session: AsyncSession, archive: AbstractArchive) -> None:
         self.session = session
         self.input_news_repo = AsyncInputNewsRepository(session=session)
         self.parsed_news_repo = AsyncParsedNewsRepository(session=session)
         self.archive = archive
         logger.info("InputNewsService initialized")
 
-    async def add_or_update_input_news_batch(self, input_news_list: List[InputNews]) -> List[InputNewsWithID]:
+    async def add_or_update_input_news_batch(self, input_news_list: list[InputNews]) -> list[InputNewsWithID]:
         """
         Add a batch of input news items to the database.
 
@@ -62,8 +70,8 @@ class InputNewsService:
     async def scrap_and_save_input_news(self, adjust_parse_date: bool, delta: timedelta) -> list[InputNewsWithID]:
         """
         Query latest news from the corresponding websites by delta and update them in DB or create news ones.
-        adjust_parse_date parameter is to optimalize parsing delta. It will check latest timestamp in DB and if it's newer
-        than the delta, it will adjust the delat to it
+        adjust_parse_date parameter is to optimalize parsing delta. It will check latest timestamp in
+        DB and if it's newer than the delta, it will adjust the delat to it
         """
         logger.info(f"Scraping and saving input news with delta: {delta}")
         if adjust_parse_date:
@@ -92,7 +100,7 @@ class InputNewsService:
         snapshot = await self.input_news_repo.create_snapshot(old_input_news)
         json_str = json.dumps(snapshot, indent=2, default=str)
         zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             zip_file.writestr("input_news.json", json_str)
         zip_buffer.seek(0)
         zip_bytes = zip_buffer.getvalue()
@@ -100,12 +108,18 @@ class InputNewsService:
         logger.info(f"Archived {len(old_input_news)} old input news items to: {archive_path}")
 
         for input_news in old_input_news:
-            await self.input_news_repo.remove(id=input_news.id)
+            input_news_id = input_news.id
+            if input_news_id is None:
+                raise ValueError(f"Input news {input_news} doesn't have properly set id.")
+            await self.input_news_repo.remove(id=input_news_id)
         logger.info(f"Removed {len(old_input_news)} old input news items from database")
 
     @staticmethod
-    async def scrap_input_news(delta: timedelta, max_articles_per_site: int = 10, websites: list[str] = None) -> list[
-        InputNews]:
+    async def scrap_input_news(
+        delta: timedelta,
+        max_articles_per_site: int = 10,
+        websites: list[str] | None = None,
+    ) -> list[InputNews]:
         """
         Function that calls the Czech News Crawler to fetch input news from websites.
 
@@ -121,14 +135,11 @@ class InputNewsService:
             crawl_result = crawl_czech_news(
                 time_delta=delta,
                 max_articles_per_site=max_articles_per_site,
-                websites=websites
+                websites=websites,
             )
         else:
             logger.debug("Scraping from all available websites")
-            crawl_result = crawl_czech_news(
-                time_delta=delta,
-                max_articles_per_site=max_articles_per_site
-            )
+            crawl_result = crawl_czech_news(time_delta=delta, max_articles_per_site=max_articles_per_site)
 
         articles_by_domain: dict[str, list[Article]] = crawl_result.articles_by_domain
         articles: list[Article] = []
@@ -157,8 +168,9 @@ class InputNewsService:
         logger.info(f"Scraped {len(input_news_list)} articles from {len(articles_by_domain)} domains")
         return input_news_list
 
-    async def get_input_news_by_delta(self, delta: timedelta, has_parsed_news: Optional[bool] = None) -> list[
-        InputNewsWithID]:
+    async def get_input_news_by_delta(
+        self, delta: timedelta, has_parsed_news: bool | None = None
+    ) -> list[InputNewsWithID]:
         """
         Retrieves input news within a specified time period.
         Args:
@@ -172,9 +184,7 @@ class InputNewsService:
         return converted_result
 
     async def get_input_news_by_ids_lite(
-            self,
-            input_news_ids: list[int],
-            has_parsed_news: Optional[bool] = None
+        self, input_news_ids: list[int], has_parsed_news: bool | None = None
     ) -> list[InputNewsWithoutContent]:
         """
         Retrieves input news within a specified time period (lite version with less information).
@@ -213,7 +223,7 @@ class InputNewsService:
         logger.info(f"Successfully connected input news ID {input_id} with parsed news ID {parsed_id}")
         return result
 
-    async def get_latest_timestamp(self) -> Optional[datetime]:
+    async def get_latest_timestamp(self) -> datetime | None:
         """
         Returns latest timestamp of the input news
         """

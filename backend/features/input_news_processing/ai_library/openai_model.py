@@ -1,16 +1,17 @@
 import pathlib
-from typing import TypeVar, Generic, Type
+from typing import cast
 
 import instructor
 from instructor import AsyncInstructor
 from openai import AsyncOpenAI
 
-from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
+from features.input_news_processing.ai_library.abstract_model import (
+    AbstractAIModel,
+    ResponseT,
+)
 
-T = TypeVar('T')
 
-
-class OpenAIModel(AbstractAIModel, Generic[T]):
+class OpenAIModel(AbstractAIModel):
     """
     Implementation of AbstractAIModel for ChatGPT using the OpenAI API.
     """
@@ -25,8 +26,12 @@ class OpenAIModel(AbstractAIModel, Generic[T]):
         """
         super().__init__(api_key=api_key, model_name=model_name)
 
-
-    async def prompt_model(self, files: dict[str, pathlib.Path], response_model: Type[T], prompt: str) -> T:
+    async def prompt_model(
+        self,
+        files: dict[str, pathlib.Path],
+        response_model: type[ResponseT],
+        prompt: str,
+    ) -> ResponseT | None:
         """
         Prompt the model with a query and files, returning structured output.
 
@@ -39,17 +44,17 @@ class OpenAIModel(AbstractAIModel, Generic[T]):
             Structured response as specified by response_model
         """
         client = self.prepare_model_sdk()
-        for key, value in files.items():
-            await client.files.create(file=value, purpose='user_data')
+        for _key, value in files.items():
+            await client.files.create(file=value, purpose="user_data")
 
         # Use instructor to get structured output
-        result = await client.chat.completions.create(
+        result = await client.chat.completions.create(  # type: ignore[type-var]
             response_model=response_model,
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
 
-        return result
+        return cast(ResponseT, result)
 
     def prepare_model_sdk(self) -> AsyncInstructor:
         """
@@ -60,9 +65,6 @@ class OpenAIModel(AbstractAIModel, Generic[T]):
         """
         client = AsyncOpenAI(api_key=self.api_key)
 
-        instructor_client = instructor.from_openai(
-            client=client,
-            mode=instructor.Mode.JSON
-        )
+        instructor_client = instructor.from_openai(client=client, mode=instructor.Mode.JSON)
 
         return instructor_client

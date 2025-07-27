@@ -4,19 +4,24 @@ These functions are not strictly necessary since Pydantic's orm_mode handles con
 but they can be useful for more complex transformations.
 """
 
-from typing import List
+from collections.abc import Sequence
 
 import structlog
 
-from core.models import ParsedNews, InputNews
 from core.converters import news_to_detailed_response
-from features.input_news_processing.domain.schemas import ParsedNewsWithInputNews, InputNewsWithID, \
-    InputNewsWithoutContent
+from core.models import InputNews as InputNewsORM
+from core.models import ParsedNews
+from features.input_news_processing.domain.schemas import InputNews as InputNewsSchema
+from features.input_news_processing.domain.schemas import (
+    InputNewsWithID,
+    InputNewsWithoutContent,
+    ParsedNewsWithInputNews,
+)
 
 logger = structlog.get_logger()
 
 
-def input_schema_to_orm(input_metadata: InputNews) -> InputNews:
+def input_schema_to_orm(input_metadata: InputNewsSchema) -> InputNewsORM:
     """
     Convert an InputNewsMetadata Pydantic model to InputNews SQLModel instance.
 
@@ -26,15 +31,11 @@ def input_schema_to_orm(input_metadata: InputNews) -> InputNews:
     Returns:
         An InputNews SQLModel instance ready to be added to the database
     """
-    if not input_metadata:
-        logger.warn("Received None input_metadata for conversion to ORM")
-        return None
-
     # Convert tags list to string representation (comma-separated)
     tags_str = ",".join(input_metadata.tags) if input_metadata.tags else None
 
     # Create InputNews instance
-    result = InputNews(
+    result = InputNewsORM(
         tags=tags_str,
         category=input_metadata.category,
         source_url=input_metadata.source_url,
@@ -48,7 +49,9 @@ def input_schema_to_orm(input_metadata: InputNews) -> InputNews:
     return result
 
 
-def input_schema_list_to_orm(input_metadata_list: List[InputNews]) -> List[InputNews]:
+def input_schema_list_to_orm(
+    input_metadata_list: list[InputNewsSchema],
+) -> list[InputNewsORM]:
     """
     Convert a list of InputNewsMetadata Pydantic models to InputNews SQLModel instances.
 
@@ -62,7 +65,7 @@ def input_schema_list_to_orm(input_metadata_list: List[InputNews]) -> List[Input
     return result
 
 
-def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
+def input_news_to_schema(input_news: InputNewsORM) -> InputNewsWithID:
     """
     Convert an InputNews SQLModel instance to InputNewsWithID Pydantic model.
 
@@ -72,15 +75,13 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
     Returns:
         An InputNewsWithID Pydantic model instance
     """
-    if not input_news:
-        logger.warn("Received None input_news for conversion to schema")
-        return None
-
     # Convert tags string to list
     tags_list = input_news.tags.split(",") if input_news.tags else []
-
+    input_news_id = input_news.id
+    if input_news_id is None:
+        raise ValueError("Trying to convert input news without id when required.")
     result = InputNewsWithID(
-        id=input_news.id,
+        id=input_news_id,
         tags=tags_list,
         category=input_news.category,
         source_url=input_news.source_url,
@@ -94,7 +95,7 @@ def input_news_to_schema(input_news: InputNews) -> InputNewsWithID:
     return result
 
 
-def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
+def input_news_to_lite_schema(input_news: InputNewsORM) -> InputNewsWithoutContent:
     """
     Convert an InputNews SQLModel instance to InputNewsWithID Pydantic model.
 
@@ -104,15 +105,13 @@ def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
     Returns:
         An InputNewsWithID Pydantic model instance
     """
-    if not input_news:
-        logger.warn("Received None input_news for conversion to schema")
-        return None
-
     # Convert tags string to list
     tags_list = input_news.tags.split(",") if input_news.tags else []
-
+    input_news_id = input_news.id
+    if input_news_id is None:
+        raise ValueError(f"Input news id is None for input news {input_news}")
     result = InputNewsWithoutContent(
-        id=input_news.id,
+        id=input_news_id,
         tags=tags_list,
         category=input_news.category,
         source_url=input_news.source_url,
@@ -125,7 +124,9 @@ def input_news_to_lite_schema(input_news: InputNews) -> InputNewsWithoutContent:
     return result
 
 
-def input_news_lite_list_to_schema(input_news_list: List[InputNews]) -> List[InputNewsWithoutContent]:
+def input_news_lite_list_to_schema(
+    input_news_list: list[InputNewsORM],
+) -> list[InputNewsWithoutContent]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
 
@@ -139,7 +140,9 @@ def input_news_lite_list_to_schema(input_news_list: List[InputNews]) -> List[Inp
     return result
 
 
-def input_news_list_to_schema(input_news_list: List[InputNews]) -> List[InputNewsWithID]:
+def input_news_list_to_schema(
+    input_news_list: Sequence[InputNewsORM],
+) -> list[InputNewsWithID]:
     """
     Convert a list of InputNews SQLModel instances to InputNewsWithID Pydantic models.
 
@@ -154,7 +157,7 @@ def input_news_list_to_schema(input_news_list: List[InputNews]) -> List[InputNew
 
 
 def parsed_news_with_input(parsed_news: ParsedNews) -> ParsedNewsWithInputNews:
-    """ Connects also input news schema to the parsed news one"""
+    """Connects also input news schema to the parsed news one"""
     detailed_response = news_to_detailed_response(parsed_news).dict()
     # TODO: workaround for dependency on converter for the FE, we should probably separate it
     del detailed_response["input_news"]
@@ -163,7 +166,9 @@ def parsed_news_with_input(parsed_news: ParsedNews) -> ParsedNewsWithInputNews:
     return result
 
 
-def parsed_news_list_with_input(parsed_news_list: List[ParsedNews]) -> List[ParsedNewsWithInputNews]:
-    """ Converts a lit of parsed_news_list with input news also"""
+def parsed_news_list_with_input(
+    parsed_news_list: Sequence[ParsedNews],
+) -> list[ParsedNewsWithInputNews]:
+    """Converts a lit of parsed_news_list with input news also"""
     result = [parsed_news_with_input(item) for item in parsed_news_list if item]
     return result

@@ -1,11 +1,17 @@
 import abc
 import pathlib
-from typing import Optional
 
 
 class AbstractArchive(abc.ABC):
-    def save_file(self, file_content: bytes, suffix: Optional[str] = None, name: Optional[str] = None) -> str:
+    @abc.abstractmethod
+    def save_file(
+        self,
+        file_content: bytes,
+        suffix: str | None = None,
+        name: str | None = None,
+    ) -> str | pathlib.Path:
         pass
 
-    def get_file(self, path: str) -> bytes:
+    @abc.abstractmethod
+    def get_file(self, path: pathlib.Path) -> bytes:
         pass

@@ -1,7 +1,6 @@
 import datetime
 import pathlib
 import uuid
-from typing import Optional
 
 import structlog
 
@@ -25,7 +24,12 @@ class LocalArchive(AbstractArchive):
         self.target_location.mkdir(parents=True, exist_ok=True)
         logger.info(f"LocalArchive initialized with target location: {target_location}")
 
-    def save_file(self, file_content: bytes, suffix: Optional[str] = None, name: Optional[str] = None) -> pathlib.Path:
+    def save_file(
+        self,
+        file_content: bytes,
+        suffix: str | None = None,
+        name: str | None = None,
+    ) -> pathlib.Path:
         """
         Save file content to the local storage.
 
@@ -39,12 +43,12 @@ class LocalArchive(AbstractArchive):
         """
         logger.debug(f"Saving file with suffix: {suffix}, name: {name}")
         if name is None:
-            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             unique_id = str(uuid.uuid4())[:8]  # Use first 8 chars of UUID for brevity
             name = f"{timestamp}_{unique_id}"
             logger.debug(f"Generated filename: {name}")
         if suffix:
-            if not suffix.startswith('.'):
+            if not suffix.startswith("."):
                 suffix = f".{suffix}"
             filename = f"{name}{suffix}"
         else:

@@ -1,21 +1,28 @@
-from typing import List, TypeVar, Type, Optional
+from collections.abc import Sequence
+from typing import TypeVar
 
 import structlog
 from pydantic import BaseModel
 from sqlmodel import SQLModel
 
+from core.domain.schemas import (
+    InputNewsWithoutContent,
+    ParsedNewsBasic,
+    ParsedNewsResponseDetailed,
+    TagResponse,
+    TopicResponse,
+)
 from core.models import ParsedNews
-from core.domain.schemas import TagResponse, TopicResponse, ParsedNewsBasic, ParsedNewsResponseDetailed, \
-    InputNewsWithoutContent
 
-M = TypeVar('M', bound=SQLModel)
-P = TypeVar('P', bound=BaseModel)
+M = TypeVar("M", bound=SQLModel)
+P = TypeVar("P", bound=BaseModel)
 
 logger = structlog.get_logger()
 
 
-def orm_to_pydantic(orm_obj: M, pydantic_class: Type[P],
-                    excludes: Optional[List[str]] = None) -> P:
+def orm_to_pydantic[M: SQLModel, P: BaseModel](
+    orm_obj: M, pydantic_class: type[P], excludes: list[str] | None = None
+) -> P:
     """
     Convert an ORM model instance to a Pydantic model instance.
 
@@ -27,10 +34,6 @@ def orm_to_pydantic(orm_obj: M, pydantic_class: Type[P],
     Returns:
         A Pydantic model instance
     """
-    if not orm_obj:
-        logger.warn("Received None orm_obj for conversion")
-        return None
-
     # Convert SQLModel instance to dict
     if excludes:
         # Convert to dict excluding specified fields
@@ -44,8 +47,9 @@ def orm_to_pydantic(orm_obj: M, pydantic_class: Type[P],
     return result
 
 
-def orm_list_to_pydantic(orm_list: List[M], pydantic_class: Type[P],
-                         excludes: Optional[List[str]] = None) -> List[P]:
+def orm_list_to_pydantic[M: SQLModel, P: BaseModel](
+    orm_list: Sequence[M], pydantic_class: type[P], excludes: list[str] | None = None
+) -> list[P]:
     """
     Convert a list of ORM model instances to a list of Pydantic model instances.
 
@@ -61,8 +65,9 @@ def orm_list_to_pydantic(orm_list: List[M], pydantic_class: Type[P],
     return result
 
 
-def pydantic_to_orm(pydantic_obj: P, orm_class: Type[M],
-                    excludes: Optional[List[str]] = None) -> M:
+def pydantic_to_orm[P: BaseModel, M: SQLModel](
+    pydantic_obj: P, orm_class: type[M], excludes: list[str] | None = None
+) -> M:
     """
     Convert a Pydantic model instance to an ORM model instance.
 
@@ -74,9 +79,6 @@ def pydantic_to_orm(pydantic_obj: P, orm_class: Type[M],
     Returns:
         An SQLModel instance
     """
-    if not pydantic_obj:
-        logger.warn("Received None pydantic_obj for conversion")
-        return None
 
     # Convert Pydantic model to dict
     if excludes:
@@ -101,15 +103,14 @@ def news_to_response(news: ParsedNews) -> ParsedNewsBasic:
         A NewsResponse Pydantic model instance with topic_name set
     """
     logger.debug(f"Converting news to response: {getattr(news, 'id', 'unknown')}")
-    if not news:
-        logger.warn("Received None news for conversion to response")
-        return None
 
     # Convert to dict first
     data = news.dict()
 
     # Add topic_name if topic is available
-    data["topic"] = orm_to_pydantic(news.topic, TopicResponse)
+    topic = news.topic
+    if topic is not None:
+        data["topic"] = orm_to_pydantic(topic, TopicResponse)
     data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
 
     # Create response model from dict
@@ -118,7 +119,7 @@ def news_to_response(news: ParsedNews) -> ParsedNewsBasic:
     return result
 
 
-def news_list_to_response(news_list: List[ParsedNews]) -> List[ParsedNewsBasic]:
+def news_list_to_response(news_list: Sequence[ParsedNews]) -> list[ParsedNewsBasic]:
     """
     Convert a list of ParsedNews ORM models to NewsResponse schemas with topic_name populated.
 
@@ -145,15 +146,14 @@ def news_to_detailed_response(news: ParsedNews) -> ParsedNewsResponseDetailed:
         A NewsWithTopicResponse Pydantic model instance
     """
     logger.debug(f"Converting news to detailed response: {getattr(news, 'id', 'unknown')}")
-    if not news:
-        logger.warn("Received None news for conversion to detailed response")
-        return None
 
     # Convert to dict first
     data = news.dict()
 
     # Add topic_name if topic is available
-    data["topic"] = orm_to_pydantic(news.topic, TopicResponse)
+    topic = news.topic
+    if topic is not None:
+        data["topic"] = orm_to_pydantic(topic, TopicResponse)
     data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
     data["input_news"] = orm_list_to_pydantic(news.input_news, InputNewsWithoutContent)
 
