@@ -108,7 +108,7 @@ def choose_new_articles_task(input_news_ids: list[int], input_news_hours: int = 
 
 
 async def async_choose_new_articles_task(
-    input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20
+    input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 25
 ) -> None:
     """Async wrapper"""
     input_news_delta = timedelta(hours=input_news_hours)

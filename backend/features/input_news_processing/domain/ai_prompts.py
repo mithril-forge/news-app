@@ -141,8 +141,10 @@ VÝSTUP:
   * Úprava title a description (pouze při zásadních změnách)
   * Topic se pokus zachovat beze změny
 - Pokud ti přijde, že v článku jsou zahrnuty už veškeré informace a není nic zásadního, co lze dodat, tak článek nemusíš upravovat
-- Formátuj výsledný text na sloupce, aby byl lépe přehledný a čitelný.
+- Formátuj výsledný text na sloupce, aby byl lépe přehledný a čitelný
 - Zdroje informací můžeš uvádět, ale dělej to tak, aby tím nebyl text příliš zaplněný - nepoužívej v článku interní ID, ti uživatelé neznají!
+- Čím více zdrojů parsed news má, tím delší ho udělej, aby si zvládl poskytnout důležité informace ze všech článků - snaž se však vybírat ty nejzásadnější informace
+- Snaž se nezkracovat content, ale spíš ho prodloužit o nové důležité informace
 """
 
 NEW_GENERATION_PROMPT = """
@@ -178,6 +180,7 @@ VÝSTUP:
   * Délka "content" MUSÍ BÝT nad 200 slov - snaž se pokrýt všechny zásadní informace, nemusíš extra šetřit místem, ale zároveň si žádné informace nedomýšlej
   * Zařazení do odpovídajícího TOPIC
   * Seznam relevantních tagů (max. 3) - Preferuj existující, nové vytvoř jen když je to OPRAVDU POTŘEBA
+  * Čím více zdrojů článek má, tím delší ho udělej, aby si zvládl poskytnout důležité informace ze všech článků - snaž se však vybírat ty nejzásadnější informace
 
 - Formátování výstupu:
   * Zajisti, aby obsah byl fakticky přesný

@@ -117,7 +117,7 @@ class InputNewsService:
     @staticmethod
     async def scrap_input_news(
         delta: timedelta,
-        max_articles_per_site: int = 10,
+        max_articles_per_site: int = 50,
         websites: list[str] | None = None,
     ) -> list[InputNews]:
         """
