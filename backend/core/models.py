@@ -104,3 +104,31 @@ class InputNews(BaseModelWithID, table=True):
 
     received_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     publication_date: datetime | None = Field(default=None)
+
+
+class Account(BaseModelWithID, table=True):
+    __tablename__ = "accounts"
+    email: str = Field()
+    daily_news_picks: Mapped[list["NewsPick"]] = Relationship(
+        back_populates="account", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+
+
+class NewsPick(BaseModelWithID, table=True):
+    __tablename__ = "news_picks"
+    date: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    account_id: int | None = Field(default=None, foreign_key="accounts.id")
+    account: Mapped["Account"] = Relationship(back_populates="daily_news_picks")
+    items: Mapped[list["NewsPickItem"]] = Relationship(
+        back_populates="pick", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    hash: str = Field()
+
+
+class NewsPickItem(BaseModel, table=True):
+    __tablename__ = "news_pick_items"
+    pick_id: int = Field(foreign_key="daily_news_picks.id", primary_key=True)
+    pick: Mapped["NewsPick"] = Relationship(back_populates="items")
+    parsed_news_id: int = Field(foreign_key="parsed_news.id", primary_key=True)
+    parsed_news: Mapped["ParsedNews"] = Relationship(back_populates="daily_picks")
