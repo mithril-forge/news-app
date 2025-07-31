@@ -204,15 +204,18 @@ async def async_generate_picture_for_news(parsed_news_id: int) -> None:
     """Async wrapper"""
     pass
 
-async def distribute_daily_picks() -> None:
-    """ Start creation and distribution of daily picks from previous days."""
-    pass
 
-async def create_daily_pick_for_user(user_email: str) -> None:
-    """ Create a daily pick for a user."""
-    pass
+async def distribute_daily_picks() -> None:
+    """Start creation and distribution of daily picks from previous day."""
+    # 1. Generates daily picks tasks for previous day and distribute them
+
+
+async def create_daily_pick_for_user(user_email: str, date: datetime) -> None:
+    """Create a daily pick for a user."""
+    # 1. Creates the daily pick with prompt from user and news that were generated for passed day
+    # 2. Pick will have description about the day that it was created
 
 
 async def send_daily_pick_for_user(user_email: str) -> None:
-    """ Send a daily pick for a user."""
+    """Send a daily pick for a user."""
     pass

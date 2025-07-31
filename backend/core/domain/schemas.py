@@ -84,3 +84,8 @@ class ParsedNewsResponseDetailed(BaseModel):
     tags: list[TagResponse] = []
     content: str
     input_news: list[InputNewsWithoutContent]
+
+
+class AccountDetails(BaseModel):
+    email: str
+    prompt: str

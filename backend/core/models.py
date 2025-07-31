@@ -109,10 +109,10 @@ class InputNews(BaseModelWithID, table=True):
 class Account(BaseModelWithID, table=True):
     __tablename__ = "accounts"
     email: str = Field()
+    prompt: str | None = Field(default=None)
     daily_news_picks: Mapped[list["NewsPick"]] = Relationship(
         back_populates="account", sa_relationship_kwargs={"lazy": "selectin"}
     )
-
 
 
 class NewsPick(BaseModelWithID, table=True):
@@ -123,6 +123,7 @@ class NewsPick(BaseModelWithID, table=True):
     items: Mapped[list["NewsPickItem"]] = Relationship(
         back_populates="pick", sa_relationship_kwargs={"lazy": "selectin"}
     )
+    description: str = Field()
     hash: str = Field()
 
 

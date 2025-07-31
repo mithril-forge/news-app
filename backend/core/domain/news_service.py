@@ -157,3 +157,16 @@ class NewsService:
         result = await self.news_repo.get_by_time_delta(delta=delta)
         pydantic_structures = orm_list_to_pydantic(orm_list=result, pydantic_class=ParsedNewsSummary)
         return pydantic_structures
+
+    async def get_news_by_pick_hash(self, pick_hash: str) -> list[ParsedNewsSummary]:
+        """Get all news for a specific pick hash"""
+        sorted_news = await self.news_repo.get_parsed_news_by_pick_hash(pick_hash=pick_hash)
+        logger.debug(f"Pick hash: {pick_hash} retrieved news ids: {[news.id for news in sorted_news]}")
+        return news_list_to_response(sorted_news)
+
+    async def get_latest_pick_news(self, user_email: str) -> list[ParsedNewsBasic]:
+        """Get the latest N news items"""
+        logger.info(f"Fetching latest pick news for user: {user_email}")
+        latest_news = await self.news_repo.get_latest_pick_news_for_user(email=user_email)
+        logger.debug(f"Retrieved {len(latest_news)} latest pick news items for user: {user_email}")
+        return news_list_to_response(latest_news)
