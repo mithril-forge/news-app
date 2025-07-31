@@ -157,3 +157,19 @@ async def read_news(news_id: int, session: Annotated[AsyncSession, Depends(get_s
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     return {"status": "healthy"}
+
+@app.post("/ai_prompt/{user_email}")
+async def set_ai_prompt(user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> None:
+    service = NewsService(session)
+    return await service.ai_prompt(user_email=user_email)
+
+@app.get("/ai_prompt/{user_email}")
+async def get_ai_prompt(user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> str:
+    service = NewsService(session)
+    return await service.get_ai_prompt(user_email=user_email)
+
+
+@app.get("/get_pick_news/{pick_hash}")
+async def get_pick_news(pick_hash: str, session: Annotated[AsyncSession, Depends(get_session)]) -> list[ParsedNewsBasic]:
+    service = NewsService(session)
+    return await service.get_pick_news(pick_hash=pick_hash)

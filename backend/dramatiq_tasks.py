@@ -203,3 +203,16 @@ def generate_and_attach_image_to_news(parsed_news_id: int) -> None:
 async def async_generate_picture_for_news(parsed_news_id: int) -> None:
     """Async wrapper"""
     pass
+
+async def distribute_daily_picks() -> None:
+    """ Start creation and distribution of daily picks from previous days."""
+    pass
+
+async def create_daily_pick_for_user(user_email: str) -> None:
+    """ Create a daily pick for a user."""
+    pass
+
+
+async def send_daily_pick_for_user(user_email: str) -> None:
+    """ Send a daily pick for a user."""
+    pass
