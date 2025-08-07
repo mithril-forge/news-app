@@ -164,6 +164,7 @@ async def health_check() -> dict[str, str]:
 
 @app.post("/ai_prompt/set")
 async def set_ai_prompt(prompt: str, user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> None:
+    """ Set default AI prompt for the user."""
     service = AccountService(session)
     return await service.set_prompt(account_email=user_email, prompt=prompt)
 
@@ -172,6 +173,7 @@ async def set_ai_prompt(prompt: str, user_email: str, session: Annotated[AsyncSe
 async def get_account_details(
     user_email: str, session: Annotated[AsyncSession, Depends(get_session)]
 ) -> AccountDetails:
+    """ Return account details for the user."""
     service = AccountService(session)
     return await service.get_account_details(account_email=user_email)
 
@@ -180,6 +182,7 @@ async def get_account_details(
 async def get_latest_pick(
     user_email: str, session: Annotated[AsyncSession, Depends(get_session)]
 ) -> list[ParsedNewsBasic]:
+    """ Get latest pick for the user. The time is considered as the creation date of the pick."""
     service = NewsService(session)
     return await service.get_latest_pick_news(user_email=user_email)
 
@@ -188,19 +191,13 @@ async def get_latest_pick(
 async def get_pick_news(
     pick_hash: str, session: Annotated[AsyncSession, Depends(get_session)]
 ) -> list[ParsedNewsBasic]:
+    """
+    Returns News without the content for the hash of the pick. Useful when you want to get title, description and
+    other details for specific pick.
+    """
     # TODO: Differ between nonexisting hashes and empty ones -> empty list | 404
     service = NewsService(session)
     return await service.get_news_by_pick_hash(pick_hash=pick_hash)
-
-
-@app.get("/trigger_prompt")
-async def trigger_prompt():
-    await create_daily_pick_for_user(
-        account_id=1,
-        user_email="<EMAIL>",
-        date=datetime.date(year=2025, month=5, day=4),
-        prompt="Zajímá mě sport, konkrétně fotbal. Taky dost politika a společenské dění. Chci opravdu důležité informace z obou odvětví.",
-    )
 
 
 # Use cases:

@@ -257,7 +257,7 @@ async def async_create_daily_pick_for_user(account_id: int, user_email: str, dat
         result = await gemini_ai_model.prompt_model(files=files, prompt=prompt_formatted, response_model=list[int])
         logger.info(f"Successfully generated daily pick for user {user_email} with news ids: {result}")
         pick_id = await pick_generation_service.save_pick(
-            account_id=account_id, date=date, description=f"Denní výběr pro {czech_date_str}"
+            account_id=account_id, date=datetime.datetime.now(), description=f"Denní výběr pro {czech_date_str}"
         )
         await pick_generation_service.connect_news_to_pick(pick_id=pick_id, news_ids=result)
 
