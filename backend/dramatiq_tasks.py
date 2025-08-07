@@ -9,6 +9,8 @@ import structlog
 from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
+from backend.constants import CZECH_MONTHS, CZECH_DAYS
+from backend.core.domain.schemas import AccountDetails
 from core.domain.account_service import AccountService
 from core.domain.news_service import NewsService
 from features.input_news_processing.domain.ai_prompts import CUSTOM_ARTICLES_PROMPT
@@ -112,7 +114,7 @@ def choose_new_articles_task(input_news_ids: list[int], input_news_hours: int = 
 
 
 async def async_choose_new_articles_task(
-    input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20
+        input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20
 ) -> None:
     """Async wrapper"""
     input_news_delta = timedelta(hours=input_news_hours)
@@ -211,21 +213,34 @@ async def async_generate_picture_for_news(parsed_news_id: int) -> None:
 
 @dramatiq.actor(periodic=cron("00 08 * * *"))
 def distribute_daily_picks_task() -> None:
-    """Start creation and distribution of daily picks from previous day."""
-    """Task for the picture generation"""
-    asyncio.run(async_distribute_daily_picks_task())
+    """Start creation and distribution of daily picks from previous day. Wrapper for the logic itself."""
+    logger.info("Starting to distribute daily picks for all users.")
+    users = asyncio.run(async_distribute_daily_picks_task())
+    logger.info(f"Successfully distributed daily pick tasks for {len(users)} users.")
 
 
-async def async_distribute_daily_picks_task() -> None:
-    date = datetime.date(datetime.datetime.now() - timedelta(days=1))
+async def async_distribute_daily_picks_task() -> list[AccountDetails]:
+    """ Start creation and distribution of daily picks from previous day."""
+    date = datetime.date.today() - timedelta(days=1)
     async with get_session_context() as db_session:
         account_service = AccountService(session=db_session)
         users = await account_service.get_accounts()
     for user in users:
         create_daily_pick_for_user.send(user_id=user.id, user_email=user.email, date=date, prompt=user.prompt)
+    return users
 
-async def create_daily_pick_for_user(account_id: int, user_email: str, date: datetime.date, prompt: str) -> None:
+
+@dramatiq.actor
+def create_daily_pick_for_user(account_id: int, user_email: str, date: datetime.date, prompt: str) -> None:
+    """ Async wrapper for the generation of daily task for user."""
+    logger.info(f"Starting daily pick task for user: {account_id} and date {date}")
+    asyncio.run(async_create_daily_pick_for_user(account_id=account_id, user_email=user_email, date=date, prompt=prompt))
+    logger.info(f"Successfully generated daily pick for user: {account_id}")
+
+
+async def async_create_daily_pick_for_user(account_id: int, user_email: str, date: datetime.date, prompt: str) -> None:
     """Create a daily pick for a user."""
+    czech_date_str = f"{CZECH_DAYS[date.weekday()]}, {date.day}. {CZECH_MONTHS[date.month]} {date.year}"
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
         logger.error("GEMINI_API_KEY environment variable not set")
@@ -240,7 +255,7 @@ async def create_daily_pick_for_user(account_id: int, user_email: str, date: dat
         result = await gemini_ai_model.prompt_model(files=files, prompt=prompt_formatted, response_model=list[int])
         logger.info(f"Successfully generated daily pick for user {user_email} with news ids: {result}")
         pick_id = await pick_generation_service.save_pick(
-            account_id=account_id, date=date, description="Denní výběr pro XXX"
+            account_id=account_id, date=date, description=f"Denní výběr pro {czech_date_str}"
         )
         await pick_generation_service.connect_news_to_pick(pick_id=pick_id, news_ids=result)
 
