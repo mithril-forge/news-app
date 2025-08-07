@@ -9,6 +9,10 @@ import structlog
 from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
+from core.domain.account_service import AccountService
+from core.domain.news_service import NewsService
+from features.input_news_processing.domain.ai_prompts import CUSTOM_ARTICLES_PROMPT
+from features.input_news_processing.domain.pick_generation_service import PickGenerationService
 from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
@@ -205,15 +209,40 @@ async def async_generate_picture_for_news(parsed_news_id: int) -> None:
     pass
 
 
-async def distribute_daily_picks() -> None:
+@dramatiq.actor(periodic=cron("00 08 * * *"))
+def distribute_daily_picks_task() -> None:
     """Start creation and distribution of daily picks from previous day."""
-    # 1. Generates daily picks tasks for previous day and distribute them
+    """Task for the picture generation"""
+    asyncio.run(async_distribute_daily_picks_task())
 
 
-async def create_daily_pick_for_user(user_email: str, date: datetime) -> None:
+async def async_distribute_daily_picks_task() -> None:
+    date = datetime.date(datetime.datetime.now() - timedelta(days=1))
+    async with get_session_context() as db_session:
+        account_service = AccountService(session=db_session)
+        users = await account_service.get_accounts()
+    for user in users:
+        create_daily_pick_for_user.send(user_id=user.id, user_email=user.email, date=date, prompt=user.prompt)
+
+async def create_daily_pick_for_user(account_id: int, user_email: str, date: datetime.date, prompt: str) -> None:
     """Create a daily pick for a user."""
-    # 1. Creates the daily pick with prompt from user and news that were generated for passed day
-    # 2. Pick will have description about the day that it was created
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    if gemini_api_key is None:
+        logger.error("GEMINI_API_KEY environment variable not set")
+        raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
+    async with get_session_context() as db_session:
+        gemini_ai_model = GeminiAIModel(api_key=gemini_api_key)
+        news_service = NewsService(session=db_session)
+        pick_generation_service = PickGenerationService(session=db_session)
+        prompt_formatted = CUSTOM_ARTICLES_PROMPT.format(prompt=prompt)
+        parsed_news = await news_service.get_news_titles_by_date(date=date)
+        files = ArticleGenerationService.save_pydantic_lists_as_files(parsed_news=parsed_news)
+        result = await gemini_ai_model.prompt_model(files=files, prompt=prompt_formatted, response_model=list[int])
+        logger.info(f"Successfully generated daily pick for user {user_email} with news ids: {result}")
+        pick_id = await pick_generation_service.save_pick(
+            account_id=account_id, date=date, description="Denní výběr pro XXX"
+        )
+        await pick_generation_service.connect_news_to_pick(pick_id=pick_id, news_ids=result)
 
 
 async def send_daily_pick_for_user(user_email: str) -> None:

@@ -31,6 +31,12 @@ class ParsedNewsSummary(BaseModel):
     image_url: str
 
 
+class ParsedInputNewsTitles(BaseModel):
+    id: int
+    title: str
+    input_news_titles: list[str]
+
+
 class ParsedNewsCreate(BaseModel):
     title: str
     description: str

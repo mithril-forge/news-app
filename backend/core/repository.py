@@ -15,7 +15,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import update
 from sqlmodel import SQLModel, and_, select
 
-from backend.core.models import Account, NewsPick, NewsPickItem
+from core.models import Account, NewsPick, NewsPickItem
 from core.models import BaseModelWithID, ParsedNews, ParsedNewsTagLink, Tag, Topic
 
 T = TypeVar("T", bound=BaseModelWithID)
@@ -440,42 +440,49 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         )
 
         result = await self.session.execute(statement)
-        parsed_news_items = result.scalars().all()
+        parsed_news_items = result.scalars().unique().all()
 
         logger.info(f"Found {len(parsed_news_items)} parsed news items for pick hash '{pick_hash}'")
         return parsed_news_items
 
+    async def get_news_by_creation_day(self, date: datetime.date) -> Sequence[ParsedNews]:
+        logger.debug(f"Getting news from day: {date}")
+        statement = select(ParsedNews).where(func.date(ParsedNews.created_at) == date)
+        result = await self.session.execute(statement)
+        news_items = result.scalars().all()
+        logger.info(f"Found {len(news_items)} news items from day '{date}'")
+        return news_items
 
-async def get_latest_pick_news_for_user(self, email: str) -> list[ParsedNews]:
-    """Alternative approach using subquery to get the latest pick ID first."""
-    logger.debug(f"Getting latest pick news for user: {email}")
+    async def get_latest_pick_news_for_user(self, email: str) -> list[ParsedNews]:
+        """Alternative approach using subquery to get the latest pick ID first."""
+        logger.debug(f"Getting latest pick news for user: {email}")
 
-    # Subquery to get the latest pick ID for the user
-    latest_pick_subquery = (
-        select(NewsPick.id)
-        .join(Account, NewsPick.account_id == Account.id)
-        .where(Account.email == email)
-        .order_by(NewsPick.date.desc())
-        .limit(1)
-        .scalar_subquery()
-    )
-
-    # Main query to get all parsed news from that pick
-    statement = (
-        select(ParsedNews)
-        .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)
-        .where(NewsPickItem.pick_id == latest_pick_subquery)
-        .options(
-            joinedload(ParsedNews.topic),
-            joinedload(ParsedNews.tags),
+        # Subquery to get the latest pick ID for the user
+        latest_pick_subquery = (
+            select(NewsPick.id)
+            .join(Account, NewsPick.account_id == Account.id)
+            .where(Account.email == email)
+            .order_by(NewsPick.date.desc())
+            .limit(1)
+            .scalar_subquery()
         )
-    )
 
-    result = await self.session.execute(statement)
-    parsed_news_items = result.scalars().all()
+        # Main query to get all parsed news from that pick
+        statement = (
+            select(ParsedNews)
+            .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)
+            .where(NewsPickItem.pick_id == latest_pick_subquery)
+            .options(
+                joinedload(ParsedNews.topic),
+                joinedload(ParsedNews.tags),
+            )
+        )
 
-    logger.info(f"Found {len(parsed_news_items)} parsed news items from latest pick for user '{email}'")
-    return parsed_news_items
+        result = await self.session.execute(statement)
+        parsed_news_items = result.scalars().unique().all()
+
+        logger.info(f"Found {len(parsed_news_items)} parsed news items from latest pick for user '{email}'")
+        return parsed_news_items
 
 
 class AsyncAccountRepository(AsyncBaseRepository[Account]):

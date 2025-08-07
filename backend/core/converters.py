@@ -5,6 +5,7 @@ import structlog
 from pydantic import BaseModel
 from sqlmodel import SQLModel
 
+from core.domain.schemas import ParsedInputNewsTitles
 from core.domain.schemas import (
     InputNewsWithoutContent,
     ParsedNewsBasic,
@@ -160,4 +161,25 @@ def news_to_detailed_response(news: ParsedNews) -> ParsedNewsResponseDetailed:
     # Create response model from dict
     result = ParsedNewsResponseDetailed(**data)
     logger.debug(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to detailed response")
+    return result
+
+
+def news_list_to_titles_response(news_list: Sequence[ParsedNews]) -> list[ParsedInputNewsTitles]:
+    """
+    Convert a list of ParsedNews ORM models to NewsTitleResponse schemas.
+
+    Args:
+        news_list: List of ParsedNews SQLModel instances
+
+    Returns:
+        List of NewsTitleResponse Pydantic model instances
+    """
+    logger.debug(f"Converting list of {len(news_list)} news items to title response")
+    result = []
+    for news in news_list:
+        result.append(
+            ParsedInputNewsTitles(
+                id=news.id, title=news.title, input_news_titles=[input_news.title for input_news in news.input_news]
+            )
+        )
     return result

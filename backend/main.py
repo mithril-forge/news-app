@@ -11,7 +11,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.core.domain.account_service import AccountService
+from core.domain.account_service import AccountService
 from config import Environment
 from core.domain.news_service import NewsService
 from core.domain.schemas import (
@@ -22,6 +22,7 @@ from core.domain.schemas import (
 )
 from core.domain.topic_service import TopicService
 from core.engine import get_session
+from dramatiq_tasks import create_daily_pick_for_user
 from logger import init_logging
 
 init_logging()
@@ -161,7 +162,7 @@ async def health_check() -> dict[str, str]:
     return {"status": "healthy"}
 
 
-@app.post("/ai_prompt/{user_email}")
+@app.post("/ai_prompt/set")
 async def set_ai_prompt(prompt: str, user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> None:
     service = AccountService(session)
     return await service.set_prompt(account_email=user_email, prompt=prompt)
@@ -187,8 +188,14 @@ async def get_latest_pick(
 async def get_pick_news(
     pick_hash: str, session: Annotated[AsyncSession, Depends(get_session)]
 ) -> list[ParsedNewsBasic]:
+    # TODO: Differ between nonexisting hashes and empty ones -> empty list | 404
     service = NewsService(session)
     return await service.get_news_by_pick_hash(pick_hash=pick_hash)
+
+
+@app.get("/trigger_prompt")
+async def trigger_prompt():
+    await create_daily_pick_for_user(account_id=1, user_email="<EMAIL>", date=datetime.date(year=2025, month=5, day=4), prompt="Zajímá mě sport, konkrétně fotbal. Taky dost politika a společenské dění. Chci opravdu důležité informace z obou odvětví.")
 
 # Use cases:
 # 1. User will go to the page, enters a prompt for an email -> POST set_prompt

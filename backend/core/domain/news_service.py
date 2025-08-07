@@ -4,6 +4,8 @@ import structlog
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.converters import news_list_to_titles_response
+from core.domain.schemas import ParsedInputNewsTitles
 from core.converters import news_list_to_response, news_to_detailed_response, orm_list_to_pydantic
 from core.domain.schemas import (
     ParsedNewsBasic,
@@ -156,6 +158,12 @@ class NewsService:
         """
         result = await self.news_repo.get_by_time_delta(delta=delta)
         pydantic_structures = orm_list_to_pydantic(orm_list=result, pydantic_class=ParsedNewsSummary)
+        return pydantic_structures
+
+    async def get_news_titles_by_date(self, date: datetime.date) -> list[ParsedInputNewsTitles]:
+        """Returns ParsedNews with minimal information about them - title, description and other information"""
+        result = await self.news_repo.get_news_by_creation_day(date=date)
+        pydantic_structures = news_list_to_titles_response(news_list=result)
         return pydantic_structures
 
     async def get_news_by_pick_hash(self, pick_hash: str) -> list[ParsedNewsSummary]:
