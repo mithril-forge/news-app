@@ -195,7 +195,13 @@ async def get_pick_news(
 
 @app.get("/trigger_prompt")
 async def trigger_prompt():
-    await create_daily_pick_for_user(account_id=1, user_email="<EMAIL>", date=datetime.date(year=2025, month=5, day=4), prompt="Zajímá mě sport, konkrétně fotbal. Taky dost politika a společenské dění. Chci opravdu důležité informace z obou odvětví.")
+    await create_daily_pick_for_user(
+        account_id=1,
+        user_email="<EMAIL>",
+        date=datetime.date(year=2025, month=5, day=4),
+        prompt="Zajímá mě sport, konkrétně fotbal. Taky dost politika a společenské dění. Chci opravdu důležité informace z obou odvětví.",
+    )
+
 
 # Use cases:
 # 1. User will go to the page, enters a prompt for an email -> POST set_prompt

@@ -114,7 +114,7 @@ def choose_new_articles_task(input_news_ids: list[int], input_news_hours: int = 
 
 
 async def async_choose_new_articles_task(
-        input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20
+    input_news_ids: list[int], input_news_hours: int = 72, news_limit: int = 20
 ) -> None:
     """Async wrapper"""
     input_news_delta = timedelta(hours=input_news_hours)
@@ -220,7 +220,7 @@ def distribute_daily_picks_task() -> None:
 
 
 async def async_distribute_daily_picks_task() -> list[AccountDetails]:
-    """ Start creation and distribution of daily picks from previous day."""
+    """Start creation and distribution of daily picks from previous day."""
     date = datetime.date.today() - timedelta(days=1)
     async with get_session_context() as db_session:
         account_service = AccountService(session=db_session)
@@ -232,9 +232,11 @@ async def async_distribute_daily_picks_task() -> list[AccountDetails]:
 
 @dramatiq.actor
 def create_daily_pick_for_user(account_id: int, user_email: str, date: datetime.date, prompt: str) -> None:
-    """ Async wrapper for the generation of daily task for user."""
+    """Async wrapper for the generation of daily task for user."""
     logger.info(f"Starting daily pick task for user: {account_id} and date {date}")
-    asyncio.run(async_create_daily_pick_for_user(account_id=account_id, user_email=user_email, date=date, prompt=prompt))
+    asyncio.run(
+        async_create_daily_pick_for_user(account_id=account_id, user_email=user_email, date=date, prompt=prompt)
+    )
     logger.info(f"Successfully generated daily pick for user: {account_id}")
 
 
