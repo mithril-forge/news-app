@@ -4,11 +4,11 @@ import structlog
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.converters import news_to_response
 from core.converters import (
     news_list_to_response,
     news_list_to_titles_response,
     news_to_detailed_response,
+    news_to_response,
     orm_list_to_pydantic,
 )
 from core.domain.schemas import (

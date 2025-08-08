@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.models import NewsPick, NewsPickItem
-from core.repository import AsyncBaseRepositoryWithID, AsyncBaseRepository
+from core.repository import AsyncBaseRepository, AsyncBaseRepositoryWithID
 
 
 class PickGenerationService:

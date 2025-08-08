@@ -10,9 +10,9 @@ from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
 from constants import CZECH_DAYS, CZECH_MONTHS
-from core.domain.schemas import AccountDetails
 from core.domain.account_service import AccountService
 from core.domain.news_service import NewsService
+from core.domain.schemas import AccountDetails
 from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive

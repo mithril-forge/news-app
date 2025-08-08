@@ -15,8 +15,17 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import update
 from sqlmodel import SQLModel, and_, select
 
-from core.models import Account, BaseModelWithID, NewsPick, NewsPickItem, ParsedNews, ParsedNewsTagLink, Tag, Topic, \
-    BaseModel
+from core.models import (
+    Account,
+    BaseModel,
+    BaseModelWithID,
+    NewsPick,
+    NewsPickItem,
+    ParsedNews,
+    ParsedNewsTagLink,
+    Tag,
+    Topic,
+)
 
 G = TypeVar("G", bound=BaseModel)
 T = TypeVar("T", bound=BaseModelWithID)
@@ -25,7 +34,7 @@ logger = structlog.get_logger()
 
 
 class AsyncBaseRepository[G: BaseModel]:
-    """ Basic repository for all the models."""
+    """Basic repository for all the models."""
 
     def __init__(self, session: AsyncSession, model_class: type[G]):
         self.session = session
