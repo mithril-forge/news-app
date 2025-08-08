@@ -446,28 +446,26 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return parsed_news_items
 
     async def get_news_by_creation_day(self, date: datetime.date) -> Sequence[ParsedNews]:
+        """ Get all news items created on the given day. """
         logger.debug(f"Getting news from day: {date}")
-        statement = select(ParsedNews).where(func.date(ParsedNews.created_at) == date)
+        statement = select(ParsedNews).where(func.created_at(ParsedNews.created_at) == date)
         result = await self.session.execute(statement)
         news_items = result.scalars().all()
         logger.info(f"Found {len(news_items)} news items from day '{date}'")
         return news_items
 
     async def get_latest_pick_news_for_user(self, email: str) -> list[ParsedNews]:
-        """Alternative approach using subquery to get the latest pick ID first."""
+        """ Get the latest pick news for a user. """
         logger.debug(f"Getting latest pick news for user: {email}")
-
-        # Subquery to get the latest pick ID for the user
         latest_pick_subquery = (
             select(NewsPick.id)
             .join(Account, NewsPick.account_id == Account.id)
             .where(Account.email == email)
-            .order_by(NewsPick.date.desc())
+            .order_by(NewsPick.created_at.desc())
             .limit(1)
             .scalar_subquery()
         )
 
-        # Main query to get all parsed news from that pick
         statement = (
             select(ParsedNews)
             .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)
@@ -493,7 +491,7 @@ class AsyncAccountRepository(AsyncBaseRepository[Account]):
         logger.info("AsyncAccountRepository initialized")
 
     async def update_prompt(self, email: str, prompt: str) -> Account | None:
-        """ """
+        """ Updates prompt for an account by email."""
         logger.debug(f"Updating prompt for email: {email}")
         statement = select(Account).where(Account.email == email)
         result = await self.session.execute(statement)
@@ -508,7 +506,7 @@ class AsyncAccountRepository(AsyncBaseRepository[Account]):
         return account
 
     async def get_by_email(self, email: str) -> Account | None:
-        """ """
+        """ Get account by email. """
         logger.debug(f"Getting account by email: {email}")
         statement = select(Account).where(Account.email == email)
         result = await self.session.execute(statement)

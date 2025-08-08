@@ -110,7 +110,7 @@ class InputNews(BaseModelWithID, table=True):
 
 class Account(BaseModelWithID, table=True):
     __tablename__ = "accounts"
-    email: str = Field()
+    email: str = Field(unique=True)
     prompt: str | None = Field(default=None)
     news_picks: Mapped[list["NewsPick"]] = Relationship(
         back_populates="account", sa_relationship_kwargs={"lazy": "selectin"}
@@ -119,7 +119,7 @@ class Account(BaseModelWithID, table=True):
 
 class NewsPick(BaseModelWithID, table=True):
     __tablename__ = "news_picks"
-    date: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     account_id: int | None = Field(default=None, foreign_key="accounts.id")
     account: Mapped["Account"] = Relationship(back_populates="news_picks")
     items: Mapped[list["NewsPickItem"]] = Relationship(
