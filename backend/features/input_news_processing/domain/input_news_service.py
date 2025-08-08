@@ -7,7 +7,7 @@ import structlog
 from cz_news import Article, crawl_czech_news
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.repository import AsyncParsedNewsRepository
+from core.repository import AsyncParsedNewsRepositoryWithID
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import (
     input_news_list_to_schema,
@@ -16,7 +16,7 @@ from features.input_news_processing.converters import (
     input_schema_list_to_orm,
     parsed_news_list_with_input,
 )
-from features.input_news_processing.database.repository import AsyncInputNewsRepository
+from features.input_news_processing.database.repository import AsyncInputNewsRepositoryWithID
 from features.input_news_processing.domain.schemas import (
     InputNews,
     InputNewsWithID,
@@ -30,8 +30,8 @@ logger = structlog.get_logger()
 class InputNewsService:
     def __init__(self, session: AsyncSession, archive: AbstractArchive) -> None:
         self.session = session
-        self.input_news_repo = AsyncInputNewsRepository(session=session)
-        self.parsed_news_repo = AsyncParsedNewsRepository(session=session)
+        self.input_news_repo = AsyncInputNewsRepositoryWithID(session=session)
+        self.parsed_news_repo = AsyncParsedNewsRepositoryWithID(session=session)
         self.archive = archive
         logger.info("InputNewsService initialized")
 

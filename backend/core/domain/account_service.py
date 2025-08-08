@@ -1,15 +1,13 @@
-from sqlmodel.ext.asyncio.session import AsyncSession
-
+from sqlalchemy.ext.asyncio import AsyncSession
 from core.converters import orm_list_to_pydantic, orm_to_pydantic
 from core.domain.schemas import AccountDetails
-from core.models import Account
-from core.repository import AsyncAccountRepository
+from core.repository import AsyncAccountRepositoryWithID
 
 
 class AccountService:
     def __init__(self, session: AsyncSession):
         self.session = session
-        self.account_repo = AsyncAccountRepository(session=session)
+        self.account_repo = AsyncAccountRepositoryWithID(session=session)
 
     async def set_prompt(self, account_email: str, prompt: str) -> None:
         """Set the prompt for the user."""

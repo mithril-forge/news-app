@@ -9,19 +9,19 @@ import structlog
 from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
-from backend.constants import CZECH_MONTHS, CZECH_DAYS
-from backend.core.domain.schemas import AccountDetails
+from constants import CZECH_DAYS, CZECH_MONTHS
+from core.domain.schemas import AccountDetails
 from core.domain.account_service import AccountService
 from core.domain.news_service import NewsService
-from features.input_news_processing.domain.ai_prompts import CUSTOM_ARTICLES_PROMPT
-from features.input_news_processing.domain.pick_generation_service import PickGenerationService
 from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
+from features.input_news_processing.domain.ai_prompts import CUSTOM_ARTICLES_PROMPT
 from features.input_news_processing.domain.article_generation_service import (
     ArticleGenerationService,
 )
 from features.input_news_processing.domain.input_news_service import InputNewsService
+from features.input_news_processing.domain.pick_generation_service import PickGenerationService
 
 logger = structlog.get_logger()
 # Simple Redis broker setup
@@ -226,7 +226,9 @@ async def async_distribute_daily_picks_task() -> list[AccountDetails]:
         account_service = AccountService(session=db_session)
         accounts = await account_service.get_accounts()
     for account in accounts:
-        create_daily_pick_for_account.send(account_id=account.id, account_email=account.email, date=date, prompt=account.prompt)
+        create_daily_pick_for_account.send(
+            account_id=account.id, account_email=account.email, date=date, prompt=account.prompt
+        )
     return accounts
 
 
@@ -235,12 +237,16 @@ def create_daily_pick_for_account(account_id: int, account_email: str, date: dat
     """Async wrapper for the generation of daily task for account."""
     logger.info(f"Starting daily pick task for account: {account_id} and date {date}")
     asyncio.run(
-        async_create_daily_pick_for_account(account_id=account_id, account_email=account_email, date=date, prompt=prompt)
+        async_create_daily_pick_for_account(
+            account_id=account_id, account_email=account_email, date=date, prompt=prompt
+        )
     )
     logger.info(f"Successfully generated daily pick for account: {account_id}")
 
 
-async def async_create_daily_pick_for_account(account_id: int, account_email: str, date: datetime.date, prompt: str) -> None:
+async def async_create_daily_pick_for_account(
+    account_id: int, account_email: str, date: datetime.date, prompt: str
+) -> None:
     """Create a daily pick for an account."""
     czech_date_str = f"{CZECH_DAYS[date.weekday()]}, {date.day}. {CZECH_MONTHS[date.month]} {date.year}"
     gemini_api_key = os.getenv("GEMINI_API_KEY")

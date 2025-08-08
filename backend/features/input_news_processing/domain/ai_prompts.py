@@ -199,7 +199,7 @@ V přiložených souborech najdeš 1 typ vstupních dat:
    - Titulky parsovaných článků
    - ID parsovaného článku
    - Každý parsovaný článek má propojené titulky článků ze kterých byl vygenerován
-   
+
 TVŮJ ÚKOL:
 - Dostaneš prompt od uživatele, který má za úkol určit, které parsované články by měly být v jeho zájmu
 - Vyber články, které by měly být relevantní pro uživatele a vrať jejich ID

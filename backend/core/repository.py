@@ -1,6 +1,6 @@
+import datetime
 from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
 from typing import (
     Any,
     TypeVar,
@@ -15,21 +15,62 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import update
 from sqlmodel import SQLModel, and_, select
 
-from core.models import Account, NewsPick, NewsPickItem
-from core.models import BaseModelWithID, ParsedNews, ParsedNewsTagLink, Tag, Topic
+from core.models import Account, BaseModelWithID, NewsPick, NewsPickItem, ParsedNews, ParsedNewsTagLink, Tag, Topic, \
+    BaseModel
 
+G = TypeVar("G", bound=BaseModel)
 T = TypeVar("T", bound=BaseModelWithID)
 
 logger = structlog.get_logger()
 
 
-class AsyncBaseRepository[T: BaseModelWithID]:
-    """Base async repository with common CRUD operations."""
+class AsyncBaseRepository[G: BaseModel]:
+    """ Basic repository for all the models."""
 
-    def __init__(self, session: AsyncSession, model_class: type[T]):
+    def __init__(self, session: AsyncSession, model_class: type[G]):
         self.session = session
         self.model_class = model_class
         logger.info(f"Initialized repository for {model_class.__name__}")
+
+    async def get_all(self) -> Sequence[G]:
+        """Get all records."""
+        logger.debug(f"Getting all {self.model_class.__name__} records")
+        statement = select(self.model_class)
+        result = await self.session.execute(statement)
+        records = result.scalars().all()
+        logger.info(f"Retrieved {len(records)} {self.model_class.__name__} records")
+        return records
+
+    async def add(self, obj_in: dict[str, Any] | G) -> G:
+        """Add a new record to the session without committing."""
+        logger.debug(f"Adding new {self.model_class.__name__}")
+        if isinstance(obj_in, dict):
+            obj = self.model_class(**obj_in)
+        else:
+            obj = obj_in
+
+        self.session.add(obj)
+        await self.session.flush()  # Flush to get the ID but don't commit
+        logger.info(f"Added new {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
+        return obj
+
+    async def update(self, obj: G) -> G:
+        """Update an existing record without committing."""
+        logger.debug(f"Updating {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
+        self.session.add(obj)
+        await self.session.flush()
+        logger.info(f"Updated {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
+        return obj
+
+    async def refresh(self, obj: G) -> G:
+        """Refresh an object from the database."""
+        logger.debug(f"Refreshing {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
+        await self.session.refresh(obj)
+        return obj
+
+
+class AsyncBaseRepositoryWithID[T: BaseModelWithID](AsyncBaseRepository[T]):
+    """Base async repository with common CRUD operations for models with ID"""
 
     @asynccontextmanager
     async def transaction(self) -> AsyncGenerator[None]:
@@ -67,36 +108,6 @@ class AsyncBaseRepository[T: BaseModelWithID]:
         logger.info(f"Found {len(records)} {self.model_class.__name__} records out of {len(ids)} requested IDs")
         return list(records)
 
-    async def get_all(self) -> Sequence[T]:
-        """Get all records."""
-        logger.debug(f"Getting all {self.model_class.__name__} records")
-        statement = select(self.model_class)
-        result = await self.session.execute(statement)
-        records = result.scalars().all()
-        logger.info(f"Retrieved {len(records)} {self.model_class.__name__} records")
-        return records
-
-    async def add(self, obj_in: dict[str, Any] | T) -> T:
-        """Add a new record to the session without committing."""
-        logger.debug(f"Adding new {self.model_class.__name__}")
-        if isinstance(obj_in, dict):
-            obj = self.model_class(**obj_in)
-        else:
-            obj = obj_in
-
-        self.session.add(obj)
-        await self.session.flush()  # Flush to get the ID but don't commit
-        logger.info(f"Added new {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
-        return obj
-
-    async def update(self, obj: T) -> T:
-        """Update an existing record without committing."""
-        logger.debug(f"Updating {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
-        self.session.add(obj)
-        await self.session.flush()
-        logger.info(f"Updated {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
-        return obj
-
     async def update_from_dict(self, structure_id: int, data: dict[str, Any]) -> T | None:
         """
         Update an existing record with the given data.
@@ -124,12 +135,6 @@ class AsyncBaseRepository[T: BaseModelWithID]:
         logger.info(f"Updated {self.model_class.__name__} with ID {structure_id} from dict")
 
         return instance
-
-    async def refresh(self, obj: T) -> T:
-        """Refresh an object from the database."""
-        logger.debug(f"Refreshing {self.model_class.__name__} with ID: {getattr(obj, 'id', 'unknown')}")
-        await self.session.refresh(obj)
-        return obj
 
     async def remove(self, id: int) -> T | None:
         """Remove a record from the session without committing."""
@@ -164,7 +169,7 @@ class AsyncBaseRepository[T: BaseModelWithID]:
             data.append(instance_data)
 
         snapshot = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.datetime.utcnow().isoformat(),
             "model_type": T.__name__,  # type: ignore[misc]
             "count": len(instances),
             "data": data,
@@ -174,7 +179,7 @@ class AsyncBaseRepository[T: BaseModelWithID]:
         return snapshot
 
 
-class AsyncTopicRepository(AsyncBaseRepository[Topic]):
+class AsyncTopicRepositoryWithID(AsyncBaseRepositoryWithID[Topic]):
     """Async repository for Topic model."""
 
     def __init__(self, session: AsyncSession):
@@ -191,7 +196,7 @@ class AsyncTopicRepository(AsyncBaseRepository[Topic]):
         return topic
 
 
-class AsyncTagRepository(AsyncBaseRepository[Tag]):
+class AsyncTagRepositoryWithID(AsyncBaseRepositoryWithID[Tag]):
     """Async repository for Tag model."""
 
     def __init__(self, session: AsyncSession):
@@ -219,7 +224,7 @@ class AsyncTagRepository(AsyncBaseRepository[Tag]):
         return tag
 
 
-class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
+class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
     """Async repository for ParsedNews model."""
 
     def __init__(self, session: AsyncSession):
@@ -242,7 +247,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.info(f"Retrieved {len(records)} latest {self.model_class.__name__} records")
         return records
 
-    async def get_most_viewed_news_by_period(self, period: timedelta, limit: int = 10) -> Sequence[ParsedNews]:
+    async def get_most_viewed_news_by_period(self, period: datetime.timedelta, limit: int = 10) -> Sequence[ParsedNews]:
         """
         Get most viewed news articles within a specified time period.
 
@@ -255,7 +260,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
             List of ParsedNews ordered by view_count descending
         """
         logger.debug(f"Getting most viewed news for period: {period}, limit: {limit}")
-        cutoff_date = datetime.utcnow() - period
+        cutoff_date = datetime.datetime.utcnow() - period
 
         stmt = (
             select(ParsedNews)
@@ -336,7 +341,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         This allows combining with other operations in a single transaction.
         """
         logger.debug(f"Preparing news with {len(tag_texts)} tags")
-        tag_repo = AsyncTagRepository(self.session)
+        tag_repo = AsyncTagRepositoryWithID(self.session)
 
         # Create news
         news = await self.add(news_data)
@@ -354,10 +359,10 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.info(f"Prepared news with ID: {news.id} and {len(tag_texts)} tags")
         return news
 
-    async def get_by_time_delta(self, delta: timedelta) -> Sequence[ParsedNews]:
+    async def get_by_time_delta(self, delta: datetime.timedelta) -> Sequence[ParsedNews]:
         """ """
         logger.debug(f"Getting news by time delta: {delta}")
-        from_date = datetime.utcnow() - delta
+        from_date = datetime.datetime.utcnow() - delta
 
         conditions = [ParsedNews.updated_at >= from_date]
 
@@ -388,8 +393,8 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
             logger.error(f"News with ID {news_id} not found for update")
             raise ValueError(f"Structure with id {news_id} not found even what it should be updated ")
 
-        tag_repo = AsyncTagRepository(self.session)
-        news.updated_at = datetime.utcnow()
+        tag_repo = AsyncTagRepositoryWithID(self.session)
+        news.updated_at = datetime.datetime.utcnow()
         statement = select(ParsedNewsTagLink).where(ParsedNewsTagLink.news_item_id == news_id)
         result = await self.session.execute(statement)
         existing_links = result.scalars().all()
@@ -410,7 +415,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
 
         return news
 
-    async def get_latest_received_timestamp(self) -> datetime | None:
+    async def get_latest_received_timestamp(self) -> datetime.datetime | None:
         """
         Get the most recent received_at timestamp.
 
@@ -430,8 +435,8 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.debug(f"Getting parsed news for pick hash: {pick_hash}")
         statement = (
             select(ParsedNews)
-            .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)
-            .join(NewsPick, NewsPickItem.pick_id == NewsPick.id)
+            .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)  # type: ignore[arg-type]
+            .join(NewsPick, NewsPickItem.pick_id == NewsPick.id)  # type: ignore[arg-type]
             .where(NewsPick.hash == pick_hash)
             .options(
                 joinedload(ParsedNews.topic),
@@ -446,7 +451,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return parsed_news_items
 
     async def get_news_by_creation_day(self, date: datetime.date) -> Sequence[ParsedNews]:
-        """ Get all news items created on the given day. """
+        """Get all news items created on the given day."""
         logger.debug(f"Getting news from day: {date}")
         statement = select(ParsedNews).where(func.created_at(ParsedNews.created_at) == date)
         result = await self.session.execute(statement)
@@ -455,20 +460,20 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return news_items
 
     async def get_latest_pick_news_for_account(self, email: str) -> ParsedNews:
-        """ Get the latest pick news for an account. """
+        """Get the latest pick news for an account."""
         logger.debug(f"Getting latest pick news for account: {email}")
         latest_pick_subquery = (
             select(NewsPick.id)
-            .join(Account, NewsPick.account_id == Account.id)
+            .join(Account, NewsPick.account_id == Account.id)  # type: ignore[arg-type]
             .where(Account.email == email)
-            .order_by(NewsPick.created_at.desc())
+            .order_by(NewsPick.created_at.desc())  # type: ignore[attr-defined]
             .limit(1)
             .scalar_subquery()
         )
 
         statement = (
             select(ParsedNews)
-            .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)
+            .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)  # type: ignore[arg-type]
             .where(NewsPickItem.pick_id == latest_pick_subquery)
             .options(
                 joinedload(ParsedNews.topic),
@@ -483,15 +488,15 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         return parsed_news_items[0]
 
 
-class AsyncAccountRepository(AsyncBaseRepository[Account]):
+class AsyncAccountRepositoryWithID(AsyncBaseRepositoryWithID[Account]):
     """Async repository for Account model."""
 
     def __init__(self, session: AsyncSession):
-        super().__init__(session, Tag)
+        super().__init__(session, Account)
         logger.info("AsyncAccountRepository initialized")
 
     async def update_prompt(self, email: str, prompt: str) -> Account | None:
-        """ Updates prompt for an account by email."""
+        """Updates prompt for an account by email."""
         logger.debug(f"Updating prompt for email: {email}")
         statement = select(Account).where(Account.email == email)
         result = await self.session.execute(statement)
@@ -506,7 +511,7 @@ class AsyncAccountRepository(AsyncBaseRepository[Account]):
         return account
 
     async def get_by_email(self, email: str) -> Account | None:
-        """ Get account by email. """
+        """Get account by email."""
         logger.debug(f"Getting account by email: {email}")
         statement = select(Account).where(Account.email == email)
         result = await self.session.execute(statement)

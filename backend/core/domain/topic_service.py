@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.converters import orm_list_to_pydantic, orm_to_pydantic
 from core.domain.schemas import TopicCreate, TopicResponse
-from core.repository import AsyncTopicRepository
+from core.repository import AsyncTopicRepositoryWithID
 
 logger = structlog.get_logger()
 
@@ -12,7 +12,7 @@ logger = structlog.get_logger()
 class TopicService:
     def __init__(self, session: AsyncSession):
         self.session = session
-        self.topic_repo = AsyncTopicRepository(session)
+        self.topic_repo = AsyncTopicRepositoryWithID(session)
         logger.info("TopicService initialized")
 
     async def get_all_topics(self) -> list[TopicResponse]:

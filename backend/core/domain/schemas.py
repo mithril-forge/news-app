@@ -93,5 +93,6 @@ class ParsedNewsResponseDetailed(BaseModel):
 
 
 class AccountDetails(BaseModel):
+    id: int
     email: str
     prompt: str

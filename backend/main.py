@@ -11,8 +11,8 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.domain.account_service import AccountService
 from config import Environment
+from core.domain.account_service import AccountService
 from core.domain.news_service import NewsService
 from core.domain.schemas import (
     AccountDetails,
@@ -22,7 +22,6 @@ from core.domain.schemas import (
 )
 from core.domain.topic_service import TopicService
 from core.engine import get_session
-from dramatiq_tasks import create_daily_pick_for_account
 from logger import init_logging
 
 init_logging()
@@ -164,7 +163,7 @@ async def health_check() -> dict[str, str]:
 
 @app.post("/ai_prompt/set")
 async def set_ai_prompt(prompt: str, user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> None:
-    """ Set default AI prompt for the user."""
+    """Set default AI prompt for the user."""
     service = AccountService(session)
     return await service.set_prompt(account_email=user_email, prompt=prompt)
 
@@ -172,17 +171,15 @@ async def set_ai_prompt(prompt: str, user_email: str, session: Annotated[AsyncSe
 @app.get("/account_details/{user_email}")
 async def get_account_details(
     user_email: str, session: Annotated[AsyncSession, Depends(get_session)]
-) -> AccountDetails:
-    """ Return account details for the user."""
+) -> AccountDetails | None:
+    """Return account details for the user."""
     service = AccountService(session)
     return await service.get_account_details(account_email=user_email)
 
 
 @app.get("/get_latest_pick/{user_email}")
-async def get_latest_pick(
-    user_email: str, session: Annotated[AsyncSession, Depends(get_session)]
-) -> ParsedNewsBasic:
-    """ Get latest pick for the user. The time is considered as the creation date of the pick."""
+async def get_latest_pick(user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> ParsedNewsBasic:
+    """Get latest pick for the user. The time is considered as the creation date of the pick."""
     service = NewsService(session)
     return await service.get_latest_pick_news(account_email=user_email)
 
@@ -204,4 +201,5 @@ async def get_pick_news(
 # 1. User will go to the page, enters a prompt for an email -> POST set_prompt
 # 2. User will go to the page, gets the prompt for an email and can change it -> GET account_details, POST set_prompt
 # 3. User will go to the page by link that he gets from email -> GET get_pick_news
-# 4. User will enter an email in the page and get the latest pick -> GET get_latest_pick / Alternative GET hash for pick and use it in second request
+# 4. User will enter an email in the page and get the latest pick -> GET get_latest_pick /
+# Alternative GET hash for pick and use it in second request
