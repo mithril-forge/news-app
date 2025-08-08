@@ -11,15 +11,18 @@ POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_HOST = os.getenv("POSTGRES_HOST")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
-
-if not all([POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB]):
+DATABASE_CONNECTION_STR = os.getenv("DATABASE_CONNECTION_STR")
+if (
+    not all([POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST, POSTGRES_PORT, POSTGRES_DB])
+    and not DATABASE_CONNECTION_STR
+):
     logger.error("One or more database environment variables are not set")
     raise ValueError("One or more database environment variables are not set")
 
-DATABASE_CONNECTION_STR = (
-    f"postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-)
-logger.info(f"Database connection configured for host: {POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}")
+if DATABASE_CONNECTION_STR is None:
+    DATABASE_CONNECTION_STR = (
+        f"postgresql+psycopg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    )
 
 async_engine = create_async_engine(DATABASE_CONNECTION_STR, echo=False)
 async_session_maker = async_sessionmaker(async_engine, expire_on_commit=False)

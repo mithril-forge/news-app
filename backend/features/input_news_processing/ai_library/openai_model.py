@@ -1,3 +1,4 @@
+import os
 import pathlib
 from typing import cast
 
@@ -16,14 +17,16 @@ class OpenAIModel(AbstractAIModel):
     Implementation of AbstractAIModel for ChatGPT using the OpenAI API.
     """
 
-    def __init__(self, api_key: str, model_name: str = "gpt-4o"):
+    def __init__(self, api_key: str, model_name: str | None = None):
         """
         Initialize the ChatGPT model.
 
         Args:
             api_key: OpenAI API key
-            model_name: Model name to use (default is gpt-4o)
+            model_name: Model name to use (defaults to env var OPENAI_MODEL_NAME or gpt-4o)
         """
+        if model_name is None:
+            model_name = os.getenv("OPENAI_MODEL_NAME", "gpt-4o")
         super().__init__(api_key=api_key, model_name=model_name)
 
     async def prompt_model(

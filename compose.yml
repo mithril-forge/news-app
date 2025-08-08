@@ -2,23 +2,43 @@
 
 services:
   postgres:
-    extends:
-      file: compose.base.yml
-      service: postgres
+    container_name: news-app-postgres
+    image: postgres:17
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
     env_file:
       - envs/common_dev.env
   redis:
-    extends:
-      file: compose.base.yml
-      service: redis
+    container_name: news-app-redis
+    image: redis:8-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    command: redis-server --appendonly yes
     env_file:
       - envs/common_dev.env
   backend:
-    extends:
-      file: compose.base.yml
-      service: backend
+    container_name: news-app-backend
     ports:
       - "8000:8000"
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    entrypoint:
+      - /entrypoint_backend.sh
+    command: "uvicorn main:app --host 0.0.0.0 --port 8000"
     volumes:
       - ./backend:/app
     depends_on:
@@ -29,9 +49,14 @@ services:
     env_file:
       - envs/common_dev.env
   dramatiq:
-    extends:
-      file: compose.base.yml
-      service: dramatiq
+    container_name: news-app-dramatiq
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    entrypoint:
+      - /entrypoint_dramatiq.sh
+    command: "dramatiq dramatiq_tasks --processes 2"
     volumes:
       - ./backend:/app
     depends_on:
@@ -42,13 +67,12 @@ services:
     env_file:
       - envs/common_dev.env
   frontend:
-    extends:
-      file: compose.base.yml
-      service: frontend
+    container_name: news-app-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: development
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
@@ -59,5 +83,5 @@ services:
       - envs/common_dev.env
 
 volumes:
-  postgres_data_news_app:
+  postgres_data:
   redis_data:

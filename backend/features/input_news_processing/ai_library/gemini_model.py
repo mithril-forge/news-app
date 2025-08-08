@@ -1,4 +1,5 @@
 import logging
+import os
 import pathlib
 from typing import cast
 
@@ -23,7 +24,9 @@ logger = structlog.get_logger()
 
 
 class GeminiAIModel(AbstractAIModel):
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-pro-preview-03-25"):
+    def __init__(self, api_key: str, model_name: str | None = None):
+        if model_name is None:
+            model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-pro-preview-03-25")
         super().__init__(api_key=api_key, model_name=model_name)
         logger.info(f"GeminiAIModel initialized with model: {model_name}")
 
