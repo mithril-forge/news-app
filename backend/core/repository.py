@@ -454,9 +454,9 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         logger.info(f"Found {len(news_items)} news items from day '{date}'")
         return news_items
 
-    async def get_latest_pick_news_for_user(self, email: str) -> list[ParsedNews]:
-        """ Get the latest pick news for a user. """
-        logger.debug(f"Getting latest pick news for user: {email}")
+    async def get_latest_pick_news_for_account(self, email: str) -> ParsedNews:
+        """ Get the latest pick news for an account. """
+        logger.debug(f"Getting latest pick news for account: {email}")
         latest_pick_subquery = (
             select(NewsPick.id)
             .join(Account, NewsPick.account_id == Account.id)
@@ -480,7 +480,7 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
         parsed_news_items = result.scalars().unique().all()
 
         logger.info(f"Found {len(parsed_news_items)} parsed news items from latest pick for user '{email}'")
-        return parsed_news_items
+        return parsed_news_items[0]
 
 
 class AsyncAccountRepository(AsyncBaseRepository[Account]):

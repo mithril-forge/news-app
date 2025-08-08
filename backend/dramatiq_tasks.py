@@ -214,9 +214,9 @@ async def async_generate_picture_for_news(parsed_news_id: int) -> None:
 @dramatiq.actor(periodic=cron("00 08 * * *"))
 def distribute_daily_picks_task() -> None:
     """Start creation and distribution of daily picks from previous day. Wrapper for the logic itself."""
-    logger.info("Starting to distribute daily picks for all users.")
-    users = asyncio.run(async_distribute_daily_picks_task())
-    logger.info(f"Successfully distributed daily pick tasks for {len(users)} users.")
+    logger.info("Starting to distribute daily picks for all accounts.")
+    accounts = asyncio.run(async_distribute_daily_picks_task())
+    logger.info(f"Successfully distributed daily pick tasks for {len(accounts)} accounts.")
 
 
 async def async_distribute_daily_picks_task() -> list[AccountDetails]:
@@ -224,24 +224,24 @@ async def async_distribute_daily_picks_task() -> list[AccountDetails]:
     date = datetime.date.today() - timedelta(days=1)
     async with get_session_context() as db_session:
         account_service = AccountService(session=db_session)
-        users = await account_service.get_accounts()
-    for user in users:
-        create_daily_pick_for_user.send(user_id=user.id, user_email=user.email, date=date, prompt=user.prompt)
-    return users
+        accounts = await account_service.get_accounts()
+    for account in accounts:
+        create_daily_pick_for_account.send(account_id=account.id, account_email=account.email, date=date, prompt=account.prompt)
+    return accounts
 
 
 @dramatiq.actor
-def create_daily_pick_for_user(account_id: int, user_email: str, date: datetime.date, prompt: str) -> None:
-    """Async wrapper for the generation of daily task for user."""
-    logger.info(f"Starting daily pick task for user: {account_id} and date {date}")
+def create_daily_pick_for_account(account_id: int, account_email: str, date: datetime.date, prompt: str) -> None:
+    """Async wrapper for the generation of daily task for account."""
+    logger.info(f"Starting daily pick task for account: {account_id} and date {date}")
     asyncio.run(
-        async_create_daily_pick_for_user(account_id=account_id, user_email=user_email, date=date, prompt=prompt)
+        async_create_daily_pick_for_account(account_id=account_id, account_email=account_email, date=date, prompt=prompt)
     )
-    logger.info(f"Successfully generated daily pick for user: {account_id}")
+    logger.info(f"Successfully generated daily pick for account: {account_id}")
 
 
-async def async_create_daily_pick_for_user(account_id: int, user_email: str, date: datetime.date, prompt: str) -> None:
-    """Create a daily pick for a user."""
+async def async_create_daily_pick_for_account(account_id: int, account_email: str, date: datetime.date, prompt: str) -> None:
+    """Create a daily pick for an account."""
     czech_date_str = f"{CZECH_DAYS[date.weekday()]}, {date.day}. {CZECH_MONTHS[date.month]} {date.year}"
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -255,13 +255,13 @@ async def async_create_daily_pick_for_user(account_id: int, user_email: str, dat
         parsed_news = await news_service.get_news_titles_by_date(date=date)
         files = ArticleGenerationService.save_pydantic_lists_as_files(parsed_news=parsed_news)
         result = await gemini_ai_model.prompt_model(files=files, prompt=prompt_formatted, response_model=list[int])
-        logger.info(f"Successfully generated daily pick for user {user_email} with news ids: {result}")
+        logger.info(f"Successfully generated daily pick for account {account_email} with news ids: {result}")
         pick_id = await pick_generation_service.save_pick(
             account_id=account_id, date=datetime.datetime.now(), description=f"Denní výběr pro {czech_date_str}"
         )
         await pick_generation_service.connect_news_to_pick(pick_id=pick_id, news_ids=result)
 
 
-async def send_daily_pick_for_user(user_email: str) -> None:
-    """Send a daily pick for a user."""
+async def send_daily_pick_for_account(account_email: str) -> None:
+    """Send a daily pick for an account."""
     pass

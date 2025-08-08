@@ -22,7 +22,7 @@ from core.domain.schemas import (
 )
 from core.domain.topic_service import TopicService
 from core.engine import get_session
-from dramatiq_tasks import create_daily_pick_for_user
+from dramatiq_tasks import create_daily_pick_for_account
 from logger import init_logging
 
 init_logging()
@@ -181,10 +181,10 @@ async def get_account_details(
 @app.get("/get_latest_pick/{user_email}")
 async def get_latest_pick(
     user_email: str, session: Annotated[AsyncSession, Depends(get_session)]
-) -> list[ParsedNewsBasic]:
+) -> ParsedNewsBasic:
     """ Get latest pick for the user. The time is considered as the creation date of the pick."""
     service = NewsService(session)
-    return await service.get_latest_pick_news(user_email=user_email)
+    return await service.get_latest_pick_news(account_email=user_email)
 
 
 @app.get("/get_pick_news/{pick_hash}")

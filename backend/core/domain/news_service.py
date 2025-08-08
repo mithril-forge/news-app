@@ -21,6 +21,8 @@ from core.repository import (
     AsyncTopicRepository,
 )
 
+from backend.core.converters import news_to_response
+
 logger = structlog.get_logger()
 
 
@@ -172,9 +174,9 @@ class NewsService:
         logger.debug(f"Pick hash: {pick_hash} retrieved news ids: {[news.id for news in sorted_news]}")
         return news_list_to_response(sorted_news)
 
-    async def get_latest_pick_news(self, user_email: str) -> list[ParsedNewsBasic]:
-        """Get the latest N news items"""
-        logger.info(f"Fetching latest pick news for user: {user_email}")
-        latest_news = await self.news_repo.get_latest_pick_news_for_user(email=user_email)
-        logger.debug(f"Retrieved {len(latest_news)} latest pick news items for user: {user_email}")
-        return news_list_to_response(latest_news)
+    async def get_latest_pick_news(self, account_email: str) -> ParsedNewsBasic:
+        """Get the latest pick for the user """
+        logger.info(f"Fetching latest pick news for user: {account_email}")
+        latest_news = await self.news_repo.get_latest_pick_news_for_account(email=account_email)
+        logger.debug(f"Retrieved {latest_news} pick news items for user: {account_email}")
+        return news_to_response(latest_news)
