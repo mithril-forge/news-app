@@ -115,3 +115,9 @@ services:
       - .env
     networks:
       - dokploy-network
+
+volumes:
+  mailserver_data:
+  mailserver_state:
+  mailserver_logs:
+  mailserver_config:
