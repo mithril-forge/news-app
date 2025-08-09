@@ -10,6 +10,7 @@ help: ## Show this help
 up: ## Start development environment
 	docker compose up -d
 	make mail-setup
+	docker exec news-app-mailserver postconf -e 'mydestination='
 
 down: ## Stop and remove all dev containers
 	docker compose down --remove-orphans

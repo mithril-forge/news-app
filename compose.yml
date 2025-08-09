@@ -46,11 +46,13 @@ services:
       - mailserver_logs:/var/log/mail/
       - mailserver_config:/tmp/docker-mailserver/
     environment:
-      - ENABLE_RSPAMD=1
+      - ENABLE_RSPAMD=0  # Disabled for development to avoid conflicts
       - ENABLE_CLAMAV=0  # Disabled for development (uses less resources)
       - ENABLE_FAIL2BAN=0  # Disabled for development
+      - ENABLE_AMAVIS=0  # Disabled for development to avoid filtering
       - LOG_LEVEL=debug
       - PERMIT_DOCKER=container  # Allow other containers to send mail
+      - POSTFIX_MYDESTINATION=  # Force mydestination to be empty
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
