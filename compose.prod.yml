@@ -49,8 +49,6 @@ services:
       - ENABLE_RSPAMD=1
       - ENABLE_AMAVIS=0
 
-      # SSL/TLS configuration (set to 'off' until you have certificates)
-      - SSL_TYPE=${SSL_TYPE:-off}
       # - TLS_LEVEL=modern  # Uncomment when SSL is enabled
       - POSTFIX_INET_PROTOCOLS=ipv4
 
