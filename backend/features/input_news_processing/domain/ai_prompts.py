@@ -136,6 +136,7 @@ TVŮJ ÚKOL:
 
 VÝSTUP:
 - Navrhni vhodné tagy (max. 3). Preferuj existující, nové vytvoř jen když je to OPRAVDU POTŘEBA
+- K formátování výstupu můžeš použít základní funkcionality markdownu -> udržuj odstavce, nadpisy odstavců apod.
 - Pokud nové články obsahují zásadní chybějící informace, navrhni úpravy:
   * Doplnění chybějících informací
   * Úprava title a description (pouze při zásadních změnách)
@@ -183,6 +184,7 @@ VÝSTUP:
   * Čím více zdrojů článek má, tím delší ho udělej, aby si zvládl poskytnout důležité informace ze všech článků - snaž se však vybírat ty nejzásadnější informace
 
 - Formátování výstupu:
+  * K formátování výstupu můžeš použít základní funkcionality markdownu -> udržuj odstavce, nadpisy odstavců apod.
   * Zajisti, aby obsah byl fakticky přesný
   * Citlivě kombinuj informace z různých zdrojů bez opakování
   * Upřednostňuj nejnovější informace při konfliktech a informace, které jsou uvedeny ve všech článcích
