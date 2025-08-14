@@ -2,6 +2,7 @@
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import CheckConstraint, Column, Integer
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -54,7 +55,6 @@ class Tag(BaseModelWithID, table=True):
 
 class ParsedNews(BaseModelWithID, table=True):
     __tablename__ = "parsed_news"
-
     title: str = Field()
     description: str = Field()
     content: str = Field()
@@ -62,7 +62,9 @@ class ParsedNews(BaseModelWithID, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     view_count: int = Field(default=0, sa_column_kwargs={"server_default": "0"})
-
+    importancy: int = Field(
+        default=5, sa_column=Column(Integer, CheckConstraint("importancy <= 10"), server_default="5", nullable=False)
+    )
     tags: Mapped[list["Tag"]] = Relationship(
         back_populates="news_items",
         link_model=ParsedNewsTagLink,

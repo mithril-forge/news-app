@@ -79,7 +79,7 @@ class NewsService:
         logger.debug(f"Retrieved news ids: {[news.id for news in sorted_news]}")
         return news_list_to_response(sorted_news)
 
-    async def create_news(self, news_data: ParsedNewsCreate) -> ParsedNewsResponseDetailed:
+    async def create_news(self, news_data: ParsedNewsCreate, importancy: int) -> ParsedNewsResponseDetailed:
         """Create a new news item with tags"""
         logger.info(f"Creating new article with title: {news_data.title}")
         logger.debug(f"News data creation content: {news_data.model_dump_json(exclude={'content', 'description'})}")
@@ -91,6 +91,7 @@ class NewsService:
         news_dict["image_url"] = (
             "https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg"
         )
+        news_dict["importancy"] = importancy
         news = await self.news_repo.prepare_with_tags(news_dict, tag_texts)
         logger.info(f"Created news item with ID: {news.id}")
         news_id = news.id

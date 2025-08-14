@@ -86,7 +86,7 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
         await session.flush()
         for generated_news_group in generated_news_groups:
             new_article = await article_generation_service.create_new_article_from_input_news(
-                input_news_ids=generated_news_group
+                input_news_ids=generated_news_group.input_news_ids, importancy=generated_news_group.importancy
             )
             verify_generated_news([new_article])
 
@@ -116,7 +116,7 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
         await session.flush()
         for generated_news_group in generated_news_groups:
             new_article = await article_generation_service.create_new_article_from_input_news(
-                input_news_ids=generated_news_group
+                input_news_ids=generated_news_group.input_news_ids, importancy=generated_news_group.importancy
             )
             verify_generated_news([new_article])
 

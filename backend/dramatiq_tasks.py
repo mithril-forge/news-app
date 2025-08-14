@@ -143,20 +143,23 @@ async def async_choose_new_articles_task(input_news_ids: list[int], input_news_h
         )
 
     logger.info(f"Created {len(input_news_lists)} generation tasks: {input_news_lists}")
-    for input_news_list in input_news_lists:
-        generate_article_task.send(input_news_ids=input_news_list)
+    for init_news_pick in input_news_lists:
+        generate_article_task.send(input_news_ids=init_news_pick.input_news_ids, importancy=init_news_pick.importancy)
     logger.info(f"Successfully created creations tasks of {len(input_news_lists)} articles.")
 
 
 @dramatiq.actor(max_retries=1)
-def generate_article_task(input_news_ids: list[int]) -> None:
+def generate_article_task(input_news_ids: list[int], importancy: int) -> None:
     """Tasks that takes input_news_ids and queries the AI model for the new parsed article"""
-    logger.info(f"Starting generate_article_task with {len(input_news_ids)} news items: {input_news_ids}")
-    asyncio.run(async_generate_article_task(input_news_ids))
+    logger.info(
+        f"Starting generate_article_task with {len(input_news_ids)} news items: {input_news_ids} "
+        f"and importancy: {importancy}"
+    )
+    asyncio.run(async_generate_article_task(input_news_ids, importancy))
     logger.info("Ended generate_article_task")
 
 
-async def async_generate_article_task(input_news_ids: list[int]) -> None:
+async def async_generate_article_task(input_news_ids: list[int], importancy: int) -> None:
     """Async wrapper"""
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key is None:
@@ -169,7 +172,9 @@ async def async_generate_article_task(input_news_ids: list[int]) -> None:
             archive=archive,
             ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
-        saved_news = await article_generation_service.create_new_article_from_input_news(input_news_ids=input_news_ids)
+        saved_news = await article_generation_service.create_new_article_from_input_news(
+            input_news_ids=input_news_ids, importancy=importancy
+        )
     logger.info(f"Generated article {saved_news.id}, sending to picture generation")
     generate_and_attach_image_to_news.send(parsed_news_id=saved_news.id)
 

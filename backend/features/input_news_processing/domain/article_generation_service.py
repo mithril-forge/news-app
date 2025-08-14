@@ -190,7 +190,7 @@ class ArticleGenerationService:
 
     async def choose_input_news_for_new_articles(
         self, input_news_ids: list[int], news_limit: int = 20
-    ) -> list[list[int]]:
+    ) -> list[InitGenerationResult]:
         """
         Uses AI to analyze input news and group related articles together, ranked by importance.
 
@@ -221,16 +221,18 @@ class ArticleGenerationService:
         logger.debug(f"Initial generation results: {result}")
         result = sorted(result, key=lambda x: x.importancy, reverse=True)[:news_limit]
         logger.info(f"Returning generation results after importancy filtering/sorting: {result}")
-        final_groups = [gen_result.input_news_ids for gen_result in result]
+        final_groups = [gen_result for gen_result in result]
         return final_groups
 
-    async def create_new_article_from_input_news(self, input_news_ids: list[int]) -> ParsedNewsResponseDetailed:
+    async def create_new_article_from_input_news(
+        self, input_news_ids: list[int], importancy: int
+    ) -> ParsedNewsResponseDetailed:
         """
         Creates a new parsed article by combining and processing multiple related input news items using AI.
 
         Args:
             input_news_ids: List of input news IDs to combine into a single article
-
+            importancy: news importancy which will be used when showing the results
         Returns:
             The newly created parsed news article with all connections established
         """
@@ -258,7 +260,7 @@ class ArticleGenerationService:
             raise ValueError(f"AI model didn't return proper result when creating new article from {input_news_ids}")
         logger.debug(f"AI model generated article: '{result.title}' with {len(result.content)} characters")
 
-        saved_news = await self.parsed_news_service.create_news(news_data=result)
+        saved_news = await self.parsed_news_service.create_news(news_data=result, importancy=importancy)
         logger.info(f"Successfully created new article: '{saved_news.title}' (ID: {saved_news.id})")
 
         for input_id in input_news_ids:

@@ -60,6 +60,7 @@ class ParsedNewsBasic(BaseModel):
     created_at: datetime
     updated_at: datetime
     tags: list[TagResponse] = []
+    importancy: int
 
     class Config:
         orm_mode = True
