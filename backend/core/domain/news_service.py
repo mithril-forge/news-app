@@ -4,8 +4,15 @@ import structlog
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.converters import news_list_to_response, news_to_detailed_response, orm_list_to_pydantic
+from core.converters import (
+    news_list_to_response,
+    news_list_to_titles_response,
+    news_to_detailed_response,
+    news_to_response,
+    orm_list_to_pydantic,
+)
 from core.domain.schemas import (
+    ParsedInputNewsTitles,
     ParsedNewsBasic,
     ParsedNewsCreate,
     ParsedNewsResponseDetailed,
@@ -14,9 +21,9 @@ from core.domain.schemas import (
     TagResponse,
 )
 from core.repository import (
-    AsyncParsedNewsRepository,
-    AsyncTagRepository,
-    AsyncTopicRepository,
+    AsyncParsedNewsRepositoryWithID,
+    AsyncTagRepositoryWithID,
+    AsyncTopicRepositoryWithID,
 )
 
 logger = structlog.get_logger()
@@ -25,9 +32,9 @@ logger = structlog.get_logger()
 class NewsService:
     def __init__(self, session: AsyncSession):
         self.session = session
-        self.news_repo = AsyncParsedNewsRepository(session)
-        self.topic_repo = AsyncTopicRepository(session)
-        self.tag_repo = AsyncTagRepository(session)
+        self.news_repo = AsyncParsedNewsRepositoryWithID(session)
+        self.topic_repo = AsyncTopicRepositoryWithID(session)
+        self.tag_repo = AsyncTagRepositoryWithID(session)
         logger.info("NewsService initialized")
 
     async def get_tags(self) -> list[TagResponse]:
@@ -157,3 +164,22 @@ class NewsService:
         result = await self.news_repo.get_by_time_delta(delta=delta)
         pydantic_structures = orm_list_to_pydantic(orm_list=result, pydantic_class=ParsedNewsSummary)
         return pydantic_structures
+
+    async def get_news_titles_by_date(self, date: datetime.date) -> list[ParsedInputNewsTitles]:
+        """Returns ParsedNews with minimal information about them - title, description and other information"""
+        result = await self.news_repo.get_news_by_creation_day(date=date)
+        pydantic_structures = news_list_to_titles_response(news_list=result)
+        return pydantic_structures
+
+    async def get_news_by_pick_hash(self, pick_hash: str) -> list[ParsedNewsBasic]:
+        """Get all news for a specific pick hash"""
+        sorted_news = await self.news_repo.get_parsed_news_by_pick_hash(pick_hash=pick_hash)
+        logger.debug(f"Pick hash: {pick_hash} retrieved news ids: {[news.id for news in sorted_news]}")
+        return news_list_to_response(sorted_news)
+
+    async def get_latest_pick_news(self, account_email: str) -> ParsedNewsBasic:
+        """Get the latest pick for the user"""
+        logger.info(f"Fetching latest pick news for user: {account_email}")
+        latest_news = await self.news_repo.get_latest_pick_news_for_account(email=account_email)
+        logger.debug(f"Retrieved {latest_news} pick news items for user: {account_email}")
+        return news_to_response(latest_news)

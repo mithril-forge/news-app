@@ -31,6 +31,12 @@ class ParsedNewsSummary(BaseModel):
     image_url: str
 
 
+class ParsedInputNewsTitles(BaseModel):
+    id: int
+    title: str
+    input_news_titles: list[str]
+
+
 class ParsedNewsCreate(BaseModel):
     title: str
     description: str
@@ -84,3 +90,9 @@ class ParsedNewsResponseDetailed(BaseModel):
     tags: list[TagResponse] = []
     content: str
     input_news: list[InputNewsWithoutContent]
+
+
+class AccountDetails(BaseModel):
+    id: int
+    email: str
+    prompt: str
