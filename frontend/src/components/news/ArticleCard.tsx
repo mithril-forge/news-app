@@ -10,7 +10,7 @@ interface ArticleCardProps {
 export default function ArticleCard({ item }: ArticleCardProps) {
   const categoryInfo = getCategoryEmoji(item.topic?.name || 'Vše');
 
-  // Function to get first 10-20 words from description
+  // Function to get first 15 words from description
   const getDescriptionPreview = (description?: string) => {
     if (!description) return '';
     
