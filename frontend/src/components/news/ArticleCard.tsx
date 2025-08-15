@@ -10,16 +10,27 @@ interface ArticleCardProps {
 export default function ArticleCard({ item }: ArticleCardProps) {
   const categoryInfo = getCategoryEmoji(item.topic?.name || 'Vše');
 
-  // Function to get first 15 words from description
+  // Function to get first 100-150 characters from description
   const getDescriptionPreview = (description?: string) => {
     if (!description) return '';
-    
-    const words = description.trim().split(/\s+/);
-    const previewWords = words.slice(0, 15); // Take first 15 words
-    const preview = previewWords.join(' ');
-    
-    // Add ellipsis if description was truncated
-    return words.length > 15 ? `${preview}...` : preview;
+
+    const trimmed = description.trim();
+    const maxLength = 120; // Adjust this number as needed
+
+    if (trimmed.length <= maxLength) {
+      return trimmed;
+    }
+
+    // Truncate at character limit but try to end at a word boundary
+    let preview = trimmed.slice(0, maxLength);
+    const lastSpaceIndex = preview.lastIndexOf(' ');
+
+    // If we found a space near the end, cut there for cleaner text
+    if (lastSpaceIndex > maxLength - 20) {
+      preview = preview.slice(0, lastSpaceIndex);
+    }
+
+    return `${preview}...`;
   };
 
   return (
