@@ -59,7 +59,7 @@ class ParsedNewsBasic(BaseModel):
     topic: TopicResponse | None
     created_at: datetime
     updated_at: datetime
-    tags: list[TagResponse] = []
+    tags: list[str] = []
     importancy: int
 
     class Config:

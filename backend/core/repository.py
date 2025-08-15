@@ -15,7 +15,8 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import update
 from sqlmodel import SQLModel, and_, select
 
-from core.models import BaseModelWithID, ParsedNews, ParsedNewsTagLink, Tag, Topic
+from core.models import BaseModelWithID, ParsedNews, ParsedNewsTagLink, Tag, Topic, ParsedNewsRelevancy
+
 
 T = TypeVar("T", bound=BaseModelWithID)
 
@@ -224,6 +225,29 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, ParsedNews)
         logger.info("AsyncParsedNewsRepository initialized")
+
+    async def get_latest_by_relevance(self, skip: int, limit: int) -> Sequence[ParsedNewsRelevancy]:
+        """
+        Fetch latest news sorted by relevance score from materialized view with pagination
+
+        Args:
+            skip: Number of records to skip for pagination
+            limit: Maximum number of records to return
+
+        Returns:
+            Sequence of ParsedNewsRelevancy ordered by relevance_score desc
+        """
+        logger.debug(f"Getting latest news by relevance (skip: {skip}, limit: {limit})")
+        query = (
+            select(ParsedNewsRelevancy)
+            .order_by(ParsedNewsRelevancy.relevance_score.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.session.execute(query)
+        records = result.scalars().all()
+        logger.info(f"Retrieved {len(records)} news records sorted by relevance")
+        return records
 
     async def get_latest(self, skip: int, limit: int) -> Sequence[ParsedNews]:
         """

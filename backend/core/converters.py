@@ -14,6 +14,8 @@ from core.domain.schemas import (
 )
 from core.models import ParsedNews
 
+from core.models import ParsedNewsRelevancy
+
 M = TypeVar("M", bound=SQLModel)
 P = TypeVar("P", bound=BaseModel)
 
@@ -111,7 +113,7 @@ def news_to_response(news: ParsedNews) -> ParsedNewsBasic:
     topic = news.topic
     if topic is not None:
         data["topic"] = orm_to_pydantic(topic, TopicResponse)
-    data["tags"] = orm_list_to_pydantic(news.tags, TagResponse)
+    data["tags"] = [tag.text for tag in news.tags]
 
     # Create response model from dict
     result = ParsedNewsBasic(**data)
@@ -161,3 +163,39 @@ def news_to_detailed_response(news: ParsedNews) -> ParsedNewsResponseDetailed:
     result = ParsedNewsResponseDetailed(**data)
     logger.debug(f"Successfully converted news ID {getattr(news, 'id', 'unknown')} to detailed response")
     return result
+
+
+def relevance_parsed_news_to_basic_response(news: ParsedNewsRelevancy) -> ParsedNewsBasic:
+    """
+    Convert ParsedNewsRelevancy from materialized view to ParsedNewsBasic response model
+
+    Args:
+        news: ParsedNewsRelevancy object from materialized view
+
+    Returns:
+        ParsedNewsBasic response model
+    """
+    return ParsedNewsBasic(
+        id=news.id,
+        title=news.title,
+        description=news.description,
+        image_url="",  # Not available in materialized view, set to empty string
+        topic=TopicResponse(id=news.topic_id, name=news.topic_name) if news.topic_id and news.topic_name else None,
+        created_at=news.updated_at,  # Using updated_at as created_at since it's not in materialized view
+        updated_at=news.updated_at,
+        tags=news.tags.split(', ') if news.tags else [],
+        importancy=news.importancy
+    )
+
+
+def relevance_parsed_news_list_to_basic_response(news_list: Sequence[ParsedNewsRelevancy]) -> list[ParsedNewsBasic]:
+    """
+    Convert list of ParsedNewsRelevancy from materialized view to list of ParsedNewsBasic response models
+
+    Args:
+        news_list: Sequence of ParsedNewsRelevancy objects from materialized view
+
+    Returns:
+        List of ParsedNewsBasic response models
+    """
+    return [relevance_parsed_news_to_basic_response(news) for news in news_list]

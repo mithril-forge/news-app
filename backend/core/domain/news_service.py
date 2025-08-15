@@ -19,6 +19,8 @@ from core.repository import (
     AsyncTopicRepository,
 )
 
+from core.converters import relevance_parsed_news_list_to_basic_response
+
 logger = structlog.get_logger()
 
 
@@ -44,6 +46,13 @@ class NewsService:
         latest_news = await self.news_repo.get_latest(skip=skip, limit=limit)
         logger.debug(f"Retrieved {len(latest_news)} latest news items")
         return news_list_to_response(latest_news)
+
+    async def get_latest_news_by_relevancy(self, skip: int, limit: int) -> list[ParsedNewsBasic]:
+        """Get the latest N news items"""
+        logger.info(f"Fetching latest news (skip={skip}, limit={limit})")
+        latest_news = await self.news_repo.get_latest_by_relevance(skip=skip, limit=limit)
+        logger.debug(f"Retrieved {len(latest_news)} latest news items")
+        return relevance_parsed_news_list_to_basic_response(latest_news)
 
     async def get_most_popular_news(self, period: datetime.timedelta, limit: int) -> list[ParsedNewsBasic]:
         logger.info(f"Fetching {limit} most popular news for {period}")
