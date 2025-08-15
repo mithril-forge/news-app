@@ -83,23 +83,6 @@ export default function ArticleContent({
     );
   }
 
-  // Handle plain text content
-  if (contentType === 'text') {
-    const paragraphs = content
-      .split(/\n\s*\n/)
-      .filter(paragraph => paragraph.trim().length > 0);
-    
-    return (
-      <div className={`prose prose-lg max-w-none ${contentStyles} ${className}`}>
-        {paragraphs.map((paragraph, index) => (
-          <p key={index} className="mb-6 text-lg leading-relaxed text-gray-700">
-            {paragraph.trim()}
-          </p>
-        ))}
-      </div>
-    );
-  }
-
   // Handle markdown content with react-markdown (simple approach)
   return (
     <div className={`prose prose-lg max-w-none ${contentStyles} ${className}`}>
