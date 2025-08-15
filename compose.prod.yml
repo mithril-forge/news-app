@@ -15,7 +15,7 @@ services:
       - /entrypoint_backend.sh
     command: "uvicorn main:app --host 0.0.0.0 --port 8000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -23,7 +23,65 @@ services:
       - .env
     networks:
       - dokploy-network
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: production-mailserver
+    hostname: ${MAIL_HOSTNAME:-mail.tvujnovinar.cz}
+    restart: unless-stopped
+    ports:
+      - "25:25"    # SMTP (for receiving from other servers)
+      - "587:587"  # SMTP Submission (for your apps)
+      - "465:465"  # SMTP Secure (legacy)
+      - "993:993"  # IMAP Secure (for email clients)
+    volumes:
+      - mailserver_data:/var/mail/
+      - mailserver_state:/var/mail-state/
+      - mailserver_logs:/var/log/mail/
+      - mailserver_config:/tmp/docker-mailserver/
+      # SSL certificates (uncomment when you have them on host)
+      # - ${SSL_CERT_PATH:-/etc/letsencrypt}:/etc/letsencrypt:ro
+    environment:
+      # Security settings for production
+      - PERMIT_DOCKER=none
+      - ENABLE_FAIL2BAN=1
+      - FAIL2BAN_BLOCKTYPE=drop
+      - ENABLE_CLAMAV=1
+      - ENABLE_RSPAMD=1
+      - ENABLE_AMAVIS=0
 
+      # - TLS_LEVEL=modern  # Uncomment when SSL is enabled
+      - POSTFIX_INET_PROTOCOLS=ipv4
+
+      # Anti-spam and security
+      - SPOOF_PROTECTION=1
+      - ENABLE_SRS=1
+      - POSTFIX_REJECT_UNKNOWN_CLIENT_HOSTNAME=1
+
+      # Logging
+      - LOG_LEVEL=info
+      - PFLOGSUMM_TRIGGER=logrotate
+
+      # Custom domain configuration
+      - OVERRIDE_HOSTNAME=${MAIL_HOSTNAME:-mail.tvujnovinar.cz}
+
+      # Dovecot configuration
+      - DOVECOT_MAILBOX_FORMAT=maildir
+      # - DOVECOT_TLS=yes  # Uncomment when SSL is enabled
+
+      # Optional: Custom mailbox size limits
+      - POSTFIX_MESSAGE_SIZE_LIMIT=${MAX_MESSAGE_SIZE:-52428800}
+      - POSTFIX_MAILBOX_SIZE_LIMIT=${MAX_MAILBOX_SIZE:-1073741824}
+
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: [ "CMD", "ss", "--listening", "--tcp", "|", "grep", "-P", "LISTEN.+:smtp" ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
   dramatiq:
     build:
       context: ./backend
@@ -55,3 +113,9 @@ services:
       - .env
     networks:
       - dokploy-network
+
+volumes:
+  mailserver_data:
+  mailserver_state:
+  mailserver_logs:
+  mailserver_config:

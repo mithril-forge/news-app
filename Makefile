@@ -9,12 +9,19 @@ help: ## Show this help
 
 up: ## Start development environment
 	docker compose up -d
+	make mail-setup
+	docker exec news-app-mailserver postconf -e 'mydestination='
 
 down: ## Stop and remove all dev containers
 	docker compose down --remove-orphans
 
 build: ## Rebuild development containers
 	docker compose build
+
+mail-setup:
+	sleep 10
+	docker compose exec mailserver setup email add admin@localhost admin123  || true
+	docker compose exec mailserver setup email add noreply@localhost noreply123  || true
 
 logsall: ## Show logs from all containers
 	docker compose logs -f

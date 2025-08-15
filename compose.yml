@@ -14,6 +14,7 @@ services:
     restart: unless-stopped
     env_file:
       - envs/common_dev.env
+
   redis:
     container_name: news-app-redis
     image: redis:8-alpine
@@ -28,6 +29,39 @@ services:
     command: redis-server --appendonly yes
     env_file:
       - envs/common_dev.env
+
+  mailserver:
+    container_name: news-app-mailserver
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    hostname: mail.localhost
+    ports:
+      - "25:25"
+      - "587:587"
+      - "465:465"
+      - "143:143"
+      - "993:993"
+    volumes:
+      - mailserver_data:/var/mail/
+      - mailserver_state:/var/mail-state/
+      - mailserver_logs:/var/log/mail/
+      - mailserver_config:/tmp/docker-mailserver/
+    environment:
+      - ENABLE_RSPAMD=0  # Disabled for development to avoid conflicts
+      - ENABLE_CLAMAV=0  # Disabled for development (uses less resources)
+      - ENABLE_FAIL2BAN=0  # Disabled for development
+      - ENABLE_AMAVIS=0  # Disabled for development to avoid filtering
+      - LOG_LEVEL=debug
+      - PERMIT_DOCKER=container  # Allow other containers to send mail
+      - POSTFIX_MYDESTINATION=  # Force mydestination to be empty
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    healthcheck:
+      test: "ss --listening --tcp | grep -P 'LISTEN.+:smtp' || exit 1"
+      timeout: 3s
+      retries: 3
+      interval: 30s
+
   backend:
     container_name: news-app-backend
     ports:
@@ -46,8 +80,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailserver:
+        condition: service_started
     env_file:
       - envs/common_dev.env
+
   dramatiq:
     container_name: news-app-dramatiq
     build:
@@ -64,8 +101,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailserver:
+        condition: service_started
     env_file:
       - envs/common_dev.env
+
   frontend:
     container_name: news-app-frontend
     build:
@@ -85,3 +125,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  mailserver_data:
+  mailserver_state:
+  mailserver_logs:
+  mailserver_config:
