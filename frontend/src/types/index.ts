@@ -29,7 +29,7 @@ export interface NewsArticle {
   updated_at: string;
   created_at: string;
   topic: Topic;
-  tags: Tag[];
+  tags: string[];
   date?: string; // Formatted date for display
   isHtml?: boolean; // Whether content is HTML formatted
 }
@@ -43,9 +43,19 @@ export interface InputNewsDetailed {
 }
 
 /**
-* Detailed article model
-*/
-export interface NewsDetailed extends NewsArticle {
+ * Detailed article model
+ */
+export interface NewsDetailed {
+  id: string;
+  title: string;
+  summary: string;
+  image_url: string | null;
+  updated_at: string;
+  created_at: string;
+  topic: Topic;
+  tags: Tag[];
+  date?: string; // Formatted date for display
+  isHtml?: boolean; // Whether content is HTML formatted
   content: string;
-  input_news: InputNewsDetailed[]
+  input_news: InputNewsDetailed[];
 }
