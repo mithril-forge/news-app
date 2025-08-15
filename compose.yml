@@ -15,7 +15,7 @@ services:
     env_file:
       - envs/common_dev.env
     ports:
-      - "5432:5432"
+      - "50010:5432"
   redis:
     container_name: news-app-redis
     image: redis:8-alpine
