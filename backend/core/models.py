@@ -86,6 +86,25 @@ class ParsedNews(BaseModelWithID, table=True):
     )
 
 
+class ParsedNewsRelevancy(SQLModel, table=True):
+    __tablename__ = "news_relevance"
+
+    # Core fields from your original model
+    id: int = Field(primary_key=True)
+    title: str
+    description: str
+    topic_name: Optional[str]
+    topic_id: Optional[int]
+    tags: str
+    updated_at: datetime
+    view_count: int
+    importancy: int
+    relevance_score: float
+    normalized_views: float
+    time_decay_factor: float
+    score_calculated_at: datetime
+
+
 class InputNews(BaseModelWithID, table=True):
     __tablename__ = "input_news"
 
