@@ -32,6 +32,10 @@ class NewsService:
         self.tag_repo = AsyncTagRepository(session)
         logger.info("NewsService initialized")
 
+    async def refresh_materialized_view(self):
+        """ Refreshes materialized view so order of articles is generated and updated"""
+        await self.news_repo.refresh_materialized_view()
+
     async def get_tags(self) -> list[TagResponse]:
         logger.debug("Getting all tags")
         tag_models = await self.tag_repo.get_all()

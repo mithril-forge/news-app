@@ -8,7 +8,7 @@ from typing import (
 )
 
 import structlog
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -16,7 +16,6 @@ from sqlalchemy.sql.expression import update
 from sqlmodel import SQLModel, and_, select
 
 from core.models import BaseModelWithID, ParsedNews, ParsedNewsTagLink, Tag, Topic, ParsedNewsRelevancy
-
 
 T = TypeVar("T", bound=BaseModelWithID)
 
@@ -225,6 +224,10 @@ class AsyncParsedNewsRepository(AsyncBaseRepository[ParsedNews]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, ParsedNews)
         logger.info("AsyncParsedNewsRepository initialized")
+
+    async def refresh_materialized_view(self):
+        """Refresh the news relevance materialized view"""
+        await self.session.execute(text("REFRESH MATERIALIZED VIEW news_relevance"))
 
     async def get_latest_by_relevance(self, skip: int, limit: int) -> Sequence[ParsedNewsRelevancy]:
         """

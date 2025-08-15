@@ -9,6 +9,7 @@ import structlog
 from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
+from core.domain.news_service import NewsService
 from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
@@ -27,6 +28,7 @@ dramatiq.set_broker(redis_broker)
 
 # Get cron schedule from environment variable (default: 8 PM daily)
 SCRAP_ARTICLES_CRON = os.getenv("SCRAP_ARTICLES_CRON", "00 20 * * *")
+REFRESH_MATERIALIZED_VIEW_CRON = os.getenv("REFRESH_MATERIALIZED_VIEW_CRON", "*/5 * * * *")
 
 
 @dramatiq.actor(periodic=cron(SCRAP_ARTICLES_CRON))
@@ -99,7 +101,7 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
 
 @dramatiq.actor(max_retries=1)
 def choose_new_articles_task(
-    input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
+        input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
 ) -> None:
     """Task that takes passed input_news_ids also query for the nonconnected older input news (by param delta).
     Then it queries AI model to choose new parsed articles and creates tasks for their generation"""
@@ -217,3 +219,23 @@ def generate_and_attach_image_to_news(parsed_news_id: int) -> None:
 async def async_generate_picture_for_news(parsed_news_id: int) -> None:
     """Async wrapper"""
     pass
+
+
+@dramatiq.actor(
+    periodic=cron(REFRESH_MATERIALIZED_VIEW_CRON),
+    max_retries=10,
+    min_backoff=30000,  # 30 seconds
+    max_backoff=300000  # 5 minutes
+)
+def refresh_materialized_view():
+    """ Refreshes materialized view each few seconds"""
+    logger.info("Refreshing materialized view of parsed news...")
+    asyncio.run(async_refresh_materialized_view())
+    logger.info("Materialized view of parsed news finished.")
+
+
+async def async_refresh_materialized_view():
+    """ Async wrapper"""
+    async with get_session_context() as db_session:
+        news_service = NewsService(session=db_session)
+        await news_service.refresh_materialized_view()
