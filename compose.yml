@@ -5,7 +5,7 @@ services:
     container_name: news-app-postgres
     image: postgres:17
     ports:
-      - "5432:5432"
+      - "50010:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
