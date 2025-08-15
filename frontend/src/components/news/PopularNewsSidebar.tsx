@@ -17,7 +17,7 @@ export default function PopularNewsSidebar() {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await fetchPopularNews(30, 5); // Načteme 5 nejpopulárnějších
+        const data = await fetchPopularNews(7, 5); // Načteme 5 nejpopulárnějších
         setPopularNews(data);
       } catch (error) {
         console.error('Error loading popular news:', error);

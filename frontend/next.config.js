@@ -6,6 +6,19 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/((?!_next/static|favicon.ico).*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
   reactStrictMode: true,
 
   // Use standalone build for better Docker production performance

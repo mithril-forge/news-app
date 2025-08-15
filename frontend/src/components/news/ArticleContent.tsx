@@ -1,17 +1,48 @@
-/**
- * Component for displaying article content with proper formatting and new design
- * Handles both plain text and HTML content
- */
+import ReactMarkdown from 'react-markdown';
 
 interface ArticleContentProps {
-  /** The content text or HTML of the article */
+  /** The content text, HTML, or markdown of the article */
   content: string;
-  /** Whether the content should be rendered as HTML */
-  isHtml?: boolean;
+  /** Content type: 'text', 'html', or 'markdown' */
+  contentType?: 'text' | 'html' | 'markdown';
+  /** Additional CSS classes */
+  className?: string;
 }
 
-export default function ArticleContent({ content, isHtml = false }: ArticleContentProps) {
-  // Enhanced styles for better typography
+export default function ArticleContent({ 
+  content, 
+  contentType = 'markdown',
+  className = '' 
+}: ArticleContentProps) {
+
+  // Handle HTML content
+  if (contentType === 'html') {
+    return (
+      <div 
+        className={`prose prose-lg max-w-none ${contentStyles} ${className}`}
+        dangerouslySetInnerHTML={{ __html: content }} 
+      />
+    );
+  }
+
+  // Handle plain text content
+  if (contentType === 'text') {
+    const paragraphs = content
+      .split(/\n\s*\n/)
+      .filter(paragraph => paragraph.trim().length > 0);
+    
+    return (
+      <div className={`prose prose-lg max-w-none ${contentStyles} ${className}`}>
+        {paragraphs.map((paragraph, index) => (
+          <p key={index} className="mb-6 text-lg leading-relaxed text-gray-700">
+            {paragraph.trim()}
+          </p>
+        ))}
+      </div>
+    );
+  }
+
+  // Enhanced styles for better typography (your original styling)
   const contentStyles = `
     prose-headings:text-gray-800 
     prose-headings:font-bold 
@@ -42,28 +73,31 @@ export default function ArticleContent({ content, isHtml = false }: ArticleConte
     prose-code:text-sm
   `;
 
-  // For HTML content, use dangerouslySetInnerHTML (assuming trusted content)
-  if (isHtml) {
+  // Handle HTML content
+  if (contentType === 'html') {
     return (
-      <div className={`prose prose-lg max-w-none ${contentStyles}`}>
-        <div dangerouslySetInnerHTML={{ __html: content }} />
-      </div>
+      <div 
+        className={`prose prose-lg max-w-none ${contentStyles} ${className}`}
+        dangerouslySetInnerHTML={{ __html: content }} 
+      />
     );
   }
-  
-  // For plain text, preserve whitespace and add paragraph breaks
-  const formattedContent = content
-    .split('\n\n')
-    .filter(paragraph => paragraph.trim().length > 0)
-    .map((paragraph, index) => (
-      <p key={index} className="mb-6 text-lg leading-relaxed text-gray-700">
-        {paragraph.trim()}
-      </p>
-    ));
-  
+
+  // Handle markdown content with react-markdown (simple approach)
   return (
-    <div className={`prose prose-lg max-w-none ${contentStyles}`}>
-      {formattedContent}
+    <div className={`prose prose-lg max-w-none ${contentStyles} ${className}`}>
+      <ReactMarkdown>
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+
+  // Handle markdown content with react-markdown (simple approach)
+  return (
+    <div className={`prose prose-lg max-w-none ${contentStyles} ${className}`}>
+      <ReactMarkdown>
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }

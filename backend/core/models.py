@@ -1,4 +1,5 @@
 # TODO: Implement cascade on_delete also in DB itself not only in SQLModel logic
+import uuid
 from datetime import datetime
 from typing import Optional
 
@@ -84,6 +85,7 @@ class ParsedNews(BaseModelWithID, table=True):
         back_populates="parsed_news_relation",
         sa_relationship_kwargs={"lazy": "selectin"},
     )
+    news_picks: Mapped[list["NewsPickItem"]] = Relationship(back_populates="parsed_news")
 
 
 class ParsedNewsRelevancy(SQLModel, table=True):
@@ -125,3 +127,32 @@ class InputNews(BaseModelWithID, table=True):
 
     received_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     publication_date: datetime | None = Field(default=None)
+
+
+class Account(BaseModelWithID, table=True):
+    __tablename__ = "accounts"
+    email: str = Field(unique=True)
+    prompt: str | None = Field(default=None)
+    news_picks: Mapped[list["NewsPick"]] = Relationship(
+        back_populates="account", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
+
+class NewsPick(BaseModelWithID, table=True):
+    __tablename__ = "news_picks"
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    account_id: int | None = Field(default=None, foreign_key="accounts.id")
+    account: Mapped["Account"] = Relationship(back_populates="news_picks")
+    items: Mapped[list["NewsPickItem"]] = Relationship(
+        back_populates="pick", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+    description: str = Field()
+    hash: str = Field(default_factory=lambda: uuid.uuid4().hex, unique=True)
+
+
+class NewsPickItem(BaseModel, table=True):
+    __tablename__ = "news_pick_items"
+    pick_id: int = Field(foreign_key="news_picks.id", primary_key=True)
+    pick: Mapped["NewsPick"] = Relationship(back_populates="items")
+    parsed_news_id: int = Field(foreign_key="parsed_news.id", primary_key=True)
+    parsed_news: Mapped["ParsedNews"] = Relationship(back_populates="news_picks")

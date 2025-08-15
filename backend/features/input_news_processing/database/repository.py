@@ -7,12 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import and_, select
 
 from core.models import InputNews, ParsedNews
-from core.repository import AsyncBaseRepository
+from core.repository import AsyncBaseRepositoryWithID
 
 logger = structlog.get_logger()
 
 
-class AsyncInputNewsRepository(AsyncBaseRepository[InputNews]):
+class AsyncInputNewsRepositoryWithID(AsyncBaseRepositoryWithID[InputNews]):
     """Async repository for InputNews model."""
 
     def __init__(self, session: AsyncSession):

@@ -7,6 +7,7 @@ from sqlmodel import SQLModel
 
 from core.domain.schemas import (
     InputNewsWithoutContent,
+    ParsedInputNewsTitles,
     ParsedNewsBasic,
     ParsedNewsResponseDetailed,
     TagResponse,
@@ -199,3 +200,26 @@ def relevance_parsed_news_list_to_basic_response(news_list: Sequence[ParsedNewsR
         List of ParsedNewsBasic response models
     """
     return [relevance_parsed_news_to_basic_response(news) for news in news_list]
+
+  
+def news_list_to_titles_response(news_list: Sequence[ParsedNews]) -> list[ParsedInputNewsTitles]:
+    """
+    Convert a list of ParsedNews ORM models to NewsTitleResponse schemas.
+
+    Args:
+        news_list: List of ParsedNews SQLModel instances
+
+    Returns:
+        List of NewsTitleResponse Pydantic model instances
+    """
+    logger.debug(f"Converting list of {len(news_list)} news items to title response")
+    result = []
+    for news in news_list:
+        if news.id is None:
+            raise ValueError(f"News {news} has empty id.")
+        result.append(
+            ParsedInputNewsTitles(
+                id=news.id, title=news.title, input_news_titles=[input_news.title for input_news in news.input_news]
+            )
+        )
+    return result
