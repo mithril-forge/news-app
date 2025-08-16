@@ -50,8 +50,8 @@ export default function NewsContent({
         
         {/* Article grid */}
         <div className="grid grid-cols-1 gap-6">
-          {remainingArticles.map(item => (
-            <ArticleCard key={item.id} item={item} />
+          {remainingArticles.map(article => (
+            <ArticleCard key={article.id} article={article} />
           ))}
         </div>
         

@@ -8,8 +8,8 @@ import "@/styles/globals.css";
 
 // Define site metadata
 export const metadata: Metadata = {
-  title: "Novinář.AI | Váš digitální zpravodaj",
-  description: "Váš spolehlivý zdroj nejnovějších zpráv z České republiky i ze světa.",
+  title: "Tvůj Novinář | Tvoje denní dávka novinek",
+  description: "Tvůj spolehlivý zdroj nejnovějších zpráv z České republiky i ze světa.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 

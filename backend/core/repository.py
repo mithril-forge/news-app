@@ -500,6 +500,7 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
             .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)  # type: ignore[arg-type]
             .join(NewsPick, NewsPickItem.pick_id == NewsPick.id)  # type: ignore[arg-type]
             .where(NewsPick.hash == pick_hash)
+            .order_by(ParsedNews.updated_at.desc())  # type: ignore[attr-defined]
             .options(
                 joinedload(ParsedNews.topic),
                 joinedload(ParsedNews.tags),
@@ -515,15 +516,15 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
     async def get_news_by_creation_day(self, date: datetime.date) -> Sequence[ParsedNews]:
         """Get all news items created on the given day."""
         logger.debug(f"Getting news from day: {date}")
-        statement = select(ParsedNews).where(func.created_at(ParsedNews.created_at) == date)
+        statement = select(ParsedNews).where(func.date(ParsedNews.created_at) == date)
         result = await self.session.execute(statement)
         news_items = result.scalars().all()
         logger.info(f"Found {len(news_items)} news items from day '{date}'")
         return news_items
 
-    async def get_latest_pick_news_for_account(self, email: str) -> ParsedNews:
-        """Get the latest pick news for an account."""
-        logger.debug(f"Getting latest pick news for account: {email}")
+    async def get_latest_pick_news_for_account(self, email: str) -> list[ParsedNews]:
+        """Get all the latest pick news for an account."""
+        logger.debug(f"Getting all latest pick news for account: {email}")
         latest_pick_subquery = (
             select(NewsPick.id)
             .join(Account, NewsPick.account_id == Account.id)  # type: ignore[arg-type]
@@ -537,6 +538,7 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
             select(ParsedNews)
             .join(NewsPickItem, ParsedNews.id == NewsPickItem.parsed_news_id)  # type: ignore[arg-type]
             .where(NewsPickItem.pick_id == latest_pick_subquery)
+            .order_by(ParsedNews.updated_at.desc())  # type: ignore[attr-defined]
             .options(
                 joinedload(ParsedNews.topic),
                 joinedload(ParsedNews.tags),
@@ -547,7 +549,7 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
         parsed_news_items = result.scalars().unique().all()
 
         logger.info(f"Found {len(parsed_news_items)} parsed news items from latest pick for user '{email}'")
-        return parsed_news_items[0]
+        return parsed_news_items
 
 
 class AsyncAccountRepositoryWithID(AsyncBaseRepositoryWithID[Account]):

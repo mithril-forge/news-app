@@ -24,7 +24,7 @@ export interface Tag {
 export interface NewsArticle {
   id: string;
   title: string;
-  summary: string;
+  description: string;
   image_url: string | null;
   updated_at: string;
   created_at: string;

@@ -15,7 +15,7 @@ export default function Header({ categories, activeCategory }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="text-3xl font-bold text-white hover:text-red-400 transition-colors">
-            NOVINAR.AI
+            Tvůj Novinář
           </Link>
           <nav className="hidden md:block">
             <CategoryNav 

@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Annotated, Any
 
 import structlog
-from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -17,12 +17,14 @@ from core.domain.account_service import AccountService
 from core.domain.news_service import NewsService
 from core.domain.schemas import (
     AccountDetails,
+    NewsPickResponse,
     ParsedNewsBasic,
     ParsedNewsResponseDetailed,
     TopicResponse,
 )
 from core.domain.topic_service import TopicService
 from core.engine import get_session
+from features.input_news_processing.domain.pick_generation_service import PickGenerationService
 from logger import init_logging
 
 init_logging()
@@ -30,6 +32,11 @@ logger = structlog.get_logger()
 
 environment = os.getenv("ENVIRONMENT")
 logger.info(f"Environment: {environment}")
+
+# Check if mocking is enabled via environment variable
+use_mocked_ai = os.getenv("USE_MOCKED_AI", "false").lower() == "true"
+logger.info(f"AI Mocking enabled: {use_mocked_ai}")
+
 default_limits: list[str] = []
 
 # Get CORS origins from environment variable
@@ -182,7 +189,7 @@ async def health_check() -> dict[str, str]:
 async def set_ai_prompt(prompt: str, user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> None:
     """Set default AI prompt for the user."""
     service = AccountService(session)
-    return await service.set_prompt(account_email=user_email, prompt=prompt)
+    return await service.set_prompt(account_email=user_email, prompt=prompt.strip())
 
 
 @app.get("/account_details/{user_email}")
@@ -195,28 +202,52 @@ async def get_account_details(
 
 
 @app.get("/get_latest_pick/{user_email}")
-async def get_latest_pick(user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> ParsedNewsBasic:
-    """Get latest pick for the user. The time is considered as the creation date of the pick."""
+async def get_latest_pick(user_email: str, session: Annotated[AsyncSession, Depends(get_session)]) -> NewsPickResponse:
+    """Get all news articles from the latest pick for the user along with the original prompt."""
     service = NewsService(session)
-    return await service.get_latest_pick_news(account_email=user_email)
+    return await service.get_latest_pick_for_user(account_email=user_email)
 
 
 @app.get("/get_pick_news/{pick_hash}")
-async def get_pick_news(
-    pick_hash: str, session: Annotated[AsyncSession, Depends(get_session)]
-) -> list[ParsedNewsBasic]:
+async def get_pick_news(pick_hash: str, session: Annotated[AsyncSession, Depends(get_session)]) -> NewsPickResponse:
     """
-    Returns News without the content for the hash of the pick. Useful when you want to get title, description and
-    other details for specific pick.
+    Returns News without the content for the hash of the pick along with the original prompt.
+    Useful when you want to get title, description and other details for specific pick.
     """
     # TODO: Differ between nonexisting hashes and empty ones -> empty list | 404
     service = NewsService(session)
-    return await service.get_news_by_pick_hash(pick_hash=pick_hash)
+    return await service.get_pick_by_hash(pick_hash=pick_hash)
 
 
-# Use cases:
-# 1. User will go to the page, enters a prompt for an email -> POST set_prompt
-# 2. User will go to the page, gets the prompt for an email and can change it -> GET account_details, POST set_prompt
-# 3. User will go to the page by link that he gets from email -> GET get_pick_news
-# 4. User will enter an email in the page and get the latest pick -> GET get_latest_pick /
-# Alternative GET hash for pick and use it in second request
+@app.post("/generate_pick")
+async def generate_pick_endpoint(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user_email: Annotated[str, Form()] = None,
+    prompt: Annotated[str, Form()] = None,
+) -> dict[str, Any]:
+    """
+    Unified pick generation endpoint that handles both anonymous and logged-in users.
+
+    For logged-in users: Pass user_email, prompt is fetched from database
+    For anonymous users: Pass prompt in form data, user_email should be None
+    """
+    service = PickGenerationService(session)
+
+    if user_email is not None:
+        return await service.generate_pick_logged_in_user(user_email=user_email, bypass_daily_limit=False)
+    elif prompt is not None:
+        prompt = prompt.strip()
+        return await service.generate_pick_anonymous(prompt=prompt)
+    else:
+        raise HTTPException(status_code=400, detail="Either user_email or prompt must be provided.")
+
+
+@app.post("/link_anonymous_pick_to_user")
+async def link_anonymous_pick_to_user(
+    user_email: Annotated[str, Form()],
+    pick_hash: Annotated[str, Form()],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> None:
+    """Links an anonymous pick (by hash) to a user account."""
+    service = NewsService(session)
+    await service.link_anonymous_pick_to_user(user_email=user_email, pick_hash=pick_hash)

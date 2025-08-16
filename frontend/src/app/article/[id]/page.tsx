@@ -19,9 +19,9 @@ import { NewsDetailed } from '@/types';
 import { getCategoryEmoji } from '@/lib/categoryEmoji';
 
 interface ArticlePageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 /**
@@ -30,18 +30,19 @@ interface ArticlePageProps {
 export async function generateMetadata({ 
   params 
 }: ArticlePageProps): Promise<Metadata> {
-  const article = await fetchNewsById(params.id);
+  const { id } = await params;
+  const article = await fetchNewsById(id);
   
   if (!article) {
     return {
-      title: 'Článek nenalezen | Novinář.AI',
+      title: 'Článek nenalezen | Tvůj Novinář',
       description: 'Požadovaný článek nebyl nalezen.',
     };
   }
   
   return {
-    title: `${article.title} | Novinář.AI`,
-    description: article.summary || 'Přečtěte si nejnovější zprávy na Novinář.AI',
+    title: `${article.title} | Tvůj Novinář`,
+    description: article.summary || 'Přečtěte si nejnovější zprávy na Tvůj Novinář',
     openGraph: {
       title: article.title,
       description: article.summary,
@@ -50,13 +51,16 @@ export async function generateMetadata({
   };
 }
 
-// Configure ISR revalidation
+// Configure ISR revalidation  
 export const revalidate = 3600; // Revalidate every hour
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
+  // Await params first
+  const { id } = await params;
+  
   // Parallel data fetching for efficiency
   const [article, topicsData] = await Promise.all([
-    fetchNewsById(params.id),
+    fetchNewsById(id),
     fetchTopics()
   ]);
   
@@ -69,7 +73,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const fullArticle = article as NewsDetailed;
   
   // Prepare categories for header/footer
-  const categories = ["Vše", ...topicsData.map(topic => topic.name)];
+  const categories = ["AI Feed", "Vše", ...topicsData.map(topic => topic.name)];
   const activeCategory = fullArticle.topic?.name || "Vše";
   
   // Get category emoji info

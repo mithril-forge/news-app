@@ -16,6 +16,8 @@ services:
     restart: unless-stopped
     env_file:
       - envs/common_dev.env
+      - .env
+
   redis:
     container_name: news-app-redis
     image: redis:8-alpine
@@ -30,6 +32,7 @@ services:
     command: redis-server --appendonly yes
     env_file:
       - envs/common_dev.env
+      - .env
   backend:
     container_name: news-app-backend
     ports:
@@ -50,6 +53,7 @@ services:
         condition: service_healthy
     env_file:
       - envs/common_dev.env
+      - .env
   dramatiq:
     container_name: news-app-dramatiq
     build:
@@ -68,6 +72,7 @@ services:
         condition: service_healthy
     env_file:
       - envs/common_dev.env
+      - .env
   frontend:
     container_name: news-app-frontend
     build:
@@ -83,6 +88,7 @@ services:
       - backend
     env_file:
       - envs/common_dev.env
+      - .env
 
 volumes:
   postgres_data:

@@ -16,11 +16,8 @@ down: ## Stop and remove all dev containers
 build: ## Rebuild development containers
 	docker compose build
 
-logsall: ## Show logs from all containers
-	docker compose logs -f
-
-logs: ## Show logs from specified container (e.g. `make logs backend`)
-	docker compose logs -f
+logs: ## Show logs from specified container (e.g. `make logs backend`) or all logs if no run args
+	docker compose logs -f $(RUN_ARGS)
 
 ruff: ## Run ruff check on backend and attempt to fix issues
 	$(MAKE) -C backend ruff
