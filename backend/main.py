@@ -44,6 +44,7 @@ if environment == Environment.DEVELOPMENT.value:
 
 class NewsSortBy(str, Enum):
     """Enum for different news sorting options"""
+
     LATEST = "latest"  # Sort by created_at/updated_at DESC
     RELEVANCE = "relevance"  # Sort by relevance_score DESC
 
@@ -109,7 +110,7 @@ async def log_requests(request: Request, call_next: Any) -> Any:
 # API endpoints
 @app.get("/topics")
 async def all_topics(
-        session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> list[TopicResponse]:
     """Get all topics"""
     service = TopicService(session)
@@ -126,10 +127,10 @@ async def specific_topic(topic_id: int, session: Annotated[AsyncSession, Depends
 
 @app.get("/news/topics/{topic_id}")
 async def news_by_topic(
-        session: Annotated[AsyncSession, Depends(get_session)],
-        topic_id: int,
-        skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
-        limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    topic_id: int,
+    skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
+    limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
 ) -> list[ParsedNewsBasic]:
     """Get news for a specific topic with pagination"""
     service = NewsService(session)
@@ -138,10 +139,10 @@ async def news_by_topic(
 
 @app.get("/news/latest")
 async def latest_news(
-        session: Annotated[AsyncSession, Depends(get_session)],
-        skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
-        limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
-        sort_by: Annotated[NewsSortBy, Query(description="How to sort the news items")] = NewsSortBy.LATEST,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
+    limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
+    sort_by: Annotated[NewsSortBy, Query(description="How to sort the news items")] = NewsSortBy.LATEST,
 ) -> list[ParsedNewsBasic]:
     """Get the latest news items with pagination"""
     service = NewsService(session)
@@ -153,9 +154,9 @@ async def latest_news(
 
 @app.get("/news/popular")
 async def popular_news(
-        session: Annotated[AsyncSession, Depends(get_session)],
-        limit: Annotated[int, Query(ge=1, le=20)] = 10,
-        days: Annotated[int, Query(ge=1, le=30)] = 3,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    limit: Annotated[int, Query(ge=1, le=20)] = 10,
+    days: Annotated[int, Query(ge=1, le=30)] = 3,
 ) -> list[ParsedNewsBasic]:
     """Get the most popular news by views"""
     service = NewsService(session=session)

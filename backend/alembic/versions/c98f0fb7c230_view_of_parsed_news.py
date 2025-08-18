@@ -5,40 +5,41 @@ Revises: 1473bcdf4d4c
 Create Date: 2025-08-15 14:59:14.406182
 
 """
-from typing import Sequence, Union
 
-from alembic import op
+from collections.abc import Sequence
+
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'c98f0fb7c230'
-down_revision: Union[str, None] = '1473bcdf4d4c'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "c98f0fb7c230"
+down_revision: str | None = "1473bcdf4d4c"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
-def upgrade():
+def upgrade() -> None:
     # Create configuration table
     op.create_table(
-        'relevance_config',
-        sa.Column('id', sa.Integer(), primary_key=True),
-        sa.Column('config_name', sa.String(50), nullable=False, unique=True),
-        sa.Column('importance_weight', sa.Float(), nullable=False),
-        sa.Column('views_weight', sa.Float(), nullable=False),
-        sa.Column('time_weight', sa.Float(), nullable=False),
-        sa.Column('time_decay_rate', sa.Float(), nullable=False),
-        sa.Column('time_window_days', sa.Integer(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), server_default=sa.func.now()),
-        sa.Column('updated_at', sa.DateTime(), server_default=sa.func.now()),
-        sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
-        sa.Column('description', sa.String(200), nullable=True),
+        "relevance_config",
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("config_name", sa.String(50), nullable=False, unique=True),
+        sa.Column("importance_weight", sa.Float(), nullable=False),
+        sa.Column("views_weight", sa.Float(), nullable=False),
+        sa.Column("time_weight", sa.Float(), nullable=False),
+        sa.Column("time_decay_rate", sa.Float(), nullable=False),
+        sa.Column("time_window_days", sa.Integer(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
+        sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now()),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
+        sa.Column("description", sa.String(200), nullable=True),
     )
 
     # Insert default configuration
     op.execute("""
         INSERT INTO relevance_config (
-            config_name, importance_weight, views_weight, time_weight, 
+            config_name, importance_weight, views_weight, time_weight,
             time_decay_rate, time_window_days, is_active, description
         ) VALUES (
             'default', 0.6, 0.3, 0.1, 0.05, 30, true,
@@ -50,17 +51,17 @@ def upgrade():
     op.execute("""
         CREATE MATERIALIZED VIEW news_relevance AS
         WITH active_config AS (
-            SELECT 
+            SELECT
                 importance_weight,
-                views_weight, 
+                views_weight,
                 time_weight,
                 time_decay_rate,
                 time_window_days
-            FROM relevance_config 
-            WHERE is_active = true 
+            FROM relevance_config
+            WHERE is_active = true
             LIMIT 1
         )
-        SELECT 
+        SELECT
             p.id,
             p.title,
             p.description,
@@ -75,20 +76,20 @@ def upgrade():
             (
                 active_config.importance_weight * (p.importancy / 10.0) +
                 active_config.views_weight * (
-                    LOG10(GREATEST(p.view_count, 1)) / 
+                    LOG10(GREATEST(p.view_count, 1)) /
                     GREATEST((SELECT LOG10(GREATEST(MAX(view_count), 1)) FROM parsed_news), 1)
                 ) +
-                active_config.time_weight * EXP(-active_config.time_decay_rate * 
+                active_config.time_weight * EXP(-active_config.time_decay_rate *
                     (EXTRACT(EPOCH FROM (NOW() - p.updated_at)) / 3600))
             ) as relevance_score,
 
             -- Individual components for analysis
             (
-                LOG10(GREATEST(p.view_count, 1)) / 
+                LOG10(GREATEST(p.view_count, 1)) /
                 GREATEST((SELECT LOG10(GREATEST(MAX(view_count), 1)) FROM parsed_news), 1)
             ) as normalized_views,
 
-            EXP(-active_config.time_decay_rate * 
+            EXP(-active_config.time_decay_rate *
                 (EXTRACT(EPOCH FROM (NOW() - p.updated_at)) / 3600)) as time_decay_factor,
 
             NOW() as score_calculated_at
@@ -120,17 +121,17 @@ def upgrade():
         BEGIN
             -- Deactivate all configs
             UPDATE relevance_config SET is_active = false;
-            
+
             -- Activate specified config
-            UPDATE relevance_config 
+            UPDATE relevance_config
             SET is_active = true, updated_at = NOW()
             WHERE config_name = config_name_param;
-            
+
             -- Check if config was found
             IF NOT FOUND THEN
                 RAISE EXCEPTION 'Configuration "%" not found', config_name_param;
             END IF;
-            
+
             RAISE NOTICE 'Activated configuration: %', config_name_param;
         END;
         $$ LANGUAGE plpgsql;
@@ -149,16 +150,16 @@ def upgrade():
         BEGIN
             -- Get current active config name
             SELECT config_name INTO current_config_name
-            FROM relevance_config 
+            FROM relevance_config
             WHERE is_active = true;
-            
+
             IF current_config_name IS NULL THEN
                 RAISE EXCEPTION 'No active configuration found';
             END IF;
-            
+
             -- Update the active configuration
-            UPDATE relevance_config 
-            SET 
+            UPDATE relevance_config
+            SET
                 importance_weight = importance_w,
                 views_weight = views_w,
                 time_weight = time_w,
@@ -166,10 +167,10 @@ def upgrade():
                 time_window_days = COALESCE(window_days, time_window_days),
                 updated_at = NOW()
             WHERE is_active = true;
-            
+
             -- Refresh the materialized view
             REFRESH MATERIALIZED VIEW news_relevance;
-            
+
             RAISE NOTICE 'Updated weights and refreshed materialized view';
         END;
         $$ LANGUAGE plpgsql;
@@ -195,13 +196,13 @@ def upgrade():
                 preset_name, importance_w, views_w, time_w,
                 decay_rate, window_days, false, description_text
             );
-            
+
             -- Activate if requested
             IF activate THEN
                 PERFORM set_active_relevance_config(preset_name);
                 REFRESH MATERIALIZED VIEW news_relevance;
             END IF;
-            
+
             RAISE NOTICE 'Created configuration preset: %', preset_name;
         END;
         $$ LANGUAGE plpgsql;
@@ -238,9 +239,9 @@ def upgrade():
     """)
 
 
-def downgrade():
+def downgrade() -> None:
     op.execute("DROP MATERIALIZED VIEW IF EXISTS news_relevance")
     op.execute("DROP FUNCTION IF EXISTS set_active_relevance_config(text)")
     op.execute("DROP FUNCTION IF EXISTS update_relevance_weights(float, float, float, float, int)")
     op.execute("DROP FUNCTION IF EXISTS create_relevance_preset(text, float, float, float, float, int, text, boolean)")
-    op.drop_table('relevance_config')
+    op.drop_table("relevance_config")

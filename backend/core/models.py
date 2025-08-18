@@ -95,8 +95,8 @@ class ParsedNewsRelevancy(SQLModel, table=True):
     id: int = Field(primary_key=True)
     title: str
     description: str
-    topic_name: Optional[str]
-    topic_id: Optional[int]
+    topic_name: str | None
+    topic_id: int | None
     tags: str
     updated_at: datetime
     view_count: int

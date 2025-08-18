@@ -9,7 +9,6 @@ import structlog
 from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
-
 from constants import CZECH_DAYS, CZECH_MONTHS
 from core.domain.account_service import AccountService
 from core.domain.news_service import NewsService
@@ -107,7 +106,7 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
 
 @dramatiq.actor(max_retries=1)
 def choose_new_articles_task(
-        input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
+    input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
 ) -> None:
     """Task that takes passed input_news_ids also query for the nonconnected older input news (by param delta).
     Then it queries AI model to choose new parsed articles and creates tasks for their generation"""
@@ -231,20 +230,21 @@ async def async_generate_picture_for_news(parsed_news_id: int) -> None:
     periodic=cron(REFRESH_MATERIALIZED_VIEW_CRON),
     max_retries=10,
     min_backoff=30000,  # 30 seconds
-    max_backoff=300000  # 5 minutes
+    max_backoff=300000,  # 5 minutes
 )
-def refresh_materialized_view():
-    """ Refreshes materialized view each few seconds"""
+def refresh_materialized_view() -> None:
+    """Refreshes materialized view each few seconds"""
     logger.info("Refreshing materialized view of parsed news...")
     asyncio.run(async_refresh_materialized_view())
     logger.info("Materialized view of parsed news finished.")
 
 
-async def async_refresh_materialized_view():
-    """ Async wrapper"""
+async def async_refresh_materialized_view() -> None:
+    """Async wrapper"""
     async with get_session_context() as db_session:
         news_service = NewsService(session=db_session)
         await news_service.refresh_materialized_view()
+
 
 @dramatiq.actor(periodic=cron("00 08 * * *"))
 def distribute_daily_picks_task() -> None:

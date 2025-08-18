@@ -10,6 +10,7 @@ from core.converters import (
     news_to_detailed_response,
     news_to_response,
     orm_list_to_pydantic,
+    relevance_parsed_news_list_to_basic_response,
 )
 from core.domain.schemas import (
     ParsedInputNewsTitles,
@@ -26,8 +27,6 @@ from core.repository import (
     AsyncTopicRepositoryWithID,
 )
 
-from core.converters import relevance_parsed_news_list_to_basic_response
-
 logger = structlog.get_logger()
 
 
@@ -39,8 +38,8 @@ class NewsService:
         self.tag_repo = AsyncTagRepositoryWithID(session)
         logger.info("NewsService initialized")
 
-    async def refresh_materialized_view(self):
-        """ Refreshes materialized view so order of articles is generated and updated"""
+    async def refresh_materialized_view(self) -> None:
+        """Refreshes materialized view so order of articles is generated and updated"""
         await self.news_repo.refresh_materialized_view()
 
     async def get_tags(self) -> list[TagResponse]:

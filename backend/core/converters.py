@@ -13,9 +13,7 @@ from core.domain.schemas import (
     TagResponse,
     TopicResponse,
 )
-from core.models import ParsedNews
-
-from core.models import ParsedNewsRelevancy
+from core.models import ParsedNews, ParsedNewsRelevancy
 
 M = TypeVar("M", bound=SQLModel)
 P = TypeVar("P", bound=BaseModel)
@@ -184,8 +182,8 @@ def relevance_parsed_news_to_basic_response(news: ParsedNewsRelevancy) -> Parsed
         topic=TopicResponse(id=news.topic_id, name=news.topic_name) if news.topic_id and news.topic_name else None,
         created_at=news.updated_at,  # Using updated_at as created_at since it's not in materialized view
         updated_at=news.updated_at,
-        tags=news.tags.split(', ') if news.tags else [],
-        importancy=news.importancy
+        tags=news.tags.split(", ") if news.tags else [],
+        importancy=news.importancy,
     )
 
 
@@ -201,7 +199,7 @@ def relevance_parsed_news_list_to_basic_response(news_list: Sequence[ParsedNewsR
     """
     return [relevance_parsed_news_to_basic_response(news) for news in news_list]
 
-  
+
 def news_list_to_titles_response(news_list: Sequence[ParsedNews]) -> list[ParsedInputNewsTitles]:
     """
     Convert a list of ParsedNews ORM models to NewsTitleResponse schemas.

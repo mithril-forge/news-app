@@ -22,10 +22,10 @@ from core.models import (
     NewsPick,
     NewsPickItem,
     ParsedNews,
+    ParsedNewsRelevancy,
     ParsedNewsTagLink,
     Tag,
     Topic,
-    ParsedNewsRelevancy
 )
 
 G = TypeVar("G", bound=BaseModel)
@@ -241,7 +241,7 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
         super().__init__(session, ParsedNews)
         logger.info("AsyncParsedNewsRepository initialized")
 
-    async def refresh_materialized_view(self):
+    async def refresh_materialized_view(self) -> None:
         """Refresh the news relevance materialized view"""
         await self.session.execute(text("REFRESH MATERIALIZED VIEW news_relevance"))
 
@@ -258,10 +258,7 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
         """
         logger.debug(f"Getting latest news by relevance (skip: {skip}, limit: {limit})")
         query = (
-            select(ParsedNewsRelevancy)
-            .order_by(ParsedNewsRelevancy.relevance_score.desc())
-            .offset(skip)
-            .limit(limit)
+            select(ParsedNewsRelevancy).order_by(ParsedNewsRelevancy.relevance_score.desc()).offset(skip).limit(limit)  # type: ignore[attr-defined]
         )
         result = await self.session.execute(query)
         records = result.scalars().all()
@@ -384,8 +381,8 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
         news = await self.add(news_data)
 
         # Add tags
-        for text in tag_texts:
-            tag = await tag_repo.get_or_create(text)
+        for txt in tag_texts:
+            tag = await tag_repo.get_or_create(txt)
             # Create link manually
             link = ParsedNewsTagLink(news_item_id=news.id, tag_id=tag.id)
             self.session.add(link)
@@ -441,8 +438,8 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
             await self.session.delete(link)
 
         logger.debug(f"Adding new tag links: {tag_texts}")
-        for text in tag_texts:
-            tag = await tag_repo.get_or_create(text)
+        for txt in tag_texts:
+            tag = await tag_repo.get_or_create(txt)
             link = ParsedNewsTagLink(news_item_id=news_id, tag_id=tag.id)
             self.session.add(link)
 
