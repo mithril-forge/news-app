@@ -42,7 +42,7 @@ def upgrade() -> None:
             config_name, importance_weight, views_weight, time_weight,
             time_decay_rate, time_window_days, is_active, description
         ) VALUES (
-            'default', 0.6, 0.3, 0.1, 0.05, 30, true,
+            'time', 0.2, 0.2, 0.6, 0.15, 30, true,
             'Default relevance scoring algorithm'
         )
     """)
