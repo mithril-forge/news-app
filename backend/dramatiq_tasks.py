@@ -42,7 +42,7 @@ def scrap_articles_task(hours_delta: int = 24) -> None:
     it adjusts the article in DB
     """
     logger.info(f"Starting scrap_articles_task with hours_delta: {hours_delta}")
-    news_ids =asyncio.run(async_scrap_articles_task(hours_delta=hours_delta))
+    news_ids = asyncio.run(async_scrap_articles_task(hours_delta=hours_delta))
     choose_connected_articles_task.send(input_news_ids=news_ids)
     logger.info(f"Ended scrap_articles_task with hours_delta: {hours_delta}")
 
