@@ -15,33 +15,6 @@ export default function ArticleContent({
   className = '' 
 }: ArticleContentProps) {
 
-  // Handle HTML content
-  if (contentType === 'html') {
-    return (
-      <div 
-        className={`prose prose-lg max-w-none ${contentStyles} ${className}`}
-        dangerouslySetInnerHTML={{ __html: content }} 
-      />
-    );
-  }
-
-  // Handle plain text content
-  if (contentType === 'text') {
-    const paragraphs = content
-      .split(/\n\s*\n/)
-      .filter(paragraph => paragraph.trim().length > 0);
-    
-    return (
-      <div className={`prose prose-lg max-w-none ${contentStyles} ${className}`}>
-        {paragraphs.map((paragraph, index) => (
-          <p key={index} className="mb-6 text-lg leading-relaxed text-gray-700">
-            {paragraph.trim()}
-          </p>
-        ))}
-      </div>
-    );
-  }
-
   // Enhanced styles for better typography (your original styling)
   const contentStyles = `
     prose-headings:text-gray-800 
@@ -73,29 +46,33 @@ export default function ArticleContent({
     prose-code:text-sm
   `;
 
-  // Handle HTML content
-  if (contentType === 'html') {
-    return (
-      <div 
-        className={`prose prose-lg max-w-none ${contentStyles} ${className}`}
-        dangerouslySetInnerHTML={{ __html: content }} 
-      />
-    );
-  }
-
-  // Handle markdown content with react-markdown (simple approach)
   return (
     <div className={`prose prose-lg max-w-none ${contentStyles} ${className}`}>
-      <ReactMarkdown>
-        {content}
-      </ReactMarkdown>
-    </div>
-  );
-
-  // Handle markdown content with react-markdown (simple approach)
-  return (
-    <div className={`prose prose-lg max-w-none ${contentStyles} ${className}`}>
-      <ReactMarkdown>
+      <  ReactMarkdown     components={{
+          // Custom component styling
+          h1: ({children}) => <h1 className="text-3xl font-bold text-gray-800 mb-8 mt-12">{children}</h1>,
+          h2: ({children}) => <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-10">{children}</h2>,
+          h3: ({children}) => <h3 className="text-xl font-bold text-gray-800 mb-4 mt-8">{children}</h3>,
+          p: ({children}) => <p className="mb-6 text-lg leading-relaxed text-gray-700">{children}</p>,
+          a: ({href, children}) => (
+            <a href={href} className="text-blue-600 hover:text-blue-800">
+              {children}
+            </a>
+          ),
+          strong: ({children}) => <strong className="text-gray-800">{children}</strong>,
+          em: ({children}) => <em className="text-gray-600">{children}</em>,
+          code: ({children}) => (
+            <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+              {children}
+            </code>
+          ),
+          blockquote: ({children}) => (
+            <blockquote className="border-l-4 border-blue-500 pl-6 italic bg-blue-50 py-4 rounded-r-lg">
+              {children}
+            </blockquote>
+          ),
+        }}
+      >
         {content}
       </ReactMarkdown>
     </div>
