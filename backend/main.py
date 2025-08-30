@@ -1,6 +1,7 @@
 import datetime
 import os
 import time
+from enum import Enum
 from typing import Annotated, Any
 
 import structlog
@@ -39,6 +40,14 @@ if environment == Environment.DEVELOPMENT.value:
     origins = [
         "*",
     ]
+
+
+class NewsSortBy(str, Enum):
+    """Enum for different news sorting options"""
+
+    LATEST = "latest"  # Sort by created_at/updated_at DESC
+    RELEVANCE = "relevance"  # Sort by relevance_score DESC
+
 
 app = FastAPI()
 
@@ -133,10 +142,14 @@ async def latest_news(
     session: Annotated[AsyncSession, Depends(get_session)],
     skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
     limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
+    sort_by: Annotated[NewsSortBy, Query(description="How to sort the news items")] = NewsSortBy.LATEST,
 ) -> list[ParsedNewsBasic]:
     """Get the latest news items with pagination"""
     service = NewsService(session)
-    return await service.get_latest_news(skip=skip, limit=limit)
+    if sort_by == NewsSortBy.LATEST:
+        return await service.get_latest_news(skip=skip, limit=limit)
+    else:
+        return await service.get_latest_news_by_relevancy(skip=skip, limit=limit)
 
 
 @app.get("/news/popular")

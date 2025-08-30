@@ -63,8 +63,8 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
                 {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}
               </span>
               {article.tags?.slice(0, 2).map(tag => (
-                <span key={tag.id} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
-                  {tag.text}
+                <span key={tag} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
+                  {tag}
                 </span>
               ))}
             </div>

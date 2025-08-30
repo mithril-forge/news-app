@@ -74,7 +74,9 @@ async def generate_and_connect_news(delta: timedelta) -> None:
         logger.info(f"Input news groups picked for enrichment: {[new_news_groups]}")
         for group in new_news_groups:
             logger.info(f"Creating news articles with ids: {group}")
-            await article_generation_service.create_new_article_from_input_news(input_news_ids=group)
+            await article_generation_service.create_new_article_from_input_news(
+                input_news_ids=group.input_news_ids, importancy=group.importancy
+            )
 
 
 async def generate_picture_for_news(news_id: int, commit_transaction: bool = False) -> None:

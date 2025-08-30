@@ -3,6 +3,7 @@
  */
 import { fetchApi } from '@/services/https';
 import { NewsArticle } from '@/types';
+import { sort } from "next/dist/build/webpack/loaders/css-loader/src/utils";
 
 /**
  * Fetches all news articles for a specific topic
@@ -25,14 +26,16 @@ export const fetchNewsByTopic = async (
  * Fetches the latest news articles
  * @param limit - The number of latest articles to retrieve (default: 10)
  * @param offset - Number of articles to skip for pagination (default: 0)
+ * @param sort_by - Sort by relevance or without the filter
  * @returns Promise with array of news articles
  */
 export const fetchLatestNews = async (
   limit = 10,
-  offset = 0
+  offset = 0,
+  sort_by = "relevance"
 ): Promise<NewsArticle[]> => {
   return fetchApi<NewsArticle[]>(
-    `/news/latest?limit=${limit}&skip=${offset}`
+    `/news/latest?limit=${limit}&skip=${offset}&sort_by=${sort_by}`
   );
 };
 

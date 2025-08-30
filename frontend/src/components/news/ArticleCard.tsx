@@ -48,7 +48,7 @@ export default function ArticleCard({ item }: ArticleCardProps) {
         >
           {categoryInfo.emoji}
         </div>
-        
+   
         {/* Content */}
         <div className="flex-1 text-center sm:text-left">
           <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
@@ -81,8 +81,8 @@ export default function ArticleCard({ item }: ArticleCardProps) {
           {item.tags && item.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3 justify-center sm:justify-start">
               {item.tags.slice(0, 2).map(tag => (
-                <span key={tag.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                  {tag.text}
+                <span key={tag} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  {tag}
                 </span>
               ))}
             </div>

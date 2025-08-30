@@ -10,6 +10,7 @@ from core.converters import (
     news_to_detailed_response,
     news_to_response,
     orm_list_to_pydantic,
+    relevance_parsed_news_list_to_basic_response,
 )
 from core.domain.schemas import (
     ParsedInputNewsTitles,
@@ -37,6 +38,10 @@ class NewsService:
         self.tag_repo = AsyncTagRepositoryWithID(session)
         logger.info("NewsService initialized")
 
+    async def refresh_materialized_view(self) -> None:
+        """Refreshes materialized view so order of articles is generated and updated"""
+        await self.news_repo.refresh_materialized_view()
+
     async def get_tags(self) -> list[TagResponse]:
         logger.debug("Getting all tags")
         tag_models = await self.tag_repo.get_all()
@@ -51,6 +56,13 @@ class NewsService:
         latest_news = await self.news_repo.get_latest(skip=skip, limit=limit)
         logger.debug(f"Retrieved {len(latest_news)} latest news items")
         return news_list_to_response(latest_news)
+
+    async def get_latest_news_by_relevancy(self, skip: int, limit: int) -> list[ParsedNewsBasic]:
+        """Get the latest N news items"""
+        logger.info(f"Fetching latest news (skip={skip}, limit={limit})")
+        latest_news = await self.news_repo.get_latest_by_relevance(skip=skip, limit=limit)
+        logger.debug(f"Retrieved {len(latest_news)} latest news items")
+        return relevance_parsed_news_list_to_basic_response(latest_news)
 
     async def get_most_popular_news(self, period: datetime.timedelta, limit: int) -> list[ParsedNewsBasic]:
         logger.info(f"Fetching {limit} most popular news for {period}")
@@ -86,7 +98,7 @@ class NewsService:
         logger.debug(f"Retrieved news ids: {[news.id for news in sorted_news]}")
         return news_list_to_response(sorted_news)
 
-    async def create_news(self, news_data: ParsedNewsCreate) -> ParsedNewsResponseDetailed:
+    async def create_news(self, news_data: ParsedNewsCreate, importancy: int) -> ParsedNewsResponseDetailed:
         """Create a new news item with tags"""
         logger.info(f"Creating new article with title: {news_data.title}")
         logger.debug(f"News data creation content: {news_data.model_dump_json(exclude={'content', 'description'})}")
@@ -98,6 +110,7 @@ class NewsService:
         news_dict["image_url"] = (
             "https://st2.depositphotos.com/4431055/11871/i/600/depositphotos_118715222-stock-photo-businessman-reading-newspaper.jpg"
         )
+        news_dict["importancy"] = importancy
         news = await self.news_repo.prepare_with_tags(news_dict, tag_texts)
         logger.info(f"Created news item with ID: {news.id}")
         news_id = news.id

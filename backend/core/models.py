@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import CheckConstraint, Column, Integer
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -55,7 +56,6 @@ class Tag(BaseModelWithID, table=True):
 
 class ParsedNews(BaseModelWithID, table=True):
     __tablename__ = "parsed_news"
-
     title: str = Field()
     description: str = Field()
     content: str = Field()
@@ -63,7 +63,9 @@ class ParsedNews(BaseModelWithID, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     view_count: int = Field(default=0, sa_column_kwargs={"server_default": "0"})
-
+    importancy: int = Field(
+        default=5, sa_column=Column(Integer, CheckConstraint("importancy <= 10"), server_default="5", nullable=False)
+    )
     tags: Mapped[list["Tag"]] = Relationship(
         back_populates="news_items",
         link_model=ParsedNewsTagLink,
@@ -84,6 +86,25 @@ class ParsedNews(BaseModelWithID, table=True):
         sa_relationship_kwargs={"lazy": "selectin"},
     )
     news_picks: Mapped[list["NewsPickItem"]] = Relationship(back_populates="parsed_news")
+
+
+class ParsedNewsRelevancy(SQLModel, table=True):
+    __tablename__ = "news_relevance"
+
+    # Core fields from your original model
+    id: int = Field(primary_key=True)
+    title: str
+    description: str
+    topic_name: str | None
+    topic_id: int | None
+    tags: str
+    updated_at: datetime
+    view_count: int
+    importancy: int
+    relevance_score: float
+    normalized_views: float
+    time_decay_factor: float
+    score_calculated_at: datetime
 
 
 class InputNews(BaseModelWithID, table=True):

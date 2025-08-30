@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class Topic(BaseModel):
@@ -76,8 +76,12 @@ class InitConnectionResult(BaseModel):
 
 class InitGenerationResult(BaseModel):
     input_news_ids: list[int]
-    # TODO: Try to limit the number from 0 to 10
     importancy: int
+
+    @field_validator("importancy")
+    @classmethod
+    def limit_importancy(cls, v: int) -> int:
+        return min(v, 10)
 
 
 class ImageDetail(BaseModel):
