@@ -42,11 +42,12 @@ def scrap_articles_task(hours_delta: int = 24) -> None:
     it adjusts the article in DB
     """
     logger.info(f"Starting scrap_articles_task with hours_delta: {hours_delta}")
-    asyncio.run(async_scrap_articles_task(hours_delta=hours_delta))
+    news_ids = asyncio.run(async_scrap_articles_task(hours_delta=hours_delta))
+    choose_connected_articles_task.send(input_news_ids=news_ids)
     logger.info(f"Ended scrap_articles_task with hours_delta: {hours_delta}")
 
 
-async def async_scrap_articles_task(hours_delta: int) -> None:
+async def async_scrap_articles_task(hours_delta: int) -> list[int]:
     """Async wrapper for scrap_articles_task"""
     delta = datetime.timedelta(hours=hours_delta)
     local_archive_folder = os.getenv("LOCAL_ARCHIVE_FOLDER")
@@ -58,8 +59,8 @@ async def async_scrap_articles_task(hours_delta: int) -> None:
         input_news_service = InputNewsService(session=session, archive=local_archive)
         result = await input_news_service.scrap_and_save_input_news(delta=delta, adjust_parse_date=True)
         news_ids = [res.id for res in result]
-    logger.info(f"Parsed {len(news_ids)} news items: {news_ids}, sending to connection task")
-    choose_connected_articles_task.send(input_news_ids=news_ids)
+    logger.info(f"Parsed {len(news_ids)} news items: {news_ids}")
+    return news_ids
 
 
 @dramatiq.actor(max_retries=1)
