@@ -43,7 +43,7 @@ class ParsedNewsCreate(BaseModel):
     title: str
     description: str
     image_url: str
-    topic_id: int | None
+    topic_id: int
     tags: list[str]
     content: str
     news_scope: NewsScope | None
@@ -53,7 +53,7 @@ class ParsedNewsUpdate(BaseModel):
     title: str
     description: str
     image_url: str
-    topic_id: int | None
+    topic_id: int
     tags: list[str]
     content: str
     id: int
