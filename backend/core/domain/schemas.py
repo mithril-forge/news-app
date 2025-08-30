@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from backend.core.config import NewsScope
+
 
 class TopicCreate(BaseModel):
     name: str
@@ -44,6 +46,7 @@ class ParsedNewsCreate(BaseModel):
     topic_id: int | None
     tags: list[str]
     content: str
+    news_scope: NewsScope | None
 
 
 class ParsedNewsUpdate(BaseModel):
@@ -54,6 +57,8 @@ class ParsedNewsUpdate(BaseModel):
     tags: list[str]
     content: str
     id: int
+    news_scope: NewsScope | None
+
 
 
 class ParsedNewsBasic(BaseModel):
