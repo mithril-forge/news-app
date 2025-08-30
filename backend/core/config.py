@@ -1,6 +1,6 @@
 from enum import Enum
 
 
-class NewsScope(Enum, str):
-    FOREIGN = "foreign"
-    DOMESTIC = "domestic"
+class NewsScope(str, Enum):
+    FOREIGN = "FOREIGN"
+    DOMESTIC = "DOMESTIC"

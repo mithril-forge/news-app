@@ -7,7 +7,7 @@ from sqlalchemy import CheckConstraint, Column, Integer
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel
 
-from backend.core.config import NewsScope
+from core.config import NewsScope
 
 
 class BaseModel(SQLModel):

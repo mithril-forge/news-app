@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.core.config import NewsScope
+from core.config import NewsScope
 
 
 class TopicCreate(BaseModel):
