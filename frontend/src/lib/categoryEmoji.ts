@@ -6,57 +6,67 @@ export interface CategoryEmoji {
 }
 
 export const categoryEmojiMap: Record<string, CategoryEmoji> = {
-  'Politika': { 
-    emoji: '🏛️', 
-    color: '#667eea', 
-    bgColor: 'linear-gradient(135deg, #667eea20, #764ba220)' 
+  Politika: {
+    emoji: "🏛️",
+    color: "#8B5A3C", // hnědá pro institucionální charakter
+    bgColor: "linear-gradient(135deg, #8B5A3C20, #A0522D20)",
   },
-  'Sport': { 
-    emoji: '⚽', 
-    color: '#f093fb', 
-    bgColor: 'linear-gradient(135deg, #f093fb20, #f5576c20)' 
+  Sport: {
+    emoji: "⚽",
+    color: "#2E8B57", // zelená jako trávník
+    bgColor: "linear-gradient(135deg, #2E8B5720, #228B2220)",
   },
-  'Technologie': { 
-    emoji: '💻', 
-    color: '#4facfe', 
-    bgColor: 'linear-gradient(135deg, #4facfe20, #00f2fe20)' 
+  Kultura: {
+    emoji: "🎭",
+    color: "#8A2BE2", // fialová pro kreativitu
+    bgColor: "linear-gradient(135deg, #8A2BE220, #9932CC20)",
   },
-  'Kultura': { 
-    emoji: '🎭', 
-    color: '#43e97b', 
-    bgColor: 'linear-gradient(135deg, #43e97b20, #38f9d720)' 
+  Ekonomika: {
+    emoji: "📈",
+    color: "#FFD700", // zlatá pro peníze/hodnoty
+    bgColor: "linear-gradient(135deg, #FFD70020, #FFA50020)",
   },
-  'Ekonomika': { 
-    emoji: '📈', 
-    color: '#fa709a', 
-    bgColor: 'linear-gradient(135deg, #fa709a20, #fee14020)' 
+  Věda: {
+    emoji: "🔬",
+    color: "#0066CC", // modrá pro vědu/technologie
+    bgColor: "linear-gradient(135deg, #0066CC20, #0052A320)",
   },
-  'Věda': { 
-    emoji: '🔬', 
-    color: '#667eea', 
-    bgColor: 'linear-gradient(135deg, #667eea20, #764ba220)' 
+  Domácí: {
+    emoji: "🏠",
+    color: "#D2691E", // oranžová pro domov/teplo
+    bgColor: "linear-gradient(135deg, #D2691E20, #CD853F20)",
   },
-  'Zdraví': { 
-    emoji: '🏥', 
-    color: '#27ae60', 
-    bgColor: 'linear-gradient(135deg, #27ae6020, #2ecc7120)' 
+  Zahraničí: {
+    emoji: "🌍",
+    color: "#4682B4", // modrá pro svět/oceány
+    bgColor: "linear-gradient(135deg, #4682B420, #5F9EA020)",
   },
-  'Domácí': { 
-    emoji: '🏠', 
-    color: '#e67e22', 
-    bgColor: 'linear-gradient(135deg, #e67e2220, #d35400020)' 
+  Vše: {
+    emoji: "📰",
+    color: "#708090", // šedá pro neutralitu
+    bgColor: "linear-gradient(135deg, #70809020, #77889920)",
   },
-  'Zahraničí': { 
-    emoji: '🌍', 
-    color: '#3498db', 
-    bgColor: 'linear-gradient(135deg, #3498db20, #2980b920)' 
+  Počasí: {
+    emoji: "⛅️",
+    color: "#87CEEB", // nebesky modrá
+    bgColor: "linear-gradient(135deg, #87CEEB20, #ADD8E620)",
   },
-  'Vše': { 
-    emoji: '📰', 
-    color: '#e74c3c', 
-    bgColor: 'linear-gradient(135deg, #e74c3c20, #c0392b20)' 
+  Společnost: {
+    emoji: "👥",
+    color: "#E6194B", // červená pro sociální témata
+    bgColor: "linear-gradient(135deg, #E6194B20, #DC143C20)",
+  },
+  Krimi: {
+    emoji: "🚨",
+    color: "#CC0000", // výrazně červená pro nebezpečí
+    bgColor: "linear-gradient(135deg, #CC000020, #B7001F20)",
+  },
+  Ostatní: {
+    emoji: "🔗",
+    color: "#696969", // tmavě šedá pro "ostatní"
+    bgColor: "linear-gradient(135deg, #69696920, #80808020)",
   }
-};
+}
 
 /**
  * Získá emoji informace pro danou kategorii
@@ -64,5 +74,5 @@ export const categoryEmojiMap: Record<string, CategoryEmoji> = {
  * @returns CategoryEmoji objekt s emoji, barvou a pozadím
  */
 export const getCategoryEmoji = (categoryName: string): CategoryEmoji => {
-  return categoryEmojiMap[categoryName] || categoryEmojiMap['Vše'];
+  return categoryEmojiMap[categoryName] || categoryEmojiMap["Vše"];
 };
