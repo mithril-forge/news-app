@@ -53,7 +53,8 @@ export default function ArticleContent({
           h1: ({children}) => <h1 className="text-3xl font-bold text-gray-800 mb-8 mt-12">{children}</h1>,
           h2: ({children}) => <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-10">{children}</h2>,
           h3: ({children}) => <h3 className="text-xl font-bold text-gray-800 mb-4 mt-8">{children}</h3>,
-          p: ({children}) => <p className="mb-6 text-lg leading-relaxed text-gray-700">{children}</p>,
+          h4: ({children}) => <h4 className="text-l font-bold text-gray-800 mb-4 mt-6">{children}</h4>,
+        p: ({children}) => <p className="mb-6 text-lg leading-relaxed text-gray-700">{children}</p>,
           a: ({href, children}) => (
             <a href={href} className="text-blue-600 hover:text-blue-800">
               {children}
