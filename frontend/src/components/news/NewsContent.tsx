@@ -4,6 +4,7 @@ import FeaturedArticle from './FeaturedArticle';
 import ArticleCard from './ArticleCard';
 import LoadMoreNews from './LoadMoreNews';
 import PopularNewsSidebar from './PopularNewsSidebar';
+import SortableNewsWrapper from './SortableNewsWrapper';
 
 interface NewsContentProps {
   /** Array of news articles to display */
@@ -14,10 +15,10 @@ interface NewsContentProps {
   topicId?: string;
 }
 
-export default function NewsContent({ 
-  news, 
+export default function NewsContent({
+  news,
   activeCategory,
-  topicId 
+  topicId
 }: NewsContentProps) {
   // Handle empty state
   if (news.length === 0) {
@@ -37,7 +38,17 @@ export default function NewsContent({
     );
   }
 
-  // Extract featured article and remaining articles
+  // If this is the main page, wrap with sortable functionality
+  if (activeCategory === "Vše") {
+    return (
+      <SortableNewsWrapper
+        initialNews={news}
+        activeCategory={activeCategory}
+        topicId={topicId}
+      />
+    );
+  }
+
   const featuredArticle = news[0];
   const remainingArticles = news.slice(1);
 
@@ -45,16 +56,23 @@ export default function NewsContent({
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Main content area */}
       <div className="lg:col-span-3">
+        {/* Category title */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {activeCategory}
+          </h2>
+        </div>
+
         {/* Featured article */}
         <FeaturedArticle article={featuredArticle} />
-        
+
         {/* Article grid */}
         <div className="grid grid-cols-1 gap-6">
           {remainingArticles.map(article => (
             <ArticleCard key={article.id} article={article} />
           ))}
         </div>
-        
+
         {/* Load more articles */}
         <LoadMoreNews
           activeCategory={activeCategory}
@@ -62,7 +80,7 @@ export default function NewsContent({
           initialCount={news.length}
         />
       </div>
-      
+
       {/* Sidebar */}
       <div className="lg:col-span-1">
         <PopularNewsSidebar />
