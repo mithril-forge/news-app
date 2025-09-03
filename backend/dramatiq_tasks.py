@@ -91,8 +91,9 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
             ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
         parsed_news_ids = await article_generation_service.connect_input_news_to_existing_articles(
-            input_news_ids=input_news_ids, input_news_hours_delta=CONNECTING_INPUT_NEWS_LIMIT,
-            parsed_news_hours_delta=CONNECTING_PARSED_NEWS_LIMIT
+            input_news_ids=input_news_ids,
+            input_news_hours_delta=CONNECTING_INPUT_NEWS_LIMIT,
+            parsed_news_hours_delta=CONNECTING_PARSED_NEWS_LIMIT,
         )
         logger.info(f"Created {len(parsed_news_ids)} regeneration tasks: {parsed_news_ids}")
         for parsed_news_id in parsed_news_ids:
@@ -110,7 +111,7 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
 
 @dramatiq.actor(max_retries=1)
 def choose_new_articles_task(
-        input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
+    input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
 ) -> None:
     """Task that takes passed input_news_ids also query for the nonconnected older input news (by param delta).
     Then it queries AI model to choose new parsed articles and creates tasks for their generation"""
@@ -284,7 +285,7 @@ def create_daily_pick_for_account(account_id: int, account_email: str, date: dat
 
 
 async def async_create_daily_pick_for_account(
-        account_id: int, account_email: str, date: datetime.date, prompt: str
+    account_id: int, account_email: str, date: datetime.date, prompt: str
 ) -> None:
     """Create a daily pick for an account."""
     czech_date_str = f"{CZECH_DAYS[date.weekday()]}, {date.day}. {CZECH_MONTHS[date.month]} {date.year}"
