@@ -120,7 +120,7 @@ class ArticleGenerationService:
         logger.debug(f"Image search results: {result_list}")
 
     async def connect_input_news_to_existing_articles(
-        self, input_news_ids: list[int], parsed_news_hours_delta: int = 72
+        self, input_news_ids: list[int], parsed_news_hours_delta: int = 24, input_news_hours_delta: int = 72
     ) -> list[int]:
         """
         Uses AI to identify which new input news items should be connected to existing parsed articles
@@ -128,7 +128,10 @@ class ArticleGenerationService:
 
         Args:
             input_news_ids: List of input news IDs to process for connections
-            parsed_news_hours_delta: Hours to look back for existing parsed news (default: 72)
+            parsed_news_hours_delta: Hours to look back for existing parsed news (default: 24)
+            input_news_hours_delta: Allowed hours for all input news of parsed ones, if not sufficient, the parsed news
+            won't be connected to any input news
+
 
         Returns:
             List of parsed news IDs that received new connections
@@ -139,10 +142,13 @@ class ArticleGenerationService:
         )
 
         parsed_news_delta = timedelta(hours=parsed_news_hours_delta)
+        input_news_delta = timedelta(hours=input_news_hours_delta)
         recent_input_news = await self.input_news_service.get_input_news_by_ids_lite(
             input_news_ids=input_news_ids, has_parsed_news=False
         )
-        recent_parsed_news = await self.parsed_news_service.get_parsed_news_summary(delta=parsed_news_delta)
+        recent_parsed_news = await self.parsed_news_service.get_parsed_news_summary(
+            parsed_news_delta=parsed_news_delta, input_news_delta=input_news_delta
+        )
         logger.debug(
             f"Retrieved {len(recent_input_news)} input news and {len(recent_parsed_news)} "
             f"parsed news for connection analysis"

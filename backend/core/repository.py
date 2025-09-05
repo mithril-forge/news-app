@@ -8,7 +8,7 @@ from typing import (
 )
 
 import structlog
-from sqlalchemy import func, text
+from sqlalchemy import exists, func, not_, text
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -19,6 +19,7 @@ from core.models import (
     Account,
     BaseModel,
     BaseModelWithID,
+    InputNews,
     NewsPick,
     NewsPickItem,
     ParsedNews,
@@ -393,17 +394,44 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
         logger.info(f"Prepared news with ID: {news.id} and {len(tag_texts)} tags")
         return news
 
-    async def get_by_time_delta(self, delta: datetime.timedelta) -> Sequence[ParsedNews]:
-        """ """
-        logger.debug(f"Getting news by time delta: {delta}")
+    async def get_by_time_delta(
+        self,
+        delta: datetime.timedelta,
+        input_news_delta: datetime.timedelta | None = None,
+    ) -> Sequence[ParsedNews]:
+        """
+        Get parsed news updated within a time delta from now.
+
+        Args:
+            delta: Time delta to look back from current time for updated_at
+            input_news_delta: Optional time delta to filter by input_news timestamp.
+                             If None, no additional input_news filtering is applied.
+
+        Returns:
+            List of ParsedNews within the time delta criteria
+        """
+        logger.debug(f"Getting news by time delta: {delta}, input_news_delta: {input_news_delta}")
         from_date = datetime.datetime.utcnow() - delta
 
         conditions = [ParsedNews.updated_at >= from_date]
 
+        # Add input news delta condition only if provided
+        if input_news_delta is not None:
+            input_news_from_date = datetime.datetime.utcnow() - input_news_delta
+            input_news_condition = not_(
+                exists().where(
+                    and_(InputNews.parsed_news == ParsedNews.id, InputNews.received_at < input_news_from_date)
+                )
+            )
+            conditions.append(cast(bool, input_news_condition))
+
         statement = select(ParsedNews).where(and_(*conditions))
         result = await self.session.execute(statement)
         news_list = result.scalars().all()
-        logger.info(f"Retrieved {len(news_list)} news articles from time delta: {delta}")
+        logger.info(
+            f"Retrieved {len(news_list)} news articles from time delta: {delta}"
+            f"{' with input_news_delta filter' if input_news_delta else ''}"
+        )
         return news_list
 
     async def update_with_tags(self, news_id: int, news_data: dict[str, Any], tag_texts: list[str]) -> ParsedNews:

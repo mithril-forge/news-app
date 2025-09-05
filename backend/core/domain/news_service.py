@@ -170,11 +170,13 @@ class NewsService:
         logger.info(f"Latest timestamp of input news retrieved: {result}")
         return result
 
-    async def get_parsed_news_summary(self, delta: datetime.timedelta) -> list[ParsedNewsSummary]:
+    async def get_parsed_news_summary(
+        self, parsed_news_delta: datetime.timedelta, input_news_delta: datetime.timedelta
+    ) -> list[ParsedNewsSummary]:
         """
         Returns ParsedNews with minimal information about them - title, description and other information
         """
-        result = await self.news_repo.get_by_time_delta(delta=delta)
+        result = await self.news_repo.get_by_time_delta(delta=parsed_news_delta, input_news_delta=input_news_delta)
         pydantic_structures = orm_list_to_pydantic(orm_list=result, pydantic_class=ParsedNewsSummary)
         return pydantic_structures
 

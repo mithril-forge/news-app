@@ -34,6 +34,8 @@ dramatiq.set_broker(redis_broker)
 # Get cron schedule from environment variable (default: 8 PM daily)
 SCRAP_ARTICLES_CRON = os.getenv("SCRAP_ARTICLES_CRON", "00 20 * * *")
 REFRESH_MATERIALIZED_VIEW_CRON = os.getenv("REFRESH_MATERIALIZED_VIEW_CRON", "*/5 * * * *")
+CONNECTING_PARSED_NEWS_LIMIT = int(os.getenv("CONNECTING_PARSED_NEWS_LIMIT", "24"))
+CONNECTING_INPUT_NEWS_LIMIT = int(os.getenv("CONNECTING_INPUT_NEWS_LIMIT", "72"))
 
 
 @dramatiq.actor(periodic=cron(SCRAP_ARTICLES_CRON))
@@ -89,7 +91,9 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
             ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
         parsed_news_ids = await article_generation_service.connect_input_news_to_existing_articles(
-            input_news_ids=input_news_ids
+            input_news_ids=input_news_ids,
+            input_news_hours_delta=CONNECTING_INPUT_NEWS_LIMIT,
+            parsed_news_hours_delta=CONNECTING_PARSED_NEWS_LIMIT,
         )
         logger.info(f"Created {len(parsed_news_ids)} regeneration tasks: {parsed_news_ids}")
         for parsed_news_id in parsed_news_ids:
