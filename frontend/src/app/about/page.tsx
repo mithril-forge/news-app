@@ -17,8 +17,21 @@ export const metadata: Metadata = {
 };
 
 export default async function AboutPage() {
-  // Fetch data for header
-  const topicsData = await fetchTopics();
+  // Fetch data for header with fallback during build
+  let topicsData = [];
+  try {
+    topicsData = await fetchTopics();
+  } catch (error) {
+    console.warn('Failed to fetch topics for about page (likely during build), using fallback:', error);
+    // Fallback topics for build time
+    topicsData = [
+      { name: 'Politika', id: 1 },
+      { name: 'Sport', id: 2 },
+      { name: 'Kultura', id: 3 },
+      { name: 'Ekonomika', id: 4 },
+      { name: 'Věda', id: 5 }
+    ];
+  }
   const categories = ["AI Feed", "Vše", ...topicsData.map(topic => topic.name)];
 
   return (
