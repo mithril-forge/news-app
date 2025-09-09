@@ -72,6 +72,13 @@ class ParsedNewsBasic(BaseModel):
         orm_mode = True
 
 
+class NewsPickResponse(BaseModel):
+    """Response for news pick containing articles and the description (usually the prompt used)."""
+
+    articles: list[ParsedNewsBasic]
+    description: str
+
+
 class InputNewsWithoutContent(BaseModel):
     publication_date: datetime
     title: str

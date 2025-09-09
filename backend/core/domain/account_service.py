@@ -12,7 +12,10 @@ class AccountService:
 
     async def set_prompt(self, account_email: str, prompt: str) -> None:
         """Set the prompt for the user."""
-        await self.account_repo.update_prompt(email=account_email, prompt=prompt)
+        account = await self.account_repo.update_prompt(email=account_email, prompt=prompt)
+        if account is None:
+            # Account doesn't exist, create it
+            await self.account_repo.add({"email": account_email, "prompt": prompt})
 
     async def get_account_details(self, account_email: str) -> AccountDetails | None:
         """Get the account details for the user."""

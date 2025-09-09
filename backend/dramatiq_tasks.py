@@ -9,14 +9,12 @@ import structlog
 from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
-from constants import CZECH_DAYS, CZECH_MONTHS
 from core.domain.account_service import AccountService
 from core.domain.news_service import NewsService
 from core.domain.schemas import AccountDetails
 from core.engine import get_session_context
 from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
-from features.input_news_processing.domain.ai_prompts import CUSTOM_ARTICLES_PROMPT
 from features.input_news_processing.domain.article_generation_service import (
     ArticleGenerationService,
 )
@@ -36,6 +34,7 @@ SCRAP_ARTICLES_CRON = os.getenv("SCRAP_ARTICLES_CRON", "00 20 * * *")
 REFRESH_MATERIALIZED_VIEW_CRON = os.getenv("REFRESH_MATERIALIZED_VIEW_CRON", "*/5 * * * *")
 CONNECTING_PARSED_NEWS_LIMIT = int(os.getenv("CONNECTING_PARSED_NEWS_LIMIT", "24"))
 CONNECTING_INPUT_NEWS_LIMIT = int(os.getenv("CONNECTING_INPUT_NEWS_LIMIT", "72"))
+DAILY_PICK_GENERATION_CRON = os.getenv("DAILY_PICK_GENERATION_CRON", "00 06 * * *")
 
 
 @dramatiq.actor(periodic=cron(SCRAP_ARTICLES_CRON))
@@ -251,7 +250,7 @@ async def async_refresh_materialized_view() -> None:
         await news_service.refresh_materialized_view()
 
 
-@dramatiq.actor(periodic=cron("00 08 * * *"))
+@dramatiq.actor(periodic=cron(DAILY_PICK_GENERATION_CRON))
 def distribute_daily_picks_task() -> None:
     """Start creation and distribution of daily picks from previous day. Wrapper for the logic itself."""
     logger.info("Starting to distribute daily picks for all accounts.")
@@ -281,31 +280,26 @@ def create_daily_pick_for_account(account_id: int, account_email: str, date: dat
             account_id=account_id, account_email=account_email, date=date, prompt=prompt
         )
     )
-    logger.info(f"Successfully generated daily pick for account: {account_id}")
 
 
 async def async_create_daily_pick_for_account(
     account_id: int, account_email: str, date: datetime.date, prompt: str
 ) -> None:
-    """Create a daily pick for an account."""
-    czech_date_str = f"{CZECH_DAYS[date.weekday()]}, {date.day}. {CZECH_MONTHS[date.month]} {date.year}"
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        logger.error("GEMINI_API_KEY environment variable not set")
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
+    """Create a daily pick for an account using the centralized PickGenerationService."""
     async with get_session_context() as db_session:
-        gemini_ai_model = GeminiAIModel(api_key=gemini_api_key)
-        news_service = NewsService(session=db_session)
         pick_generation_service = PickGenerationService(session=db_session)
-        prompt_formatted = CUSTOM_ARTICLES_PROMPT.format(prompt=prompt)
-        parsed_news = await news_service.get_news_titles_by_date(date=date)
-        files = ArticleGenerationService.save_pydantic_lists_as_files(parsed_news=parsed_news)
-        result = await gemini_ai_model.prompt_model(files=files, prompt=prompt_formatted, response_model=list[int])
-        logger.info(f"Successfully generated daily pick for account {account_email} with news ids: {result}")
-        pick_id = await pick_generation_service.save_pick(
-            account_id=account_id, date=datetime.datetime.now(), description=f"Denní výběr pro {czech_date_str}"
-        )
-        await pick_generation_service.connect_news_to_pick(pick_id=pick_id, news_ids=result)
+
+        try:
+            # Use the centralized generate_pick method, bypassing daily limits for system-generated picks
+            result = await pick_generation_service.generate_pick_logged_in_user(
+                user_email=account_email,
+                bypass_daily_limit=True,  # System-generated picks don't count against user's daily limit
+            )
+            logger.info(f"Successfully generated daily pick for account {account_email}: {result}")
+        except Exception as e:
+            logger.error(f"Failed to generate daily pick for account {account_email}: {e}")
+            # Don't raise the exception to avoid failing the entire batch
+            # Daily pick generation should be resilient to individual failures
 
 
 async def send_daily_pick_for_account(account_email: str) -> None:

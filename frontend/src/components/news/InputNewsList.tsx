@@ -2,7 +2,7 @@
  * InputNewsList server component for displaying input news sources with new design
  */
 import Link from 'next/link';
-import LogoWithFallback from '@/components/common/LogoWithFallback'; // We'll need to create this as a separate client component
+import LogoWithFallback from '@/components/common/LogoWithFallback';
 
 // Define the interface for InputNews objects
 interface InputNewsDetailed {
@@ -23,15 +23,6 @@ const InputNewsList = ({ inputNews }: InputNewsListProps) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('cs-CZ');
   };
-
-  // Get logo URL for source site
-const InputNewsList = ({ inputNews }: InputNewsListProps) => {
-  // Format the date to display in Czech format
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('cs-CZ');
-  };
-}
 
   // Get logo URL for source site
   const getSourceLogo = (sourceSite: string): { url: string; fallback: string } => {
@@ -91,68 +82,68 @@ const InputNewsList = ({ inputNews }: InputNewsListProps) => {
         const logoData = getSourceLogo(news.source_site);
         
         return (
-          <div 
-            key={index} 
-            className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100"
+          <a 
+            key={index}
+            href={news.source_url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="block group cursor-pointer"
           >
-            <div className="p-6">
-              <div className="flex gap-4 items-start">
-                {/* Source logo */}
-                <div className="w-16 h-16 rounded-xl bg-blue-50 border-2 border-blue-200 flex items-center justify-center flex-shrink-0">
-                  <LogoWithFallback 
-                    logoUrl={logoData.url}
-                    sourceSite={news.source_site}
-                    fallback={logoData.fallback}
-                  />
-                </div>
-                
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3 leading-tight">
-                    {news.title}
-                  </h3>
-                  
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
-                    {news.author && (
-                      <span className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">Autor:</span> 
-                        <span>{news.author}</span>
-                      </span>
-                    )}
-                    <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2v8h12V6H4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-medium">Zdroj:</span> 
-                      <span>{news.source_site}</span>
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-medium">Publikováno:</span> 
-                      <span>{formatDate(news.publication_date)}</span>
-                    </span>
+            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border border-gray-100">
+              <div className="p-6">
+                <div className="flex gap-4 items-start">
+                  {/* Source logo */}
+                  <div className="w-16 h-16 rounded-xl bg-blue-50 border-2 border-blue-200 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                    <LogoWithFallback 
+                      logoUrl={logoData.url}
+                      sourceSite={news.source_site}
+                      fallback={logoData.fallback}
+                    />
                   </div>
                   
-                  <a 
-                    href={news.source_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium px-4 py-2 rounded-xl transition-all hover:scale-105 hover:shadow-md"
-                  >
-                    Přečíst zdroj
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                    </svg>
-                  </a>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
+                      {news.title}
+                    </h3>
+                    
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+                      {news.author && (
+                        <span className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                          <span className="font-medium">Autor:</span> 
+                          <span>{news.author}</span>
+                        </span>
+                      )}
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2v8h12V6H4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Zdroj:</span> 
+                        <span>{news.source_site}</span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Publikováno:</span> 
+                        <span>{formatDate(news.publication_date)}</span>
+                      </span>
+                    </div>
+                    
+                    <span className="inline-flex items-center gap-2 text-blue-600 group-hover:text-blue-800 font-medium text-sm transition-all group-hover:gap-4">
+                      Přečíst původní článek
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                      </svg>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </a>
         );
       })}
     </div>

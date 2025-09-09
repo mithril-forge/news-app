@@ -10,18 +10,19 @@ import Loading from '@/components/common/Loading';
 export const revalidate = 600; // Revalidate this page every 10 minutes
 
 interface HomePageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
-  };
+  }>;
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   // Get the category from URL query params with a default of "Vše"
-  const activeCategory = searchParams.category || "Vše";
+  const resolvedSearchParams = await searchParams;
+  const activeCategory = resolvedSearchParams.category || "Vše";
   
   // Fetch data on the server
   const topicsData = await fetchTopics();
-  const categories = ["Vše", ...topicsData.map(topic => topic.name)];
+  const categories = ["AI Feed", "Vše", ...topicsData.map(topic => topic.name)];
   
   // Fetch the appropriate news data based on selected category
   let newsData;

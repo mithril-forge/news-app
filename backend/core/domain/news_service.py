@@ -3,16 +3,18 @@ import datetime
 import structlog
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from core.converters import (
     news_list_to_response,
     news_list_to_titles_response,
     news_to_detailed_response,
-    news_to_response,
     orm_list_to_pydantic,
     relevance_parsed_news_list_to_basic_response,
 )
+from core.domain.account_service import AccountService
 from core.domain.schemas import (
+    NewsPickResponse,
     ParsedInputNewsTitles,
     ParsedNewsBasic,
     ParsedNewsCreate,
@@ -21,6 +23,7 @@ from core.domain.schemas import (
     ParsedNewsUpdate,
     TagResponse,
 )
+from core.models import Account, NewsPick
 from core.repository import (
     AsyncParsedNewsRepositoryWithID,
     AsyncTagRepositoryWithID,
@@ -186,15 +189,88 @@ class NewsService:
         pydantic_structures = news_list_to_titles_response(news_list=result)
         return pydantic_structures
 
-    async def get_news_by_pick_hash(self, pick_hash: str) -> list[ParsedNewsBasic]:
-        """Get all news for a specific pick hash"""
-        sorted_news = await self.news_repo.get_parsed_news_by_pick_hash(pick_hash=pick_hash)
-        logger.debug(f"Pick hash: {pick_hash} retrieved news ids: {[news.id for news in sorted_news]}")
-        return news_list_to_response(sorted_news)
+    async def get_news_titles_by_time_delta(self, delta: datetime.timedelta) -> list[ParsedInputNewsTitles]:
+        """Returns ParsedNews titles for pick generation within a time delta"""
+        result = await self.news_repo.get_by_time_delta(delta=delta)
+        pydantic_structures = news_list_to_titles_response(news_list=result)
+        return pydantic_structures
 
-    async def get_latest_pick_news(self, account_email: str) -> ParsedNewsBasic:
-        """Get the latest pick for the user"""
-        logger.info(f"Fetching latest pick news for user: {account_email}")
-        latest_news = await self.news_repo.get_latest_pick_news_for_account(email=account_email)
-        logger.debug(f"Retrieved {latest_news} pick news items for user: {account_email}")
-        return news_to_response(latest_news)
+    async def get_pick_by_hash(self, pick_hash: str) -> NewsPickResponse:
+        """Get pick with articles and description by hash"""
+        # Get the pick to retrieve the description
+        result = await self.session.execute(select(NewsPick).where(NewsPick.hash == pick_hash))
+        pick = result.scalar_one_or_none()
+
+        if not pick:
+            raise HTTPException(status_code=404, detail="Pick not found")
+
+        # Get the news articles for this pick
+        try:
+            sorted_news = await self.news_repo.get_parsed_news_by_pick_hash(pick_hash=pick_hash)
+            articles = news_list_to_response(sorted_news)
+            logger.debug(f"Pick hash: {pick_hash} retrieved {len(articles)} articles")
+        except Exception as e:
+            # If we can't get articles but pick exists, return empty articles with the description
+            logger.warning(f"Could not get articles for pick hash {pick_hash}: {e}")
+            articles = []
+
+        return NewsPickResponse(articles=articles, description=pick.description)
+
+    async def get_latest_pick_for_user(self, account_email: str) -> NewsPickResponse:
+        """Get latest pick with articles and description for user"""
+        # Get the account
+        account_result = await self.session.execute(select(Account).where(Account.email == account_email))
+        account = account_result.scalar_one_or_none()
+
+        if not account:
+            raise HTTPException(status_code=404, detail="Account not found")
+
+        # Get the latest pick for this account
+        pick_result = await self.session.execute(
+            select(NewsPick).where(NewsPick.account_id == account.id).order_by(NewsPick.created_at.desc()).limit(1)  # type: ignore[attr-defined]
+        )
+        latest_pick = pick_result.scalar_one_or_none()
+
+        if not latest_pick:
+            # Return empty response if no picks found
+            return NewsPickResponse(articles=[], description="")
+
+        # Get the news articles for this pick
+        try:
+            latest_news = await self.news_repo.get_latest_pick_news_for_account(email=account_email)
+            articles = news_list_to_response(latest_news)
+            logger.debug(f"Retrieved {len(articles)} articles for user: {account_email}")
+        except Exception as e:
+            # If we can't get articles but pick exists, return empty articles with the description
+            logger.warning(f"Could not get articles for pick {latest_pick.id}: {e}")
+            articles = []
+
+        return NewsPickResponse(articles=articles, description=latest_pick.description)
+
+    async def link_anonymous_pick_to_user(self, user_email: str, pick_hash: str) -> None:
+        """Links an anonymous pick (by hash) to a user account."""
+
+        logger.info(f"Linking anonymous pick {pick_hash} to user {user_email}")
+
+        # Get account details to verify user exists
+        account_service = AccountService(self.session)
+        account_details = await account_service.get_account_details(account_email=user_email)
+
+        if not account_details:
+            raise HTTPException(status_code=404, detail="User account not found")
+
+        # Find the anonymous pick by hash
+        pick_result = await self.session.execute(
+            select(NewsPick).where(NewsPick.hash == pick_hash).where(NewsPick.account_id.is_(None))  # type: ignore[union-attr]
+        )
+        pick = pick_result.scalar_one_or_none()
+
+        if not pick:
+            raise HTTPException(status_code=404, detail="Anonymous pick not found or already linked")
+
+        # Link the pick to the user account
+        pick.account_id = account_details.id
+        self.session.add(pick)
+        await self.session.commit()
+
+        logger.info(f"Successfully linked anonymous pick {pick_hash} to user {user_email}")

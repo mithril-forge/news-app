@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import pathlib
@@ -5,6 +6,7 @@ from typing import cast
 
 import instructor
 import structlog
+from fastapi import HTTPException
 from google.generativeai import GenerativeModel, configure, types, upload_file  # type: ignore[attr-defined]
 from instructor import AsyncInstructor
 from tenacity import (
@@ -15,6 +17,7 @@ from tenacity import (
     wait_exponential,
 )
 
+from core.redis_client import redis_client
 from features.input_news_processing.ai_library.abstract_model import (
     AbstractAIModel,
     ResponseT,
@@ -61,8 +64,30 @@ class GeminiAIModel(AbstractAIModel):
         response_model: type[ResponseT],
         prompt: str,
     ) -> ResponseT:
-        """Prompt model with the query and files, the preparation of files is done independently"""
+        """Prompt model with the query and files, with rate limiting applied.
+
+        Preparation of files is done independently.
+        """
         logger.info(f"Prompting Gemini model with {len(files)} files and response model: {response_model.__name__}")
+
+        # Apply rate limiting before making any API calls
+        today_str = datetime.date.today().strftime("%Y-%m-%d")
+        global_limit_key = f"gemini_global_limit_{today_str}"
+
+        # Check global limit (configurable per day app-wide)
+        global_limit = int(os.getenv("GEMINI_GLOBAL_DAILY_LIMIT", "100"))
+        global_count = redis_client.get_counter(global_limit_key)
+        if global_count >= global_limit:
+            logger.warning(f"Global Gemini API daily limit reached: {global_count}/{global_limit}")
+            raise HTTPException(
+                status_code=429, detail="Daily AI API limit reached app-wide. Please try again tomorrow."
+            )
+
+        # Increment counter before making the API call
+        redis_client.increment_counter(global_limit_key)
+
+        logger.info(f"Gemini API usage - Global: {global_count + 1}/{global_limit}")
+
         contents: list[str | types.File] = [prompt]
         gemini_client = self.prepare_model_sdk()
         gemini_files = self.upload_files_gemini(files=files)
