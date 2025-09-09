@@ -227,7 +227,7 @@ class NewsService:
 
         # Get the latest pick for this account
         pick_result = await self.session.execute(
-            select(NewsPick).where(NewsPick.account_id == account.id).order_by(NewsPick.created_at.desc()).limit(1)
+            select(NewsPick).where(NewsPick.account_id == account.id).order_by(NewsPick.created_at.desc()).limit(1)  # type: ignore[attr-defined]
         )
         latest_pick = pick_result.scalar_one_or_none()
 
@@ -261,7 +261,7 @@ class NewsService:
 
         # Find the anonymous pick by hash
         pick_result = await self.session.execute(
-            select(NewsPick).where(NewsPick.hash == pick_hash, NewsPick.account_id.is_(None))
+            select(NewsPick).where(NewsPick.hash == pick_hash).where(NewsPick.account_id.is_(None))  # type: ignore[union-attr]
         )
         pick = pick_result.scalar_one_or_none()
 

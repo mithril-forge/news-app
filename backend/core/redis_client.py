@@ -2,7 +2,10 @@
 
 import json
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any, Self
+
+if TYPE_CHECKING:
+    from redis import Redis
 
 import redis
 import structlog
@@ -16,16 +19,16 @@ class RedisClient:
     _instance = None
     _client = None
 
-    def __new__(cls):
+    def __new__(cls) -> Self:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         if self._client is None:
             self._initialize_client()
 
-    def _initialize_client(self):
+    def _initialize_client(self) -> None:
         """Initialize Redis client with configuration from environment."""
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
@@ -44,10 +47,11 @@ class RedisClient:
         logger.info(f"Redis client connected successfully to {redis_url}")
 
     @property
-    def client(self) -> redis.Redis:
+    def client(self) -> "Redis[str]":
         """Get the Redis client instance."""
         if self._client is None:
             self._initialize_client()
+        assert self._client is not None
         return self._client
 
     def set_daily_limit(self, key: str, data: dict[str, Any], ttl: int = 86400) -> bool:
@@ -62,7 +66,8 @@ class RedisClient:
         Returns:
             True if successful, False otherwise
         """
-        return self.client.setex(key, ttl, json.dumps(data))
+        result = self.client.setex(key, ttl, json.dumps(data))
+        return bool(result)
 
     def has_daily_limit(self, key: str) -> bool:
         """
@@ -74,9 +79,9 @@ class RedisClient:
         Returns:
             True if key exists, False otherwise
         """
-        return self.client.exists(key) > 0
+        return bool(self.client.exists(key))
 
-    def get_daily_limit(self, key: str) -> dict[str, Any] | None:
+    def get_daily_limit(self, key: str) -> Any | None:
         """
         Get daily limit data by key.
 
@@ -84,11 +89,11 @@ class RedisClient:
             key: The cache key
 
         Returns:
-            Dictionary of data if found, None otherwise
+            JSON data if found, None otherwise
         """
         data = self.client.get(key)
         if data:
-            return json.loads(data)
+            return json.loads(str(data))
         return None
 
     def delete_daily_limit(self, key: str) -> bool:
@@ -101,7 +106,7 @@ class RedisClient:
         Returns:
             True if key was deleted, False otherwise
         """
-        return self.client.delete(key) > 0
+        return bool(self.client.delete(key))
 
     def increment_counter(self, key: str, ttl: int = 86400) -> int:
         """
@@ -118,7 +123,7 @@ class RedisClient:
         pipe.incr(key)
         pipe.expire(key, ttl)
         results = pipe.execute()
-        return results[0]
+        return int(results[0])
 
     def get_counter(self, key: str) -> int:
         """
@@ -131,7 +136,7 @@ class RedisClient:
             Current count (0 if key doesn't exist)
         """
         count = self.client.get(key)
-        return int(count) if count else 0
+        return int(str(count)) if count else 0
 
 
 # Global Redis client instance

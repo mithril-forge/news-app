@@ -291,9 +291,8 @@ async def async_create_daily_pick_for_account(
 
         try:
             # Use the centralized generate_pick method, bypassing daily limits for system-generated picks
-            result = await pick_generation_service.generate_pick(
+            result = await pick_generation_service.generate_pick_logged_in_user(
                 user_email=account_email,
-                prompt=prompt,
                 bypass_daily_limit=True,  # System-generated picks don't count against user's daily limit
             )
             logger.info(f"Successfully generated daily pick for account {account_email}: {result}")

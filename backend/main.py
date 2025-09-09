@@ -222,8 +222,8 @@ async def get_pick_news(pick_hash: str, session: Annotated[AsyncSession, Depends
 @app.post("/generate_pick")
 async def generate_pick_endpoint(
     session: Annotated[AsyncSession, Depends(get_session)],
-    user_email: Annotated[str, Form()] = None,
-    prompt: Annotated[str, Form()] = None,
+    user_email: Annotated[str | None, Form()] = None,
+    prompt: Annotated[str | None, Form()] = None,
 ) -> dict[str, Any]:
     """
     Unified pick generation endpoint that handles both anonymous and logged-in users.

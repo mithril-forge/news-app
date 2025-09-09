@@ -549,7 +549,7 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
         parsed_news_items = result.scalars().unique().all()
 
         logger.info(f"Found {len(parsed_news_items)} parsed news items from latest pick for user '{email}'")
-        return parsed_news_items
+        return list(parsed_news_items)
 
 
 class AsyncAccountRepositoryWithID(AsyncBaseRepositoryWithID[Account]):
