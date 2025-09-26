@@ -5,10 +5,9 @@ import { getCategoryEmoji } from '@/lib/categoryEmoji';
 
 interface ArticleCardProps {
   article: NewsArticle;
-  key: number;
 }
 
-export default function ArticleCard({ article, key }: ArticleCardProps) {
+export default function ArticleCard({ article }: ArticleCardProps) {
   // Safety check for undefined article
   if (!article) {
     return null;
