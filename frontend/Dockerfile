@@ -17,6 +17,8 @@ FROM base AS development
 
 ENV ENVIRONMENT=development
 ENV SKIP_ENV_VALIDATION=1
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
 
 EXPOSE 3000
 CMD ["npm", "run", "dev"]

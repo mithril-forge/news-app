@@ -95,12 +95,11 @@ export default function SortableNewsWrapper({
           <>
             {/* Featured article */}
             {featuredArticle && <FeaturedArticle article={featuredArticle} />}
-
             {/* Article grid */}
             {remainingArticles.length > 0 && (
               <div className="grid grid-cols-1 gap-6">
                 {remainingArticles.map((item) => (
-                  <ArticleCard key={item.id} item={item} />
+                  <ArticleCard article={item} key={item.id} />
                 ))}
               </div>
             )}

@@ -65,14 +65,12 @@ export default function NewsContent({
 
         {/* Featured article */}
         <FeaturedArticle article={featuredArticle} />
-
         {/* Article grid */}
         <div className="grid grid-cols-1 gap-6">
           {remainingArticles.map(article => (
             <ArticleCard key={article.id} article={article} />
           ))}
         </div>
-
         {/* Load more articles */}
         <LoadMoreNews
           activeCategory={activeCategory}
