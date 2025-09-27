@@ -74,7 +74,7 @@ export default function SortDropdown({ currentSort, onSortChange, className = ''
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+        <div className="absolute right-0 z-10 mt-2 w-full origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
           <div className="py-1">
             {sortOptions.map((option) => (
               <button
