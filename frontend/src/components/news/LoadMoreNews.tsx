@@ -36,7 +36,6 @@ export default function LoadMoreNews({
 
   // Reset state when category, topic, or sort changes (only for main page)
   useEffect(() => {
-    console.log('Category, topic, or sort changed, resetting loaded articles');
     setAdditionalArticles([]);
     setHasMore(true);
     setIsLoading(false);
