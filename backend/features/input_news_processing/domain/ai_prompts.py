@@ -146,6 +146,7 @@ VÝSTUP:
 - Zdroje informací můžeš uvádět, ale dělej to tak, aby tím nebyl text příliš zaplněný - nepoužívej v článku interní ID, ti uživatelé neznají!
 - Čím více zdrojů parsed news má, tím delší ho udělej, aby si zvládl poskytnout důležité informace ze všech článků - snaž se však vybírat ty nejzásadnější informace
 - Snaž se nezkracovat content, ale spíš ho prodloužit o nové důležité informace
+- Urči, jestli je článek ohledně domácích věcí v ČR (domestic), nebo obsahuje zprávy ze zahraničí (foreign)
 """
 
 NEW_GENERATION_PROMPT = """
@@ -182,7 +183,6 @@ VÝSTUP:
   * Zařazení do odpovídajícího TOPIC
   * Seznam relevantních tagů (max. 3) - Preferuj existující, nové vytvoř jen když je to OPRAVDU POTŘEBA
   * Čím více zdrojů článek má, tím delší ho udělej, aby si zvládl poskytnout důležité informace ze všech článků - snaž se však vybírat ty nejzásadnější informace
-
 - Formátování výstupu:
   * K formátování výstupu můžeš použít základní funkcionality markdownu -> udržuj odstavce, nadpisy odstavců apod.
   * Zajisti, aby obsah byl fakticky přesný
@@ -190,6 +190,7 @@ VÝSTUP:
   * Upřednostňuj nejnovější informace při konfliktech a informace, které jsou uvedeny ve všech článcích
   * Formátuj výsledný text na sloupce, aby byl lépe přehledný a čitelný.
   * Zdroje informací můžeš uvádět, ale dělej to tak, aby tím nebyl text příliš zaplněný - nepoužívej v článku interní ID, ti uživatelé neznají!
+  * Urči, jestli je článek ohledně domácích věcí v ČR (domestic), nebo obsahuje zprávy ze zahraničí (foreign)
 
 DODRŽ VŠECHNY BODY NAHOŘE! Minimální délku content, jazyk atd.
 """

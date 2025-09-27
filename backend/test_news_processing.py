@@ -82,7 +82,7 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
             input_news_ids=input_news_ids
         )
         news_count = 3
-        assert len(generated_news) == news_count, f"Service should generate exactly 3 news. {generated_news=}"
+        assert len(generated_news_groups) == news_count, f"Service should generate exactly 3 news. {generated_news=}"
         await session.flush()
         for generated_news_group in generated_news_groups:
             new_article = await article_generation_service.create_new_article_from_input_news(
@@ -112,7 +112,7 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
         generated_news_groups = await article_generation_service.choose_input_news_for_new_articles(
             input_news_ids=input_news_ids
         )
-        assert len(generated_news) == 1, f"Service should generate exactly 1 news. {generated_news=}"
+        assert len(generated_news_groups) == 1, f"Service should generate exactly 1 news. {generated_news_groups=}"
         await session.flush()
         for generated_news_group in generated_news_groups:
             new_article = await article_generation_service.create_new_article_from_input_news(

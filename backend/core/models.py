@@ -7,6 +7,8 @@ from sqlalchemy import CheckConstraint, Column, Integer
 from sqlalchemy.orm import Mapped, relationship
 from sqlmodel import Field, Relationship, SQLModel
 
+from core.config import NewsScope
+
 
 class BaseModel(SQLModel):
     """Base model with common utility methods."""
@@ -59,6 +61,7 @@ class ParsedNews(BaseModelWithID, table=True):
     title: str = Field()
     description: str = Field()
     content: str = Field()
+    news_scope: NewsScope | None = Field(default=None)
     image_url: str | None = Field(default=None)
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
