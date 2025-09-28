@@ -75,12 +75,12 @@ export default function SortDropdown({ currentSort, onSortChange, className = ''
 
       {isOpen && (
         <div className="absolute right-0 z-10 mt-2 w-full origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-          <div className="py-1">
+          <div className="p-1">
             {sortOptions.map((option) => (
               <button
                 key={option.value}
                 onClick={() => handleOptionClick(option.value)}
-                className={`group flex w-full items-center px-4 py-2 text-left text-sm transition-colors ${
+                className={`group flex w-full items-center px-3 py-2 text-left text-sm transition-colors rounded-md ${
                   currentSort === option.value
                     ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700 hover:bg-gray-50'
