@@ -57,6 +57,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             news={newsData} 
             activeCategory={activeCategory}
             topicId={selectedTopicId}
+            enableSorting={selectedTopicId === undefined}
           />
         </main>
       </Suspense>
