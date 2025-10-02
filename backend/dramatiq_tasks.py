@@ -302,6 +302,10 @@ async def async_create_daily_pick_for_account(
             # Daily pick generation should be resilient to individual failures
 
 
-async def send_daily_pick_for_account(account_email: str) -> None:
+async def send_daily_pick_for_account(account_email: str, pick_hash: str, description: str) -> None:
     """Send a daily pick for an account."""
-    pass
+    async with get_session_context() as db_session:
+        service = NewsService(db_session)
+        pick_items = await service.get_pick_by_hash(pick_hash=pick_hash)
+    # 2. Create email with format that will announce the pick for the day, using the description.
+    # 3. Send email to the user with corresponding email
