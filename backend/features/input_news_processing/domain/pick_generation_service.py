@@ -37,30 +37,36 @@ class PickGenerationService:
         for news_id in news_ids:
             await self.pick_items_repository.add({"pick_id": pick_id, "parsed_news_id": news_id})
 
-    async def generate_pick_anonymous(self, prompt: str) -> dict[str, Any]:
+    async def generate_pick_anonymous(self, prompt: str, news_age_in_hours: int,
+                                      description: str | None = None) -> dict[str, Any]:
         """
         Generate a news pick for an anonymous user based on the provided prompt.
 
         Args:
             prompt: The prompt text to guide the pick generation.
+            news_age_in_hours: How old news to use and parse
+            description: Description for the pick
 
         Returns:
             A dictionary containing the pick hash and a success message.
         """
         logger.info(f"Starting pick generation for anonymous user with prompt: {prompt[:50]}...")
 
-        pick_hash = await self._invoke_pick_generation(prompt, account_id=None)
+        pick_hash = await self._invoke_pick_generation(prompt, account_id=None, news_age_in_hours=news_age_in_hours,
+                                                       description=description)
 
         return {
             "message": "Pick generated successfully",
             "hash": pick_hash,
         }
 
-    async def generate_pick_logged_in_user(self, user_email: str, bypass_daily_limit: bool = False) -> dict[str, Any]:
+    async def generate_pick_logged_in_user(self, user_email: str, news_age_in_hours: int,
+                                           bypass_daily_limit: bool = False, description: str | None = None) -> dict[str, Any]:
         """
         Generate a news pick for a logged-in user based on their stored prompt.
 
         Args:
+            news_age_in_hours: age of the news in hours
             user_email: The email of the logged-in user.
             bypass_daily_limit: If True, skip daily limit checking (for system-generated picks).
 
@@ -89,7 +95,8 @@ class PickGenerationService:
 
         logger.info(f"Starting pick generation for user {user_email} with prompt: {prompt[:50]}...")
 
-        pick_hash = await self._invoke_pick_generation(prompt, account_id=account_details.id)
+        pick_hash = await self._invoke_pick_generation(prompt, account_id=account_details.id,
+                                                       news_age_in_hours=news_age_in_hours, description=description)
 
         # Update daily limits (only for user-initiated picks, not system-generated picks)
         if user_email and not bypass_daily_limit:
@@ -103,7 +110,8 @@ class PickGenerationService:
             "hash": pick_hash,
         }
 
-    async def _invoke_pick_generation(self, user_prompt: str, account_id: int | None) -> str:
+    async def _invoke_pick_generation(self, user_prompt: str, account_id: int | None, news_age_in_hours: int,
+                                      description: str | None = None) -> str:
         """Invoke the AI model to generate a pick based on the user prompt and available news.
 
         Args:
@@ -113,14 +121,14 @@ class PickGenerationService:
         Returns:
             A string representing the pick hash.
         """
+        description = description or user_prompt
         use_mocked_ai = os.getenv("USE_MOCKED_AI", "false").lower() == "true"
         news_service = NewsService(session=self.pick_repository.session)
 
         try:
-            # Get news data for processing (max 36 hours old)
-            thirty_six_hours = datetime.timedelta(hours=36)
-            logger.info("Fetching news from the last 36 hours")
-            parsed_news = await news_service.get_news_titles_by_time_delta(delta=thirty_six_hours)
+            news_age_timedelta = datetime.timedelta(hours=news_age_in_hours)
+            logger.info(f"Fetching news from the last {news_age_in_hours} hours")
+            parsed_news = await news_service.get_news_titles_by_time_delta(delta=news_age_timedelta)
             logger.info(f"Found {len(parsed_news) if parsed_news else 0} news items from the last 36 hours")
 
             if not parsed_news:
@@ -148,7 +156,7 @@ class PickGenerationService:
                 news_ids = result or []  # Use empty list if no results
 
             # Save the pick to the database
-            pick_id = await self.save_pick(account_id=account_id, description=user_prompt)
+            pick_id = await self.save_pick(account_id=account_id, description=description)
             # Get the pick hash to return
             pick_result = await self.session.execute(select(NewsPick).where(NewsPick.id == pick_id))
             pick_hash = pick_result.scalar_one().hash

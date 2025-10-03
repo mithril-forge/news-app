@@ -10,6 +10,7 @@ from dramatiq.brokers.redis import RedisBroker
 from periodiq import PeriodiqMiddleware, cron
 
 from core.domain.account_service import AccountService
+from core.domain.email_service import EmailNewsletterService
 from core.domain.news_service import NewsService
 from core.domain.schemas import AccountDetails
 from core.engine import get_session_context
@@ -110,7 +111,7 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
 
 @dramatiq.actor(max_retries=1)
 def choose_new_articles_task(
-    input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
+        input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
 ) -> None:
     """Task that takes passed input_news_ids also query for the nonconnected older input news (by param delta).
     Then it queries AI model to choose new parsed articles and creates tasks for their generation"""
@@ -266,46 +267,102 @@ async def async_distribute_daily_picks_task() -> list[AccountDetails]:
         accounts = await account_service.get_accounts()
     for account in accounts:
         create_daily_pick_for_account.send(
-            account_id=account.id, account_email=account.email, date=date, prompt=account.prompt
+            account_email=account.email,
+            date=date.isoformat(),
         )
     return accounts
 
 
 @dramatiq.actor
-def create_daily_pick_for_account(account_id: int, account_email: str, date: datetime.date, prompt: str) -> None:
+def create_daily_pick_for_account(account_email: str, date: str) -> None:
     """Async wrapper for the generation of daily task for account."""
-    logger.info(f"Starting daily pick task for account: {account_id} and date {date}")
+    parsed_date = datetime.date.fromisoformat(date)
+    logger.info(f"Starting daily pick task for account: {account_email} and date {parsed_date}")
     asyncio.run(
         async_create_daily_pick_for_account(
-            account_id=account_id, account_email=account_email, date=date, prompt=prompt
+            account_email=account_email,
+            date=parsed_date
         )
     )
 
 
 async def async_create_daily_pick_for_account(
-    account_id: int, account_email: str, date: datetime.date, prompt: str
+        account_email: str, date: datetime.date,
 ) -> None:
     """Create a daily pick for an account using the centralized PickGenerationService."""
+    czech_days = {
+        0: "z pondělí",
+        1: "z úterý",
+        2: "ze středy",
+        3: "ze čtvrtku",
+        4: "z pátku",
+        5: "ze soboty",
+        6: "z neděle",
+    }
+
+    date_start = datetime.datetime.combine(date, datetime.time.min)
+    now = datetime.datetime.now()
+    hours_since_date_start = int((now - date_start).total_seconds() / 3600)
+
+    day_name = czech_days[date.weekday()]
+    description = f"Denní výběr zpráv {day_name}"
+
     async with get_session_context() as db_session:
         pick_generation_service = PickGenerationService(session=db_session)
 
         try:
-            # Use the centralized generate_pick method, bypassing daily limits for system-generated picks
             result = await pick_generation_service.generate_pick_logged_in_user(
                 user_email=account_email,
-                bypass_daily_limit=True,  # System-generated picks don't count against user's daily limit
+                bypass_daily_limit=True,
+                news_age_in_hours=hours_since_date_start,
+                description=description
             )
             logger.info(f"Successfully generated daily pick for account {account_email}: {result}")
+
+            pick_hash = result.get("hash")
+            if pick_hash:
+                send_daily_pick_email.send(account_email, pick_hash)
+            else:
+                logger.error(f"No pick_hash returned for account {account_email}")
+
         except Exception as e:
             logger.error(f"Failed to generate daily pick for account {account_email}: {e}")
-            # Don't raise the exception to avoid failing the entire batch
-            # Daily pick generation should be resilient to individual failures
 
 
-async def send_daily_pick_for_account(account_email: str, pick_hash: str, description: str) -> None:
+@dramatiq.actor
+def send_daily_pick_email(account_email: str, pick_hash: str) -> None:
+    """Async wrapper for sending daily pick email."""
+    logger.info(f"Starting email send task for account: {account_email} and pick: {pick_hash}")
+    asyncio.run(
+        async_send_daily_pick_for_account(
+            account_email=account_email,
+            pick_hash=pick_hash
+        )
+    )
+
+
+async def async_send_daily_pick_for_account(account_email: str, pick_hash: str) -> None:
     """Send a daily pick for an account."""
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    if brevo_api_key is None:
+        logger.error("BREVO_API_KEY environment variable not set")
+        raise ValueError("You need to provide BREVO_API_KEY to use the model.")
     async with get_session_context() as db_session:
-        service = NewsService(db_session)
-        pick_items = await service.get_pick_by_hash(pick_hash=pick_hash)
-    # 2. Create email with format that will announce the pick for the day, using the description.
-    # 3. Send email to the user with corresponding email
+        news_service = NewsService(db_session)
+        account_service = AccountService(db_session)
+
+        try:
+            news_pick = await news_service.get_pick_by_hash(pick_hash=pick_hash)
+            account = await account_service.get_account_details(account_email=account_email)
+
+            email_service = EmailNewsletterService(
+                brevo_api_key=brevo_api_key
+            )
+            await email_service.send_newsletter(
+                recipient_email=account_email,
+                articles=news_pick.articles,
+                prompt_description=account.prompt
+            )
+            logger.info(f"Successfully sent daily pick email to {account_email}")
+        except Exception as e:
+            logger.error(f"Failed to send daily pick email to {account_email}: {e}")
