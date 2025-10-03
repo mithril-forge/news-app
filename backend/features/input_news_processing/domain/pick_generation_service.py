@@ -37,8 +37,9 @@ class PickGenerationService:
         for news_id in news_ids:
             await self.pick_items_repository.add({"pick_id": pick_id, "parsed_news_id": news_id})
 
-    async def generate_pick_anonymous(self, prompt: str, news_age_in_hours: int,
-                                      description: str | None = None) -> dict[str, Any]:
+    async def generate_pick_anonymous(
+        self, prompt: str, news_age_in_hours: int, description: str | None = None
+    ) -> dict[str, Any]:
         """
         Generate a news pick for an anonymous user based on the provided prompt.
 
@@ -52,16 +53,18 @@ class PickGenerationService:
         """
         logger.info(f"Starting pick generation for anonymous user with prompt: {prompt[:50]}...")
 
-        pick_hash = await self._invoke_pick_generation(prompt, account_id=None, news_age_in_hours=news_age_in_hours,
-                                                       description=description)
+        pick_hash = await self._invoke_pick_generation(
+            prompt, account_id=None, news_age_in_hours=news_age_in_hours, description=description
+        )
 
         return {
             "message": "Pick generated successfully",
             "hash": pick_hash,
         }
 
-    async def generate_pick_logged_in_user(self, user_email: str, news_age_in_hours: int,
-                                           bypass_daily_limit: bool = False, description: str | None = None) -> dict[str, Any]:
+    async def generate_pick_logged_in_user(
+        self, user_email: str, news_age_in_hours: int, bypass_daily_limit: bool = False, description: str | None = None
+    ) -> dict[str, Any]:
         """
         Generate a news pick for a logged-in user based on their stored prompt.
 
@@ -95,8 +98,9 @@ class PickGenerationService:
 
         logger.info(f"Starting pick generation for user {user_email} with prompt: {prompt[:50]}...")
 
-        pick_hash = await self._invoke_pick_generation(prompt, account_id=account_details.id,
-                                                       news_age_in_hours=news_age_in_hours, description=description)
+        pick_hash = await self._invoke_pick_generation(
+            prompt, account_id=account_details.id, news_age_in_hours=news_age_in_hours, description=description
+        )
 
         # Update daily limits (only for user-initiated picks, not system-generated picks)
         if user_email and not bypass_daily_limit:
@@ -110,8 +114,9 @@ class PickGenerationService:
             "hash": pick_hash,
         }
 
-    async def _invoke_pick_generation(self, user_prompt: str, account_id: int | None, news_age_in_hours: int,
-                                      description: str | None = None) -> str:
+    async def _invoke_pick_generation(
+        self, user_prompt: str, account_id: int | None, news_age_in_hours: int, description: str | None = None
+    ) -> str:
         """Invoke the AI model to generate a pick based on the user prompt and available news.
 
         Args:

@@ -5,6 +5,9 @@ build-locally:
 ruff:
 	uv run ruff check . --fix
 
+ruff-unsafe-fixes:
+	uv run ruff check . --fix --unsafe-fixes
+
 ruff-format:
 	uv run ruff format .
 

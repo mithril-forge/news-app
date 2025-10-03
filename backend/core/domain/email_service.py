@@ -16,6 +16,8 @@ class EmailNewsletterService:
         self.configuration.api_key["api-key"] = brevo_api_key
         self.api_client = ApiClient(self.configuration)
         self.api_instance = TransactionalEmailsApi(self.api_client)
+        self.sender_email = ("noreply@tvujnovinar.cz",)
+        self.sender_name = ("Tvůj Novinář",)
         logger.info("EmailNewsletterService initialized")
 
     def _truncate_content(self, content: str, word_count: int = 30) -> str:
@@ -42,9 +44,12 @@ class EmailNewsletterService:
 
     def _get_article_word(self, count: int) -> str:
         """Returns correct Czech form of 'article' based on count."""
-        if count == 1:
+        _SINGULAR_COUNT = 1
+        _PAUCAL_MIN = 2
+        _PAUCAL_MAX = 4
+        if count == _SINGULAR_COUNT:
             return "nový článek"
-        elif 2 <= count <= 4:
+        elif _PAUCAL_MIN <= count <= _PAUCAL_MAX:
             return "nové články"
         else:
             return "nových článků"
@@ -67,8 +72,10 @@ class EmailNewsletterService:
         preview = self._truncate_content(content, preview_words)
 
         return f"""
-        <div style="margin-bottom: 20px; padding: 25px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-            <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+        <div style="margin-bottom: 20px; padding: 25px; background-color: #ffffff; border:
+        1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;">
                 {category}
             </div>
             <h2 style="margin: 0 0 10px 0; font-size: 20px; color: #1e293b; font-weight: 700; line-height: 1.4;">
@@ -79,8 +86,8 @@ class EmailNewsletterService:
             <p style="margin: 0 0 15px 0; font-size: 14px; color: #64748b; line-height: 1.6;">
                 {preview}
             </p>
-            <a href="{url}" 
-               style="display: inline-block; color: #ef4444; text-decoration: none; 
+            <a href="{url}"
+               style="display: inline-block; color: #ef4444; text-decoration: none;
                       font-size: 14px; font-weight: 600;">
                 Přečíst celý článek →
             </a>
@@ -97,11 +104,11 @@ class EmailNewsletterService:
         return articles_html
 
     def generate_daily_news_email(
-            self,
-            articles: list[ParsedNewsBasic],
-            prompt_description: str,
-            user_name: str = "Uživateli",
-            preview_words: int = 30,
+        self,
+        articles: list[ParsedNewsBasic],
+        prompt_description: str,
+        user_name: str = "Uživateli",
+        preview_words: int = 30,
     ) -> str:
         """
         Generate HTML email with daily news overview.
@@ -129,17 +136,21 @@ class EmailNewsletterService:
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Denní přehled zpráv</title>
         </head>
-        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f1f5f9;">
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial,
+        sans-serif; background-color: #f1f5f9;">
             <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 20px;">
                 <tr>
                     <td align="center">
-                        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <table width="600" cellpadding="0" cellspacing="0" style="background-color:
+                        #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 
                             <!-- Hlavička -->
                             <tr>
-                                <td style="background-color: #1e293b; color: #ffffff; padding: 30px; text-align: center;">
+                                <td style="background-color: #1e293b; color: #ffffff; padding: 30px;
+                                text-align: center;">
                                     <h1 style="margin: 0; font-size: 28px; font-weight: 700;">Tvůj Novinář</h1>
-                                    <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.8;">Denní přehled zpráv • {previous_date}</p>
+                                    <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.8;">
+                                    Denní přehled zpráv • {previous_date}</p>
                                 </td>
                             </tr>
 
@@ -150,8 +161,9 @@ class EmailNewsletterService:
                                         Pěkný den!
                                     </p>
                                     <p style="margin: 0 0 20px 0; font-size: 14px; color: #666666; line-height: 1.6;">
-                                        Náš AI novinář vybral speciálně pro tebe <strong>{article_count} {self._get_article_word(article_count)}</strong> 
-                                        na míru podle zadaného tématu <strong>{prompt_description}</strong>. 
+                                        Náš AI novinář vybral speciálně pro tebe <strong>{article_count}
+                                        {self._get_article_word(article_count)}</strong>
+                                        na míru podle zadaného tématu <strong>{prompt_description}</strong>.
                                         Výběr šitý na míru – jako bys měl vlastního redaktora!
                                     </p>
                                 </td>
@@ -168,7 +180,8 @@ class EmailNewsletterService:
                             <tr>
                                 <td style="padding: 30px; background-color: #f8f9fa; border-top: 1px solid #e9ecef;">
                                     <p style="margin: 0; font-size: 14px; color: #666666; text-align: center;">
-                                        Tento přehled byl vytvořen na základě tvého nastaveného tématu: <em>{prompt_description}</em>
+                                        Tento přehled byl vytvořen na základě tvého nastaveného tématu:
+                                        <em>{prompt_description}</em>
                                     </p>
                                 </td>
                             </tr>
@@ -194,14 +207,12 @@ class EmailNewsletterService:
         return html_template
 
     async def send_newsletter(
-            self,
-            recipient_email: str,
-            articles: list[ParsedNewsBasic],
-            prompt_description: str,
-            user_name: str = "Uživateli",
-            preview_words: int = 30,
-            sender_email: str = "noreply@tvujnovinar.cz",
-            sender_name: str = "Tvůj Novinář",
+        self,
+        recipient_email: str,
+        articles: list[ParsedNewsBasic],
+        prompt_description: str,
+        user_name: str = "Uživateli",
+        preview_words: int = 30,
     ) -> bool:
         """
         Generate and send newsletter via Brevo.
@@ -212,8 +223,6 @@ class EmailNewsletterService:
             user_name: User's name
             prompt_description: Description of user's topic/prompt
             preview_words: Number of words to show in preview
-            sender_email: Sender email address
-            sender_name: Sender name
 
         Returns:
             True if email was sent successfully
@@ -232,11 +241,13 @@ class EmailNewsletterService:
         )
 
         # Prepare email
-        subject = f"Denní přehled zpráv - {(datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d. %m. %Y')}"
+        subject = (
+            f"Denní přehled zpráv - {(datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%d. %m. %Y')}"
+        )
 
         send_smtp_email = SendSmtpEmail(
             to=[{"email": recipient_email, "name": user_name}],
-            sender={"email": sender_email, "name": sender_name},
+            sender={"email": self.sender_email, "name": self.sender_name},
             subject=subject,
             html_content=html_content,
         )

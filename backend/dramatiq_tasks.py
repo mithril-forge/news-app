@@ -111,7 +111,7 @@ async def async_choose_connected_articles_task(input_news_ids: list[int]) -> Non
 
 @dramatiq.actor(max_retries=1)
 def choose_new_articles_task(
-        input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
+    input_news_ids: list[int], input_news_hours: int | None = None, news_limit: int | None = None
 ) -> None:
     """Task that takes passed input_news_ids also query for the nonconnected older input news (by param delta).
     Then it queries AI model to choose new parsed articles and creates tasks for their generation"""
@@ -278,16 +278,12 @@ def create_daily_pick_for_account(account_email: str, date: str) -> None:
     """Async wrapper for the generation of daily task for account."""
     parsed_date = datetime.date.fromisoformat(date)
     logger.info(f"Starting daily pick task for account: {account_email} and date {parsed_date}")
-    asyncio.run(
-        async_create_daily_pick_for_account(
-            account_email=account_email,
-            date=parsed_date
-        )
-    )
+    asyncio.run(async_create_daily_pick_for_account(account_email=account_email, date=parsed_date))
 
 
 async def async_create_daily_pick_for_account(
-        account_email: str, date: datetime.date,
+    account_email: str,
+    date: datetime.date,
 ) -> None:
     """Create a daily pick for an account using the centralized PickGenerationService."""
     czech_days = {
@@ -315,7 +311,7 @@ async def async_create_daily_pick_for_account(
                 user_email=account_email,
                 bypass_daily_limit=True,
                 news_age_in_hours=hours_since_date_start,
-                description=description
+                description=description,
             )
             logger.info(f"Successfully generated daily pick for account {account_email}: {result}")
 
@@ -333,12 +329,7 @@ async def async_create_daily_pick_for_account(
 def send_daily_pick_email(account_email: str, pick_hash: str) -> None:
     """Async wrapper for sending daily pick email."""
     logger.info(f"Starting email send task for account: {account_email} and pick: {pick_hash}")
-    asyncio.run(
-        async_send_daily_pick_for_account(
-            account_email=account_email,
-            pick_hash=pick_hash
-        )
-    )
+    asyncio.run(async_send_daily_pick_for_account(account_email=account_email, pick_hash=pick_hash))
 
 
 async def async_send_daily_pick_for_account(account_email: str, pick_hash: str) -> None:
@@ -354,14 +345,12 @@ async def async_send_daily_pick_for_account(account_email: str, pick_hash: str) 
         try:
             news_pick = await news_service.get_pick_by_hash(pick_hash=pick_hash)
             account = await account_service.get_account_details(account_email=account_email)
-
-            email_service = EmailNewsletterService(
-                brevo_api_key=brevo_api_key
-            )
+            if account is None:
+                raise ValueError(f"Account with {account_email} not available")
+            email_service = EmailNewsletterService(brevo_api_key=brevo_api_key)
+            prompt = account.prompt or "Prompt nedostupný"
             await email_service.send_newsletter(
-                recipient_email=account_email,
-                articles=news_pick.articles,
-                prompt_description=account.prompt
+                recipient_email=account_email, articles=news_pick.articles, prompt_description=prompt
             )
             logger.info(f"Successfully sent daily pick email to {account_email}")
         except Exception as e:
