@@ -234,10 +234,12 @@ async def generate_pick_endpoint(
     service = PickGenerationService(session)
 
     if user_email is not None:
-        return await service.generate_pick_logged_in_user(user_email=user_email, bypass_daily_limit=False)
+        return await service.generate_pick_logged_in_user(
+            user_email=user_email, bypass_daily_limit=False, news_age_in_hours=48
+        )
     elif prompt is not None:
         prompt = prompt.strip()
-        return await service.generate_pick_anonymous(prompt=prompt)
+        return await service.generate_pick_anonymous(prompt=prompt, news_age_in_hours=48)
     else:
         raise HTTPException(status_code=400, detail="Either user_email or prompt must be provided.")
 
