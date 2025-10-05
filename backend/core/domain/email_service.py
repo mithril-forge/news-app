@@ -16,8 +16,8 @@ class EmailNewsletterService:
         self.configuration.api_key["api-key"] = brevo_api_key
         self.api_client = ApiClient(self.configuration)
         self.api_instance = TransactionalEmailsApi(self.api_client)
-        self.sender_email = ("noreply@tvujnovinar.cz",)
-        self.sender_name = ("Tvůj Novinář",)
+        self.sender_email = "noreply@tvujnovinar.cz"
+        self.sender_name = "Tvůj Novinář"
         logger.info("EmailNewsletterService initialized")
 
     def _truncate_content(self, content: str, word_count: int = 30) -> str:
