@@ -1,6 +1,5 @@
 import datetime
 import os
-from typing import Any
 
 import structlog
 from fastapi import HTTPException
@@ -37,9 +36,7 @@ class PickGenerationService:
         for news_id in news_ids:
             await self.pick_items_repository.add({"pick_id": pick_id, "parsed_news_id": news_id})
 
-    async def generate_pick_anonymous(
-        self, prompt: str, news_age_in_hours: int, description: str | None = None
-    ) -> dict[str, Any]:
+    async def generate_pick_anonymous(self, prompt: str, news_age_in_hours: int, description: str | None = None) -> str:
         """
         Generate a news pick for an anonymous user based on the provided prompt.
 
@@ -57,14 +54,11 @@ class PickGenerationService:
             prompt, account_id=None, news_age_in_hours=news_age_in_hours, description=description
         )
 
-        return {
-            "message": "Pick generated successfully",
-            "hash": pick_hash,
-        }
+        return pick_hash
 
     async def generate_pick_logged_in_user(
         self, user_email: str, news_age_in_hours: int, bypass_daily_limit: bool = False, description: str | None = None
-    ) -> dict[str, Any]:
+    ) -> str:
         """
         Generate a news pick for a logged-in user based on their stored prompt.
 
@@ -109,10 +103,7 @@ class PickGenerationService:
                 {"timestamp": datetime.datetime.now().isoformat(), "user_email": user_email, "pick_hash": pick_hash},
             )
 
-        return {
-            "message": "Pick generated successfully",
-            "hash": pick_hash,
-        }
+        return pick_hash
 
     async def _invoke_pick_generation(
         self, user_prompt: str, account_id: int | None, news_age_in_hours: int, description: str | None = None

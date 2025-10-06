@@ -24,6 +24,7 @@ from core.domain.schemas import (
 )
 from core.domain.topic_service import TopicService
 from core.engine import get_session
+from core.presentation.schemas import PickGenerationResponse
 from features.input_news_processing.domain.pick_generation_service import PickGenerationService
 from logger import init_logging
 
@@ -224,7 +225,7 @@ async def generate_pick_endpoint(
     session: Annotated[AsyncSession, Depends(get_session)],
     user_email: Annotated[str | None, Form()] = None,
     prompt: Annotated[str | None, Form()] = None,
-) -> dict[str, Any]:
+) -> PickGenerationResponse:
     """
     Unified pick generation endpoint that handles both anonymous and logged-in users.
 
@@ -234,12 +235,15 @@ async def generate_pick_endpoint(
     service = PickGenerationService(session)
 
     if user_email is not None:
-        return await service.generate_pick_logged_in_user(
+        pick_hash = await service.generate_pick_logged_in_user(
             user_email=user_email, bypass_daily_limit=False, news_age_in_hours=48
         )
+        return PickGenerationResponse(hash=pick_hash, message="Pick generated successfully")
+
     elif prompt is not None:
         prompt = prompt.strip()
-        return await service.generate_pick_anonymous(prompt=prompt, news_age_in_hours=48)
+        pick_hash = await service.generate_pick_anonymous(prompt=prompt, news_age_in_hours=48)
+        return PickGenerationResponse(hash=pick_hash, message="Pick generated successfully")
     else:
         raise HTTPException(status_code=400, detail="Either user_email or prompt must be provided.")
 

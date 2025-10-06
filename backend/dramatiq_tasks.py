@@ -307,15 +307,14 @@ async def async_create_daily_pick_for_account(
         pick_generation_service = PickGenerationService(session=db_session)
 
         try:
-            result = await pick_generation_service.generate_pick_logged_in_user(
+            pick_hash = await pick_generation_service.generate_pick_logged_in_user(
                 user_email=account_email,
                 bypass_daily_limit=True,
                 news_age_in_hours=hours_since_date_start,
                 description=description,
             )
-            logger.info(f"Successfully generated daily pick for account {account_email}: {result}")
+            logger.info(f"Successfully generated daily pick for account {account_email}: {pick_hash}")
 
-            pick_hash = result.get("hash")
             if pick_hash:
                 send_daily_pick_email.send(account_email, pick_hash)
             else:
