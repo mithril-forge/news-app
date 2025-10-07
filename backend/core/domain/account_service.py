@@ -31,4 +31,4 @@ class AccountService:
 
     async def delete_account(self, account_email: str) -> None:
         """ Deletes the account"""
-        await self.account_repo.del
+        await self.account_repo.delete_by_email(account_email=account_email)

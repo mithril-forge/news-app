@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Loading from "@/components/common/Loading";
 import ArticleCard from "@/components/news/ArticleCard";
 import {
   fetchTopics,
@@ -13,17 +12,15 @@ import {
   getPickNews,
 } from "@/services/api";
 import {
+  deleteAccount,
   generatePick,
   linkAnonymousPickToUser,
-  type NewsPickResponse,
 } from "@/services/api/feed";
-import type { PickGenerationResponse } from "@/services/api/feed";
 import { NewsArticle, Topic } from "@/types";
 
 // Storage keys
 const EMAIL_KEY = "news_app_user_email";
 const PROMPT_KEY = "news_app_user_prompt";
-const DAILY_GENERATION_KEY = "news_app_daily_generation";
 const ANONYMOUS_PICK_HASH_KEY = "news_app_anonymous_pick_hash";
 const ANONYMOUS_PICK_DATE_KEY = "news_app_anonymous_pick_date";
 
@@ -51,11 +48,19 @@ const EmailModal = ({
   const [email, setEmail] = useState("");
   const [modalFeedback, setModalFeedback] = useState<string | null>(null);
   const [isLoginMode, setIsLoginMode] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check terms acceptance only for registration, not login
+    if (!isLoginMode && !termsAccepted) {
+      setModalFeedback("Musíte souhlasit se zásadami ochrany osobních údajů");
+      return;
+    }
+    
     if (email.trim()) {
       setModalFeedback(null);
       const result = isLoginMode
@@ -107,6 +112,29 @@ const EmailModal = ({
             />
           </div>
 
+          {/* Terms acceptance checkbox - only for registration */}
+          {!isLoginMode && (
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="terms" className="text-sm text-gray-700">
+                Souhlasím se{" "}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  className="text-blue-600 underline hover:text-blue-800"
+                >
+                  zásadami ochrany osobních údajů
+                </a>
+              </label>
+            </div>
+          )}
+
           {/* Modal feedback */}
           {modalFeedback && (
             <div className="rounded-lg border border-red-200 bg-red-50 p-3">
@@ -151,8 +179,9 @@ const EmailModal = ({
             type="button"
             onClick={() => {
               setIsLoginMode(!isLoginMode);
-              setModalFeedback(null); // Clear any error messages when switching
-              setEmail(""); // Clear email field
+              setModalFeedback(null);
+              setEmail("");
+              setTermsAccepted(false);
             }}
             className="cursor-pointer font-medium text-blue-600 underline hover:text-blue-800"
           >
@@ -229,7 +258,6 @@ export default function PersonalFeedPage() {
   const [editedPrompt, setEditedPrompt] = useState("");
   const [originalPrompt, setOriginalPrompt] = useState("");
 
-  // Load saved data from localStorage on mount
   useEffect(() => {
     const savedEmail = localStorage.getItem(EMAIL_KEY);
     const savedPrompt = localStorage.getItem(PROMPT_KEY);
@@ -237,25 +265,20 @@ export default function PersonalFeedPage() {
     const savedPickDate = localStorage.getItem(ANONYMOUS_PICK_DATE_KEY);
 
     if (savedEmail) {
-      // Logged in user
       setEmail(savedEmail);
       setIsLoggedIn(true);
       setShowPromptForm(false);
       loadUserData(savedEmail);
     } else if (savedPrompt) {
-      // Anonymous user
       setPrompt(savedPrompt);
       setShowPromptForm(false);
 
-      // Check if we have saved pick from today
       const today = new Date().toDateString();
       if (savedPickHash && savedPickDate === today) {
-        // Load articles from backend using the hash
         loadAnonymousPickByHash(savedPickHash);
       }
     }
 
-    // Load topics for header
     fetchTopics().then(setTopics);
   }, []);
 
@@ -267,7 +290,6 @@ export default function PersonalFeedPage() {
       if (accountDetails) {
         setPrompt(accountDetails.prompt || "");
 
-        // Try to get all articles from their latest pick
         if (accountDetails.prompt) {
           try {
             const pickResponse = await getAllLatestPick(userEmail);
@@ -276,7 +298,6 @@ export default function PersonalFeedPage() {
               pickResponse.description || accountDetails.prompt,
             );
 
-            // Show warning if no articles found
             if (pickResponse.articles.length === 0) {
               setFeedback({
                 type: "warning",
@@ -303,7 +324,6 @@ export default function PersonalFeedPage() {
       setNews(pickResponse.articles);
       setOriginalPrompt(pickResponse.description);
 
-      // Show warning if no articles found
       if (pickResponse.articles.length === 0) {
         setFeedback({
           type: "warning",
@@ -313,7 +333,6 @@ export default function PersonalFeedPage() {
       }
     } catch (error) {
       console.error("Error loading anonymous pick:", error);
-      // Clear invalid hash
       localStorage.removeItem(ANONYMOUS_PICK_HASH_KEY);
       localStorage.removeItem(ANONYMOUS_PICK_DATE_KEY);
       setNews([]);
@@ -330,37 +349,31 @@ export default function PersonalFeedPage() {
     setPickGenerationStep("Generuji tvůj personalizovaný výběr...");
 
     try {
-      // Generate pick
       if (userEmail) {
-        // Logged in user
         await generatePick({ userEmail });
         setPickGenerationStep("Načítám tvé články...");
         await loadUserData(userEmail);
       } else {
-        // Anonymous user
         const response = await generatePick({ prompt: userPrompt });
         setPickGenerationStep("Načítám tvé články...");
         const pickResponse = await getPickNews(response.hash);
         setNews(pickResponse.articles);
         setOriginalPrompt(pickResponse.description);
 
-        // Save pick hash to localStorage for persistence
         const today = new Date().toDateString();
         localStorage.setItem(ANONYMOUS_PICK_HASH_KEY, response.hash);
         localStorage.setItem(ANONYMOUS_PICK_DATE_KEY, today);
 
-        // Show warning if no articles found
         if (pickResponse.articles.length === 0) {
           setFeedback({
             type: "warning",
             message:
               "⚠️ Tvůj prompt byl příliš unikátní a nenašli jsme žádné odpovídající články. Zkus to příště jinak.",
           });
-          return; // Don't show success message
+          return;
         }
       }
 
-      // Show success and email modal for anonymous users
       if (!userEmail) {
         setShowEmailModal(true);
       }
@@ -380,7 +393,6 @@ export default function PersonalFeedPage() {
         errorMessage.includes("IP blocked") ||
         errorMessage.includes("429")
       ) {
-        // Check if this was triggered from a prompt update by a logged-in user
         if (email && isLoggedIn) {
           setFeedback({
             type: "info",
@@ -421,10 +433,7 @@ export default function PersonalFeedPage() {
     e.preventDefault();
     if (!prompt.trim()) return;
 
-    // Save prompt to localStorage
     localStorage.setItem(PROMPT_KEY, prompt);
-
-    // Generate pick
     await generatePickWithFeedback(prompt, isLoggedIn ? email : undefined);
   };
 
@@ -433,7 +442,6 @@ export default function PersonalFeedPage() {
   ): Promise<{ success: boolean; error?: string }> => {
     setSaving(true);
     try {
-      // First check if account already exists to prevent overwriting
       const existingAccount = await getAccountDetails(emailInput);
       if (existingAccount) {
         return {
@@ -442,38 +450,28 @@ export default function PersonalFeedPage() {
         };
       }
 
-      // Get the current anonymous pick hash if exists
       const anonymousPickHash = localStorage.getItem(ANONYMOUS_PICK_HASH_KEY);
-
-      // Try to save AI prompt with email (creating new account)
       await setAIPrompt(emailInput, prompt);
 
-      // If user has anonymous pick, link it to their new account
       const hasAnonymousPick = anonymousPickHash && news.length > 0;
       if (hasAnonymousPick) {
         try {
           await linkAnonymousPickToUser(emailInput, anonymousPickHash);
         } catch (error) {
           console.warn("Failed to link anonymous pick to user:", error);
-          // Don't fail account creation if linking fails
         }
       }
 
-      // Save to localStorage
       localStorage.setItem(EMAIL_KEY, emailInput);
       setEmail(emailInput);
       setIsLoggedIn(true);
 
-      // Clear anonymous localStorage data since we're now registered
       localStorage.removeItem(ANONYMOUS_PICK_HASH_KEY);
       localStorage.removeItem(ANONYMOUS_PICK_DATE_KEY);
 
-      // If we had anonymous articles and linked them, keep displaying them
-      // Otherwise load user data from backend
       if (!hasAnonymousPick) {
         await loadUserData(emailInput);
       }
-      // If we had anonymous articles, they stay displayed and are now linked to the account
 
       setShowEmailModal(false);
       setFeedback({
@@ -485,24 +483,20 @@ export default function PersonalFeedPage() {
       return { success: true };
     } catch (error) {
       console.error("Error saving email:", error);
-      // Check if email already exists
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       if (
         errorMessage.includes("already exists") ||
         errorMessage.includes("duplicate")
       ) {
-        // Auto-login if email exists
         try {
           localStorage.setItem(EMAIL_KEY, emailInput);
           setEmail(emailInput);
           setIsLoggedIn(true);
 
-          // Clear anonymous localStorage data
           localStorage.removeItem(ANONYMOUS_PICK_HASH_KEY);
           localStorage.removeItem(ANONYMOUS_PICK_DATE_KEY);
 
-          // Load existing user data
           await loadUserData(emailInput);
 
           setShowEmailModal(false);
@@ -539,15 +533,13 @@ export default function PersonalFeedPage() {
 
     setSaving(true);
     try {
-      // Save the updated prompt
       await setAIPrompt(email, editedPrompt);
       setPrompt(editedPrompt);
       setIsEditingPrompt(false);
 
-      // Try to generate pick with new prompt - backend will handle daily limits
       await generatePickWithFeedback(editedPrompt, email);
     } catch (error) {
-      console.error("❌ Error saving prompt:", error);
+      console.error("Error saving prompt:", error);
       setFeedback({
         type: "error",
         message: "❌ Nastala chyba při ukládání. Zkus to prosím znovu.",
@@ -562,10 +554,47 @@ export default function PersonalFeedPage() {
     setEditedPrompt("");
   };
 
+  const handleDeleteAccount = async () => {
+    if (!confirm("Opravdu chcete smazat svůj účet? Tato akce je nevratná.")) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Call the API to delete the account
+      await deleteAccount(email);
+
+      // Clear local storage
+      localStorage.removeItem(EMAIL_KEY);
+      localStorage.removeItem(PROMPT_KEY);
+      localStorage.removeItem(ANONYMOUS_PICK_HASH_KEY);
+      localStorage.removeItem(ANONYMOUS_PICK_DATE_KEY);
+
+      // Reset state
+      setEmail("");
+      setPrompt("");
+      setNews([]);
+      setIsLoggedIn(false);
+      setShowPromptForm(true);
+
+      setFeedback({
+        type: "success",
+        message: "✅ Tvůj účet byl úspěšně smazán.",
+      });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      setFeedback({
+        type: "error",
+        message: "❌ Nastala chyba při mazání účtu. Zkus to prosím znovu.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleLogin = async (loginEmail: string) => {
     setSaving(true);
     try {
-      // Try to get account details
       const accountDetails = await getAccountDetails(loginEmail);
 
       if (!accountDetails) {
@@ -576,14 +605,12 @@ export default function PersonalFeedPage() {
         return;
       }
 
-      // Save to localStorage and set logged in state
       localStorage.setItem(EMAIL_KEY, loginEmail);
       setEmail(loginEmail);
       setIsLoggedIn(true);
       setShowLoginForm(false);
       setShowPromptForm(false);
 
-      // Load user data
       await loadUserData(loginEmail);
 
       setFeedback({
@@ -605,7 +632,6 @@ export default function PersonalFeedPage() {
     loginEmail: string,
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Try to get account details
       const accountDetails = await getAccountDetails(loginEmail);
 
       if (!accountDetails) {
@@ -615,16 +641,13 @@ export default function PersonalFeedPage() {
         };
       }
 
-      // Save to localStorage and set logged in state
       localStorage.setItem(EMAIL_KEY, loginEmail);
       setEmail(loginEmail);
       setIsLoggedIn(true);
 
-      // Clear anonymous localStorage data
       localStorage.removeItem(ANONYMOUS_PICK_HASH_KEY);
       localStorage.removeItem(ANONYMOUS_PICK_DATE_KEY);
 
-      // Load user data
       await loadUserData(loginEmail);
 
       setShowEmailModal(false);
@@ -643,14 +666,6 @@ export default function PersonalFeedPage() {
     }
   };
 
-  // Email change is not allowed for logged-in users
-  // const handleChangeEmail = () => {
-  //   localStorage.removeItem(EMAIL_KEY);
-  //   setEmail('');
-  //   setIsLoggedIn(false);
-  //   setShowPromptForm(true);
-  //   setNews([]);
-
   const categories = ["AI Feed", "Vše", ...topics.map((topic) => topic.name)];
 
   return (
@@ -663,7 +678,6 @@ export default function PersonalFeedPage() {
       <Header categories={categories} activeCategory="AI Feed" />
 
       <main className="mx-auto w-full max-w-5xl flex-grow px-4 py-8">
-        {/* Hero Section - show for new users or when editing prompt */}
         {showPromptForm && !isLoggedIn && (
           <div className="mb-8 text-center">
             <div className="mb-4 inline-flex items-center space-x-3">
@@ -681,7 +695,6 @@ export default function PersonalFeedPage() {
           </div>
         )}
 
-        {/* Main Content */}
         <div className="mb-8 rounded-3xl bg-white p-8 shadow-2xl">
           {feedback && <FeedbackComponent feedback={feedback} />}
 
@@ -847,7 +860,6 @@ export default function PersonalFeedPage() {
                   )}
                 </div>
 
-                {/* Login option for first-time visitors */}
                 {!isLoggedIn && (
                   <div className="mt-6 text-center">
                     <p className="mb-2 text-sm text-gray-600">Už máte účet?</p>
@@ -867,7 +879,6 @@ export default function PersonalFeedPage() {
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Settings Bar - only for anonymous users */}
               {!isLoggedIn && prompt && (
                 <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-4">
                   <div className="flex items-center space-x-3">
@@ -888,7 +899,6 @@ export default function PersonalFeedPage() {
                 </div>
               )}
 
-              {/* Show current prompt for both logged in and anonymous users */}
               {prompt && (
                 <div className="rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-blue-50 p-8">
                   <div className="mb-6 flex items-start justify-between">
@@ -918,7 +928,7 @@ export default function PersonalFeedPage() {
                       </div>
                     </div>
                     {isLoggedIn && (
-                      <div>
+                      <div className="flex gap-2">
                         <button
                           onClick={handleEditPrompt}
                           className="flex cursor-pointer items-center space-x-2 rounded-xl border-2 border-gray-300 bg-white px-4 py-2 text-gray-700 transition-all hover:border-blue-400 hover:text-blue-600 hover:shadow-md"
@@ -927,10 +937,10 @@ export default function PersonalFeedPage() {
                           <span className="font-medium">Upravit</span>
                         </button>
                         <button
-                          onClick={handleEditPrompt}
-                          className="flex cursor-pointer items-center space-x-2 rounded-xl border-2 border-gray-300 bg-white px-4 py-2 text-gray-700 transition-all hover:border-blue-400 hover:text-blue-600 hover:shadow-md"
+                          onClick={handleDeleteAccount}
+                          className="flex cursor-pointer items-center space-x-2 rounded-xl border-2 border-red-300 bg-white px-4 py-2 text-red-600 transition-all hover:border-red-500 hover:bg-red-50 hover:shadow-md"
                         >
-                          <span>✏️</span>
+                          <span>🗑️</span>
                           <span className="font-medium">Smazat</span>
                         </button>
                       </div>
@@ -982,7 +992,6 @@ export default function PersonalFeedPage() {
                 </div>
               )}
 
-              {/* News section */}
               {loading ? (
                 <div className="py-12 text-center">
                   <div className="inline-flex items-center space-x-3 rounded-2xl border border-blue-200 bg-blue-50 px-6 py-4">
@@ -1031,7 +1040,6 @@ export default function PersonalFeedPage() {
         </div>
       </main>
 
-      {/* Email Modal */}
       <EmailModal
         isOpen={showEmailModal}
         onClose={() => setShowEmailModal(false)}

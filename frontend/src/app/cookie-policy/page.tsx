@@ -1,16 +1,22 @@
 import React from 'react';
+import Footer from '~/components/layout/Footer';
+import Header from '~/components/layout/Header';
+import { fetchTopics } from '~/services/api';
 
-export default function CookiePolicyPage() {
+export default async function CookiePolicyPage() {
+    
+    // Fetch data on the server
+    const topicsData = await fetchTopics();
+    const categories = ["AI Feed", "Vše", ...topicsData.map(topic => topic.name)];
+    
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Simple header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <a href="/" className="text-xl font-bold text-blue-600 hover:text-blue-700">
-            Tvůj Novinář
-          </a>
-        </div>
-      </header>
+        <div className="min-h-screen flex flex-col" style={{
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+    }}>
+            <Header
+              categories={categories}
+              activeCategory=""
+            />
 
       <main className="max-w-4xl mx-auto px-4 py-12">
         <article className="bg-white rounded-lg shadow-sm p-8 md:p-12">
@@ -179,11 +185,9 @@ export default function CookiePolicyPage() {
               
               <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Prostřednictvím našeho webu</h3>
               <p className="text-gray-700 mb-4">
-                Své preference můžete kdykoliv změnit kliknutím na:
+                Své preference můžete kdykoliv změnit kliknutím na Nastavení cookies ve spodní části obrazovky.
               </p>
-              <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                Nastavení cookies
-              </button>
+ 
 
               <h3 className="text-lg font-semibold text-gray-900 mb-3 mt-6">Prostřednictvím prohlížeče</h3>
               <p className="text-gray-700 mb-3">
@@ -239,7 +243,6 @@ export default function CookiePolicyPage() {
               </ul>
             </section>
 
-            {/* Contact */}
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Kontakt</h2>
               <p className="text-gray-700 mb-3">Máte-li dotazy k cookies, kontaktujte nás:</p>
@@ -249,19 +252,16 @@ export default function CookiePolicyPage() {
               </ul>
             </section>
 
-            {/* Last update */}
             <section>
               <p className="text-gray-600 text-sm">
                 <strong>Poslední aktualizace:</strong> 7. října 2025
               </p>
             </section>
 
-            {/* Link to privacy policy */}
             <section className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Odkaz na Privacy Policy</h3>
               <p className="text-gray-700">
                 Více informací o zpracování osobních údajů najdete v našich{' '}
-                <a href="/privacy-policy" className="text-blue-600 hover:underline font-semibold">
+                <a href="/terms" className="text-blue-600 hover:underline font-semibold">
                   Zásadách ochrany osobních údajů
                 </a>.
               </p>
@@ -270,20 +270,9 @@ export default function CookiePolicyPage() {
         </article>
       </main>
 
-      {/* Simple footer */}
-      <footer className="bg-white border-t border-gray-200 py-8 mt-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
-            <p>© 2025 Tvůj Novinář. Všechna práva vyhrazena.</p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="/about" className="hover:text-blue-600">O nás</a>
-              <a href="/privacy-policy" className="hover:text-blue-600">Ochrana údajů</a>
-              <a href="/cookie-policy" className="hover:text-blue-600">Cookies</a>
-              <a href="/contact" className="hover:text-blue-600">Kontakt</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer 
+        categories={categories} 
+      />
     </div>
   );
 }
