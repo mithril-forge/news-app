@@ -30,7 +30,26 @@ export default function Footer({
             <span className="text-gray-500">|</span>
             <span className="text-gray-300">info@tvujnovinar.cz</span>
           </div>
-
+          <div className="flex items-center gap-6 text-sm">
+            <Link
+              href="/terms"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Zásady ochrany osobních údajů
+            </Link>
+            <span className="text-gray-500">|</span>
+            <span className="text-gray-300">info@tvujnovinar.cz</span>
+          </div>
+          <div className="flex items-center gap-6 text-sm">
+            <Link
+              href="/terms"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              Zásady používání cookies
+            </Link>
+            <span className="text-gray-500">|</span>
+            <span className="text-gray-300">info@tvujnovinar.cz</span>
+          </div>
           {/* Copyright */}
           <div className="text-sm text-gray-400">
             © {new Date().getFullYear()} Tvůj Novinář

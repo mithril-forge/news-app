@@ -913,7 +913,7 @@ export default function PersonalFeedPage() {
                         </p>
                         {originalPrompt && (
                           <p className="text-sm text-gray-500 mt-1">
-                            Původní prompt: "{originalPrompt}"
+                            Téma výběru: {originalPrompt}
                           </p>
                         )}
                       </div>
