@@ -28,3 +28,7 @@ class AccountService:
         """Get all accounts"""
         accounts = await self.account_repo.get_all()
         return orm_list_to_pydantic(accounts, AccountDetails)
+
+    async def delete_account(self, account_email: str) -> None:
+        """ Deletes the account"""
+        await self.account_repo.del

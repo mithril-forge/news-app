@@ -582,3 +582,17 @@ class AsyncAccountRepositoryWithID(AsyncBaseRepositoryWithID[Account]):
         account = result.scalars().first()
         logger.info(f"Retrieved account with email: {email}")
         return account
+
+
+    async def delete_by_email(self, email: str) -> None:
+        """Delete account by email."""
+        logger.debug(f"Deleting account by email: {email}")
+        statement = select(Account).where(Account.email == email)
+        result = await self.session.execute(statement)
+        account = result.scalars().first()
+        if account:
+            await self.session.delete(account)
+            await self.session.commit()
+            logger.info(f"Deleted account with email: {email}")
+        else:
+            logger.warn(f"Account with email {email} not found")
