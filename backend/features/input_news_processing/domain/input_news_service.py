@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import os
 import zipfile
 from datetime import datetime, timedelta
@@ -135,6 +136,9 @@ class InputNewsService:
             if env_value is None:
                 raise ValueError("SCRAP_MAX_ARTICLES_PER_SITE environment variable is not set")
             max_articles_per_site = int(env_value)
+
+        logging.getLogger("cz_news").setLevel(logging.INFO)
+        logging.getLogger("cz_news.crawler").setLevel(logging.INFO)
 
         logger.info(f"Scraping input news with delta: {delta}, max_articles_per_site: {max_articles_per_site}")
         if websites is not None:
