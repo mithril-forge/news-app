@@ -190,7 +190,7 @@ class EmailNewsletterService:
                             <tr>
                                 <td style="padding: 20px; text-align: center; font-size: 12px; color: #999999;">
                                     <p style="margin: 0;">
-                                        Pokud chceš změnit svůj prompt, můžeš to udělat na stránce:
+                                        Pokud chceš změnit svůj prompt, nebo zrušit newsletter, můžeš to udělat na stránce:
                                         https://tvujnovinar.cz/feed
                                     </p>
                                 </td>
