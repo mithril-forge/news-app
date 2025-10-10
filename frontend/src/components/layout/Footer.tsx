@@ -9,7 +9,6 @@ interface FooterProps {
   /** Optional callback for category selection */
   onSelectCategory?: (category: string) => void;
 }
-
 export default function Footer({
   categories,
   onSelectCategory
@@ -27,8 +26,8 @@ export default function Footer({
             >
               O nás
             </Link>
-
           </div>
+          
           <div className="flex items-center gap-3 text-sm">
             <Link
               href="/terms"
@@ -37,6 +36,7 @@ export default function Footer({
               Zásady ochrany osobních údajů
             </Link>
           </div>
+          
           <div className="flex items-center gap-3 text-sm">
             <Link
               href="/cookie-policy"
@@ -45,9 +45,16 @@ export default function Footer({
               Zásady používání cookies
             </Link>
           </div>
-          <span className="text-gray-500">|</span>
-          <span className="text-gray-300">info@tvujnovinar.cz</span>
-          {/* Copyright */}
+          
+          <span className="text-gray-500 text-sm">|</span>
+          
+          <a 
+            href="mailto:info@tvujnovinar.cz"
+            className="text-sm text-gray-300 hover:text-white transition-colors"
+          >
+            info@tvujnovinar.cz
+          </a>
+          
           <div className="text-sm text-gray-400">
             © {new Date().getFullYear()} Tvůj Novinář
           </div>
