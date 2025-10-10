@@ -117,7 +117,7 @@ async def log_requests(request: Request, call_next: Any) -> Any:
 # API endpoints
 @app.get("/topics")
 async def all_topics(
-        session: Annotated[AsyncSession, Depends(get_session)],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> list[TopicResponse]:
     """Get all topics"""
     service = TopicService(session)
@@ -134,10 +134,10 @@ async def specific_topic(topic_id: int, session: Annotated[AsyncSession, Depends
 
 @app.get("/news/topics/{topic_id}")
 async def news_by_topic(
-        session: Annotated[AsyncSession, Depends(get_session)],
-        topic_id: int,
-        skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
-        limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    topic_id: int,
+    skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
+    limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
 ) -> list[ParsedNewsBasic]:
     """Get news for a specific topic with pagination"""
     service = NewsService(session)
@@ -146,10 +146,10 @@ async def news_by_topic(
 
 @app.get("/news/latest")
 async def latest_news(
-        session: Annotated[AsyncSession, Depends(get_session)],
-        skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
-        limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
-        sort_by: Annotated[NewsSortBy, Query(description="How to sort the news items")] = NewsSortBy.LATEST,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    skip: Annotated[int, Query(ge=0, description="Number of records to skip")] = 0,
+    limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 10,
+    sort_by: Annotated[NewsSortBy, Query(description="How to sort the news items")] = NewsSortBy.LATEST,
 ) -> list[ParsedNewsBasic]:
     """Get the latest news items with pagination"""
     service = NewsService(session)
@@ -161,9 +161,9 @@ async def latest_news(
 
 @app.get("/news/popular")
 async def popular_news(
-        session: Annotated[AsyncSession, Depends(get_session)],
-        limit: Annotated[int, Query(ge=1, le=20)] = 10,
-        days: Annotated[int, Query(ge=1, le=30)] = 3,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    limit: Annotated[int, Query(ge=1, le=20)] = 10,
+    days: Annotated[int, Query(ge=1, le=30)] = 3,
 ) -> list[ParsedNewsBasic]:
     """Get the most popular news by views"""
     service = NewsService(session=session)
@@ -194,7 +194,7 @@ async def set_ai_prompt(prompt: str, user_email: str, session: Annotated[AsyncSe
 
 @app.get("/account_details/{user_email}")
 async def get_account_details(
-        user_email: str, session: Annotated[AsyncSession, Depends(get_session)]
+    user_email: str, session: Annotated[AsyncSession, Depends(get_session)]
 ) -> AccountDetails | None:
     """Return account details for the user."""
     service = AccountService(session)
@@ -221,9 +221,9 @@ async def get_pick_news(pick_hash: str, session: Annotated[AsyncSession, Depends
 
 @app.post("/generate_pick")
 async def generate_pick_endpoint(
-        session: Annotated[AsyncSession, Depends(get_session)],
-        user_email: Annotated[str | None, Form()] = None,
-        prompt: Annotated[str | None, Form()] = None,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user_email: Annotated[str | None, Form()] = None,
+    prompt: Annotated[str | None, Form()] = None,
 ) -> dict[str, Any]:
     """
     Unified pick generation endpoint that handles both anonymous and logged-in users.
@@ -246,9 +246,9 @@ async def generate_pick_endpoint(
 
 @app.post("/link_anonymous_pick_to_user")
 async def link_anonymous_pick_to_user(
-        user_email: Annotated[str, Form()],
-        pick_hash: Annotated[str, Form()],
-        session: Annotated[AsyncSession, Depends(get_session)],
+    user_email: Annotated[str, Form()],
+    pick_hash: Annotated[str, Form()],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> None:
     """Links an anonymous pick (by hash) to a user account."""
     service = NewsService(session)
@@ -257,9 +257,9 @@ async def link_anonymous_pick_to_user(
 
 @app.delete("/delete_account")
 async def delete_account(
-        user_email: Annotated[str, Form()],
-        session: Annotated[AsyncSession, Depends(get_session)],
+    user_email: Annotated[str, Form()],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ) -> None:
-    """ Deletes record for the user"""
+    """Deletes record for the user"""
     account_service = AccountService(session=session)
     await account_service.delete_account(account_email=user_email)

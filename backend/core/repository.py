@@ -583,7 +583,6 @@ class AsyncAccountRepositoryWithID(AsyncBaseRepositoryWithID[Account]):
         logger.info(f"Retrieved account with email: {email}")
         return account
 
-
     async def delete_by_email(self, account_email: str) -> None:
         """Delete account by email."""
         logger.debug(f"Deleting account by email: {account_email}")
