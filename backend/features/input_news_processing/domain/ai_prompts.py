@@ -146,6 +146,9 @@ VÝSTUP:
 - Zdroje informací můžeš uvádět, ale dělej to tak, aby tím nebyl text příliš zaplněný - nepoužívej v článku interní ID, ti uživatelé neznají!
 - Čím více zdrojů parsed news má, tím delší ho udělej, aby si zvládl poskytnout důležité informace ze všech článků - snaž se však vybírat ty nejzásadnější informace
 - Snaž se nezkracovat content, ale spíš ho prodloužit o nové důležité informace
+- Pokud je daná informace stejná ve všech článcích, nebo nějak jasně vyplývá, tak se nemusíš nutně odkazovat
+- Vyber si důležité body, které jsou odlišné v článcích a ty shrň -> tvoje přidaná hodnota je v poskytování uživateli objektivních informací z různých zdrojů, aby měl na věc objektivní pohled + dodání uživateli různých důležitých informací, ktere jsou jen v konkrétních článcích
+- Vyber si nové důležité informace, které se objevily v nových input_news a ty zahrň -> můžeš tam i poukázat, že tyto informace se třeba objevily následně atd.
 """
 
 NEW_GENERATION_PROMPT = """
@@ -171,7 +174,7 @@ TVŮJ ÚKOL:
 - Prozkoumej nové články (input_news)
 - Vytvoř nový souhrnný článek spojením souvisejících zdrojových článků
 - Článek bude v ČEŠTINĚ
-- Článek tvoř tak, aby byl pochopitelný i bez interních znalostí dat jako jsou ID atd. Odkazuj se spíš pomocí zdroje: "Dle článku na Novinkách" atd.
+- Článek tvoř tak, aby byl pochopitelný i bez interních znalostí dat jako jsou ID atd. Odkazuj se spíš pomocí zdroje: "Dle článku na Novinkách" atd. -> to odkazování ale používej vyjímečně a hlavně v případech, kdy jsou data v článku specifická a odlišná od ostatních
 
 VÝSTUP:
 - Článek bude splňovat tyto pravidla:
@@ -190,6 +193,8 @@ VÝSTUP:
   * Upřednostňuj nejnovější informace při konfliktech a informace, které jsou uvedeny ve všech článcích
   * Formátuj výsledný text na sloupce, aby byl lépe přehledný a čitelný.
   * Zdroje informací můžeš uvádět, ale dělej to tak, aby tím nebyl text příliš zaplněný - nepoužívej v článku interní ID, ti uživatelé neznají!
+  * Pokud je daná informace stejná ve všech článcích, nebo nějak jasně vyplývá, tak se nemusíš nutně odkazovat
+  * Vyber si důležité body, které jsou odlišné v článcích a ty shrň -> tvoje přidaná hodnota je v poskytování uživateli objektivních informací z různých zdrojů, aby měl na věc objektivní pohled + dodání uživateli různých důležitých informací, ktere jsou jen v konkrétních článcích
 
 DODRŽ VŠECHNY BODY NAHOŘE! Minimální délku content, jazyk atd.
 """
