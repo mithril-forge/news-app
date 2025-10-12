@@ -39,9 +39,6 @@ class AsyncInputNewsRepositoryWithID(AsyncBaseRepositoryWithID[InputNews]):
         """Get input news by timedelta, user can adjust if the input news should be filtered by parsed_news"""
         logger.debug(f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}")
         threshold_date = datetime.utcnow() - delta
-        logger.debug(f"Threshold date: {threshold_date}")
-
-        # Build conditions properly
         if newer:
             statement = select(InputNews).where(InputNews.publication_date >= threshold_date)
         else:
@@ -51,9 +48,6 @@ class AsyncInputNewsRepositoryWithID(AsyncBaseRepositoryWithID[InputNews]):
             statement = statement.where(InputNews.parsed_news.isnot(None))
         elif has_parsed_news is False:
             statement = statement.where(InputNews.parsed_news.is_(None))
-
-        # DEBUG: Print the actual SQL
-        logger.debug(f"SQL Query: {statement}")
 
         result = await self.session.execute(statement)
         input_news_list = result.scalars().all()

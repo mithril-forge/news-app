@@ -415,7 +415,6 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
 
         conditions = [ParsedNews.updated_at >= from_date]
 
-        # Add input news delta condition only if provided
         if input_news_delta is not None:
             input_news_from_date = datetime.datetime.utcnow() - input_news_delta
             input_news_condition = not_(
