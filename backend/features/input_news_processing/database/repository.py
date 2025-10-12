@@ -36,7 +36,17 @@ class AsyncInputNewsRepositoryWithID(AsyncBaseRepositoryWithID[InputNews]):
         has_parsed_news: bool | None = None,
         newer: bool = True,
     ) -> Sequence[InputNews]:
-        """Get input news by timedelta, user can adjust if the input news should be filtered by parsed_news"""
+        """
+        Get input news published within a time delta from now.
+        Args:
+            delta: Time delta to look back from current time
+            has_parsed_news: If True, only return news with parsed_news link.
+                            If False, only return news without parsed_news link.
+                            If None, return all news regardless of parsed_news status.
+            newer: if True than newer than timedelta, else older
+        Returns:
+            List of InputNews within the time delta
+        """
         logger.debug(f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}")
         threshold_date = datetime.utcnow() - delta
         if newer:
