@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import structlog
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import and_, select
+from sqlmodel import select
 
 from core.models import InputNews, ParsedNews
 from core.repository import AsyncBaseRepositoryWithID
@@ -31,12 +31,12 @@ class AsyncInputNewsRepositoryWithID(AsyncBaseRepositoryWithID[InputNews]):
         return input_news
 
     async def get_by_time_delta(
-            self,
-            delta: timedelta,
-            has_parsed_news: bool | None = None,
-            newer: bool = True,
+        self,
+        delta: timedelta,
+        has_parsed_news: bool | None = None,
+        newer: bool = True,
     ) -> Sequence[InputNews]:
-        """ Get input news by timedelta, user can adjust if the input news should be filtered by parsed_news"""
+        """Get input news by timedelta, user can adjust if the input news should be filtered by parsed_news"""
         logger.debug(f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}")
         threshold_date = datetime.utcnow() - delta
         logger.debug(f"Threshold date: {threshold_date}")
