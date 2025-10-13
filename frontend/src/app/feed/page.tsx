@@ -732,13 +732,13 @@ export default function PersonalFeedPage() {
                     onChange={(e) => setPrompt(e.target.value)}
                     rows={5}
                     className="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg resize-none"
-                    placeholder="Například: Chci mít přehled o všech kulturních akcích v Praze a jenom ty nejdůležitější celosvětové zprávy z oblasti technologií a byznysu."
+                    placeholder="Například: Chci mít přehled o politických událostech v ČR a jenom ty nejdůležitější celosvětové zprávy z oblasti technologií a byznysu."
                     required
                   />
                   <div className="mt-3 flex items-start space-x-2">
                     <span className="text-blue-500">💡</span>
                     <p className="text-sm text-gray-600">
-                      <strong>Tip:</strong> Buďte konkrétní! Můžete zadat témata, regiony, typy zpráv nebo dokonce tón článků, který preferujete.
+                      <strong>Tip:</strong> Buďte konkrétní! Můžete zadat témata, regiony, typy zpráv nebo dokonce tón článků, který preferujete. Měj ale na paměti, že naše články pokrývají hlavně ty nejdůležitější události z ČR a světa. Na naší stránce tak například nenajdeš různé lokální události z tvého okolí.
                     </p>
                   </div>
                 </div>
