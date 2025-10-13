@@ -337,7 +337,7 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
 
         result = await self.session.execute(stmt)
 
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore[attr-defined]
             logger.error(f"Failed to add view - news with ID {news_id} not found")
             raise NoResultFound(f"News with id {news_id} not found")
 

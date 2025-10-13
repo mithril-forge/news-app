@@ -4,7 +4,7 @@ import os
 import pathlib
 from typing import cast
 
-import instructor  # type: ignore
+import instructor  # type: ignore[import-untyped]
 import structlog
 from fastapi import HTTPException
 from instructor import AsyncInstructor
