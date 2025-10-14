@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface LogoWithFallbackProps {
   logoUrl: string;
@@ -20,18 +21,14 @@ const LogoWithFallback = ({ logoUrl, sourceSite, fallback }: LogoWithFallbackPro
   }
 
   return (
-    <img
+    <Image
       src={logoUrl}
       alt={`${sourceSite} logo`}
-      className="w-10 h-10 object-contain rounded-lg"
+      width={40}
+      height={40}
+      className="object-contain rounded-lg"
       onError={() => setHasError(true)}
-      onLoad={(e) => {
-        // Check if image is actually loaded (not a placeholder)
-        const img = e.target as HTMLImageElement;
-        if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-          setHasError(true);
-        }
-      }}
+      unoptimized={false}
     />
   );
 };
