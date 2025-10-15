@@ -7,7 +7,8 @@ from typing import cast
 import instructor
 import structlog
 from fastapi import HTTPException
-from google.generativeai import GenerativeModel, configure, types, upload_file  # type: ignore[attr-defined]
+from google import genai
+from google.genai import types
 from instructor import AsyncInstructor
 from tenacity import (
     after_log,
@@ -36,6 +37,7 @@ class GeminiAIModel(AbstractAIModel):
     @staticmethod
     def upload_files_gemini(
         files: dict[str, pathlib.Path],
+        client: genai.Client,
     ) -> dict[str, types.File]:
         # TODO: Implement caching of already uploaded files in session
         """Uploads a file synchronously and returns the File objects"""
@@ -46,7 +48,13 @@ class GeminiAIModel(AbstractAIModel):
             if not file_path.exists():
                 logger.error(f"File path {file_path} not found")
                 raise ValueError(f"File path {file_path} not found")
-            file_obj = upload_file(path=file_path, display_name=key, mime_type="text/plain")
+            file_obj = client.files.upload(
+                file=str(file_path),
+                config=types.UploadFileConfig(
+                    display_name=key,
+                    mime_type="text/plain"
+                )
+            )
             logger.info(f"File uploaded successfully: {key}, URI = {file_obj.uri}")
             results[key] = file_obj
         logger.info(f"Successfully uploaded {len(results)} files to Gemini")
@@ -88,18 +96,21 @@ class GeminiAIModel(AbstractAIModel):
 
         logger.info(f"Gemini API usage - Global: {global_count + 1}/{global_limit}")
 
-        contents: list[str | types.File] = [prompt]
         gemini_client = self.prepare_model_sdk()
-        gemini_files = self.upload_files_gemini(files=files)
-        contents.extend(gemini_files.values())
+        client = genai.Client(api_key=self.api_key)
+        gemini_files = self.upload_files_gemini(files=files, client=client)
+
+        # Build content list - pass file objects directly
+        content_parts = [prompt]
+        content_parts.extend(gemini_files.values())  # Add file objects directly
 
         logger.info("Sending request to Gemini model")
-        logger.debug(f"Content to gemini: {contents}")
-        messages = [{"role": "user", "content": contents}]
+        logger.debug(f"Content to gemini: {content_parts}")
+        messages = [{"role": "user", "content": content_parts}]
 
-        result = await gemini_client.chat.completions.create(  # type: ignore[type-var]
+        result = await gemini_client.chat.completions.create(
             response_model=response_model,
-            messages=messages,  # type: ignore[arg-type]
+            messages=messages,
         )
         typed_result: ResponseT = cast(ResponseT, result)
         logger.info("Successfully received response from Gemini model")
@@ -108,11 +119,9 @@ class GeminiAIModel(AbstractAIModel):
     def prepare_model_sdk(self) -> AsyncInstructor:
         """Prepares model encapsulated by instructor library for structured output."""
         logger.info("Preparing Gemini model SDK with instructor")
-        configure(api_key=self.api_key)
-        client = instructor.from_gemini(
-            client=GenerativeModel(model_name=self.model_name),
-            mode=instructor.Mode.GEMINI_JSON,
-            use_async=True,
+        instructor_client = instructor.from_provider(
+            f"google/{self.model_name}",
+            api_key=self.api_key,
         )
         logger.info("Gemini model SDK prepared successfully")
-        return cast(AsyncInstructor, client)
+        return cast(AsyncInstructor, instructor_client)
