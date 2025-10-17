@@ -48,27 +48,31 @@ export default async function AboutPage() {
 
       <Suspense fallback={<Loading />}>
         <main className="max-w-4xl mx-auto px-4 py-12 w-full flex-grow">
-          <Card className="overflow-hidden">
+          <Card className="card-elevated overflow-hidden relative">
+            {/* Subtle gradient background pattern */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+
             {/* Page header */}
-            <CardHeader className="text-center pb-8 pt-12">
-              <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-primary/20">
-                <span className="text-3xl">🧠</span>
+            <CardHeader className="text-center pb-8 pt-12 relative">
+              <div className="w-24 h-24 ai-gradient rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/30 animate-pulse">
+                <span className="text-5xl">🧠</span>
               </div>
-              <CardTitle className="text-4xl md:text-5xl mb-4">
+              <CardTitle className="text-4xl md:text-5xl mb-4 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text">
                 O nás
               </CardTitle>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Proč jsme vytvořili Tvůj Novinář a jak chceme změnit způsob, jakým konzumujete zprávy
               </p>
             </CardHeader>
 
-            <CardContent className="space-y-6 pb-12">
+            <CardContent className="space-y-6 pb-12 relative">
               {/* Problem section */}
-              <Card className="border-destructive/20 bg-destructive/5">
+              <Card className="card-elevated border-2 border-destructive/30 bg-destructive/5 overflow-hidden relative">
+                <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-destructive/80 via-destructive/40 to-transparent" />
                 <CardHeader>
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-destructive/10 rounded-xl flex items-center justify-center flex-shrink-0 border border-destructive/20">
-                      <AlertCircle className="h-6 w-6 text-destructive" />
+                    <div className="w-14 h-14 bg-gradient-to-br from-destructive/20 to-destructive/10 rounded-xl flex items-center justify-center flex-shrink-0 border-2 border-destructive/30 shadow-md">
+                      <AlertCircle className="h-7 w-7 text-destructive" />
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-2xl mb-4">Problém, který řešíme</CardTitle>
@@ -86,11 +90,12 @@ export default async function AboutPage() {
               </Card>
 
               {/* Solution section */}
-              <Card className="border-primary/20 bg-primary/5">
+              <Card className="card-elevated ai-gradient-border overflow-hidden relative">
+                <div className="absolute inset-x-0 top-0 h-1 ai-gradient" />
                 <CardHeader>
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 border border-primary/20">
-                      <Lightbulb className="h-6 w-6 text-primary" />
+                    <div className="w-14 h-14 ai-gradient rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30">
+                      <Lightbulb className="h-7 w-7 text-white" />
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-2xl mb-4">Naše řešení</CardTitle>
@@ -159,14 +164,14 @@ export default async function AboutPage() {
               <Separator className="my-8" />
 
               {/* Call to action */}
-              <div className="text-center pt-4">
-                <h3 className="text-2xl font-bold mb-4">Začněte už dnes</h3>
-                <p className="text-muted-foreground mb-6">
+              <div className="text-center pt-8">
+                <h3 className="text-3xl font-bold mb-4 text-gradient">Začněte už dnes</h3>
+                <p className="text-muted-foreground mb-8 text-lg max-w-xl mx-auto">
                   Vytvoř si svůj personalizovaný zpravodajský feed a ušetři si čas na věci, které jsou pro tebe skutečně důležité.
                 </p>
-                <Button asChild size="lg" className="gap-2">
+                <Button asChild size="lg" className="ai-gradient gap-2 text-lg px-8 py-6 shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all">
                   <Link href="/feed">
-                    <Rocket className="h-4 w-4" />
+                    <Rocket className="h-5 w-5" />
                     Vytvořit AI Feed
                   </Link>
                 </Button>
