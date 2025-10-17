@@ -26,37 +26,24 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
 
   return (
     <Link href={`/article/${article.id}`} className="block group mb-8">
-      <Card className="overflow-hidden border-2 transition-all duration-200 hover:shadow-lg">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-primary" />
+      <Card className="overflow-hidden border-2 border-primary/10 transition-all duration-200 hover:shadow-lg hover:border-primary/30 bg-card">
+        <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
 
         <CardHeader className="pb-4 pt-8">
           <div className="flex gap-6 items-start flex-col md:flex-row">
             {/* Category icon */}
-            <div
-              className="w-20 h-20 rounded-lg flex items-center justify-center text-4xl flex-shrink-0 transition-transform duration-200 group-hover:scale-105 mx-auto md:mx-0"
-              style={{
-                background: `${categoryInfo.color}20`,
-                border: `2px solid ${categoryInfo.color}40`
-              }}
-            >
+            <div className="w-20 h-20 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-4xl flex-shrink-0 transition-transform duration-200 group-hover:scale-105 mx-auto md:mx-0">
               {categoryInfo.emoji}
             </div>
 
             <div className="flex-1 space-y-3 text-center md:text-left">
               {/* Date and category */}
               <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
-                <time className="text-sm text-muted-foreground">
+                <time className="text-sm text-muted-foreground uppercase tracking-wide font-medium">
                   {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}
                 </time>
-                <span className="text-muted-foreground">•</span>
-                <Badge
-                  variant="secondary"
-                  style={{
-                    backgroundColor: `${categoryInfo.color}15`,
-                    color: categoryInfo.color,
-                    borderColor: `${categoryInfo.color}30`
-                  }}
-                >
+                <span className="text-muted-foreground/50">•</span>
+                <Badge variant="default" className="font-medium">
                   {article.topic?.name || "Vše"}
                 </Badge>
                 {article.tags?.slice(0, 2).map(tag => (
@@ -81,7 +68,7 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
           )}
 
           <div className="pt-2">
-            <span className="text-base font-medium text-primary inline-flex items-center gap-2 group-hover:gap-3 transition-all">
+            <span className="text-base font-semibold text-primary inline-flex items-center gap-2 group-hover:gap-3 transition-all">
               Přečíst celý článek
               <ArrowRight className="h-4 w-4" />
             </span>

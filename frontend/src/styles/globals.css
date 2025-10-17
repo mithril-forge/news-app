@@ -47,56 +47,59 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  /* Clean newspaper background - slightly off-white */
-  --background: oklch(0.99 0.002 90);
-  --foreground: oklch(0.15 0.01 270);
+  --radius: 0.25rem;
 
-  /* Cards with subtle shadow feel */
+  /* Sophisticated cream background - like premium newsprint */
+  --background: oklch(0.98 0.005 80);
+  --foreground: oklch(0.15 0.008 20);
+
+  /* Bright white cards - crisp paper contrast */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.01 270);
+  --card-foreground: oklch(0.15 0.008 20);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 270);
+  --popover-foreground: oklch(0.15 0.008 20);
 
-  /* Dark primary for newspaper header - classic newspaper black */
-  --primary: oklch(0.18 0.01 270);
+  /* Rich navy blue - sophisticated editorial accent */
+  --primary: oklch(0.28 0.08 250);
   --primary-foreground: oklch(0.99 0 0);
 
-  /* Subtle secondary for less prominent elements */
-  --secondary: oklch(0.96 0.003 270);
-  --secondary-foreground: oklch(0.18 0.01 270);
+  /* Soft warm beige for secondary elements */
+  --secondary: oklch(0.93 0.01 70);
+  --secondary-foreground: oklch(0.25 0.01 30);
 
-  /* Muted for subtle backgrounds */
-  --muted: oklch(0.97 0.003 270);
-  --muted-foreground: oklch(0.50 0.01 270);
+  /* Subtle warm backgrounds */
+  --muted: oklch(0.96 0.006 75);
+  --muted-foreground: oklch(0.45 0.01 30);
 
-  /* Accent for interactive elements */
-  --accent: oklch(0.96 0.003 270);
-  --accent-foreground: oklch(0.18 0.01 270);
+  /* Terracotta accent - editorial warmth */
+  --accent: oklch(0.90 0.015 65);
+  --accent-foreground: oklch(0.20 0.01 30);
 
-  /* Destructive stays neutral */
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Rich burgundy for errors - sophisticated not harsh */
+  --destructive: oklch(0.45 0.15 20);
+  --destructive-foreground: oklch(0.99 0 0);
 
-  /* Borders - subtle */
-  --border: oklch(0.92 0.003 270);
-  --input: oklch(0.92 0.003 270);
-  --ring: oklch(0.50 0.01 270);
+  /* Elegant borders - warm taupe */
+  --border: oklch(0.90 0.008 70);
+  --input: oklch(0.92 0.008 75);
+  --ring: oklch(0.28 0.08 250);
 
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  /* Professional chart palette */
+  --chart-1: oklch(0.50 0.12 250);
+  --chart-2: oklch(0.55 0.10 180);
+  --chart-3: oklch(0.48 0.14 35);
+  --chart-4: oklch(0.52 0.11 300);
+  --chart-5: oklch(0.56 0.13 140);
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.97 0.005 75);
+  --sidebar-foreground: oklch(0.20 0.01 30);
+  --sidebar-primary: oklch(0.28 0.08 250);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.01 70);
+  --sidebar-accent-foreground: oklch(0.25 0.01 30);
+  --sidebar-border: oklch(0.90 0.008 70);
+  --sidebar-ring: oklch(0.45 0.01 30);
 }
 
 .dark {
@@ -138,6 +141,30 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+
+  /* Enhanced typography for newspaper feel */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+    letter-spacing: -0.015em;
+  }
+
+  /* Newspaper-style separators */
+  .newspaper-divider {
+    @apply border-t border-border/60;
+  }
+
+  /* Editorial card shadow */
+  .card-editorial {
+    box-shadow:
+      0 1px 2px 0 oklch(0 0 0 / 0.03),
+      0 1px 3px 1px oklch(0 0 0 / 0.02);
+  }
+
+  /* Premium feel for focused inputs */
+  input:focus-visible,
+  textarea:focus-visible {
+    @apply ring-2 ring-primary/20 border-primary/40;
   }
 }

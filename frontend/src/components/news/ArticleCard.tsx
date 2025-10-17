@@ -38,36 +38,25 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
   return (
     <Link href={`/article/${article.id}`} className="block group">
-      <Card className="transition-all duration-200 hover:shadow-md border-border">
-        <CardHeader className="pb-3">
-          <div className="flex items-start gap-4">
+      <Card className="transition-all duration-200 hover:shadow-md hover:border-primary/20 overflow-hidden">
+        {/* Top accent line */}
+        <div className="h-1 bg-gradient-to-r from-primary/80 via-primary/40 to-primary/10" />
+
+        <CardHeader className="pb-3 pt-4">
+          <div className="flex items-start gap-3">
             {/* Category icon */}
-            <div
-              className="w-12 h-12 rounded-md flex items-center justify-center text-2xl flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
-              style={{
-                background: `${categoryInfo.color}15`,
-                border: `1px solid ${categoryInfo.color}30`
-              }}
-            >
+            <div className="w-11 h-11 rounded-lg bg-secondary flex items-center justify-center text-xl flex-shrink-0 border border-border transition-transform duration-200 group-hover:scale-105">
               {categoryInfo.emoji}
             </div>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 space-y-2">
               {/* Date and category */}
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <time className="text-xs text-muted-foreground">
+              <div className="flex items-center gap-2 flex-wrap">
+                <time className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}
                 </time>
-                <span className="text-muted-foreground">•</span>
-                <Badge
-                  variant="secondary"
-                  className="text-xs font-normal"
-                  style={{
-                    backgroundColor: `${categoryInfo.color}10`,
-                    color: categoryInfo.color,
-                    borderColor: `${categoryInfo.color}20`
-                  }}
-                >
+                <span className="w-1 h-1 rounded-full bg-muted-foreground/30"></span>
+                <Badge variant="secondary" className="text-xs font-medium">
                   {article.topic?.name || "Vše"}
                 </Badge>
               </div>
@@ -89,7 +78,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             )}
 
             {/* Tags and read more */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
               {article.tags && article.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {article.tags.slice(0, 2).map(tag => (
@@ -101,7 +90,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
               )}
 
               <span className="text-sm font-medium text-primary inline-flex items-center gap-1.5 group-hover:gap-2 transition-all ml-auto">
-                Číst více
+                Číst článek
                 <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>
