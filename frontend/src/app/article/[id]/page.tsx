@@ -96,15 +96,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Main article content */}
             <div className="lg:col-span-3">
-              <Card className="overflow-hidden">
-                {/* Top accent line */}
-                <div className="h-1 bg-primary" />
+              <Card className="card-elevated overflow-hidden">
+                {/* Top accent line with AI gradient */}
+                <div className="h-1.5 ai-gradient" />
 
                 {/* Article header */}
                 <CardHeader className="pb-6">
                   {/* Category emoji and meta info */}
                   <div className="flex items-center gap-6 mb-6">
-                    <div className="w-20 h-20 rounded-xl bg-secondary flex items-center justify-center text-3xl border border-border">
+                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/50 to-accent/20 flex items-center justify-center text-4xl border-2 border-border/50 shadow-md animate-pulse">
                       {categoryInfo.emoji}
                     </div>
 
@@ -138,7 +138,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
                   {/* Article summary */}
                   {fullArticle.summary && (
-                    <div className="p-6 bg-muted/50 rounded-lg border-l-4 border-primary">
+                    <div className="p-6 bg-accent/50 rounded-xl border-l-4 border-primary relative overflow-hidden shadow-sm">
+                      <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-primary via-primary/60 to-transparent" />
                       <p className="text-lg leading-relaxed font-medium">
                         {fullArticle.summary}
                       </p>

@@ -92,11 +92,14 @@ const InputNewsList = ({ inputNews }: InputNewsListProps) => {
             rel="noopener noreferrer"
             className="block group"
           >
-            <Card className="hover:shadow-md hover:border-primary/20 transition-all">
+            <Card className="card-elevated border-border/50 hover:border-primary/30 transition-all relative overflow-hidden">
+              {/* Subtle gradient accent on hover */}
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
               <CardContent className="pt-6">
                 <div className="flex gap-4 items-start">
                   {/* Source logo */}
-                  <div className="w-14 h-14 rounded-lg bg-secondary border border-border flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-16 h-16 rounded-xl bg-accent/50 border border-border/50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:border-primary/20 transition-all duration-300 shadow-sm">
                     <LogoWithFallback
                       logoUrl={logoData.url}
                       sourceSite={news.source_site}

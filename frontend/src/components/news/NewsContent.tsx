@@ -7,6 +7,8 @@ import ArticleCard from './ArticleCard';
 import LoadMoreNews from './LoadMoreNews';
 import PopularNewsSidebar from './PopularNewsSidebar';
 import SortDropdown, { SortOption } from '@/components/common/SortDropdown';
+import { Card, CardContent, CardHeader } from '~/components/ui/card';
+import { Skeleton } from '~/components/ui/skeleton';
 
 interface NewsContentProps {
   news: NewsArticle[];
@@ -99,13 +101,54 @@ export default function NewsContent({
           )}
         </div>
 
-        {/* Loading state */}
+        {/* Loading state with skeleton */}
         {isLoading ? (
-          <div className="flex items-center justify-center rounded-lg bg-card border py-12">
-            <div className="mr-3 h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
-            <span className="text-muted-foreground">
-              {isLoadingCategory ? "Načítám kategorii..." : "Načítám články..."}
-            </span>
+          <div className="space-y-6">
+            {/* Featured article skeleton */}
+            <Card className="card-elevated overflow-hidden relative">
+              <div className="absolute inset-x-0 top-0 h-1.5 ai-gradient shimmer" />
+              <CardHeader className="pb-4 pt-8">
+                <div className="flex gap-6 items-start flex-col md:flex-row">
+                  <Skeleton className="w-24 h-24 rounded-2xl shimmer mx-auto md:mx-0" />
+                  <div className="flex-1 space-y-3 text-center md:text-left w-full">
+                    <div className="flex items-center gap-2 flex-wrap justify-center md:justify-start">
+                      <Skeleton className="h-6 w-20 rounded-full shimmer" />
+                      <Skeleton className="h-6 w-32 rounded-full shimmer" />
+                    </div>
+                    <Skeleton className="h-10 w-full shimmer" />
+                    <Skeleton className="h-10 w-3/4 shimmer mx-auto md:mx-0" />
+                    <div className="pt-2">
+                      <Skeleton className="h-4 w-full shimmer" />
+                      <Skeleton className="h-4 w-5/6 shimmer mt-2" />
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+
+            {/* Article cards skeleton */}
+            {[...Array(3)].map((_, i) => (
+              <Card key={i} className="card-elevated overflow-hidden">
+                <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent" />
+                <CardHeader className="pb-3 pt-4">
+                  <div className="flex items-start gap-3">
+                    <Skeleton className="w-12 h-12 rounded-xl shimmer" />
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-20 shimmer" />
+                        <Skeleton className="h-4 w-24 shimmer" />
+                      </div>
+                      <Skeleton className="h-6 w-full shimmer" />
+                      <Skeleton className="h-6 w-4/5 shimmer" />
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 space-y-3">
+                  <Skeleton className="h-4 w-full shimmer" />
+                  <Skeleton className="h-4 w-3/4 shimmer" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : (
           <>

@@ -98,17 +98,16 @@ export default function PopularNewsSidebar() {
             <Link
               key={article.id}
               href={`/article/${article.id}`}
-              className="flex gap-3 items-center p-2.5 rounded-xl hover:bg-accent transition-all group relative"
+              className="flex gap-3 items-center p-2.5 pl-4 rounded-xl hover:bg-accent transition-all group relative"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Number indicator */}
-              <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                {index + 1}
-              </div>
-
               {/* Emoji with enhanced styling */}
-              <div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl flex-shrink-0 border border-border/50 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-accent group-hover:border-primary/20 transition-all duration-300">
+              <div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl flex-shrink-0 border border-border/50 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-accent group-hover:border-primary/20 transition-all duration-300 relative z-10">
                 {categoryInfo.emoji}
+                {/* Number badge on emoji */}
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                  {index + 1}
+                </div>
               </div>
 
               {/* Content */}
