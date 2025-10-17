@@ -17,6 +17,11 @@ import PopularNewsSidebar from '@/components/news/PopularNewsSidebar';
 import { fetchNewsById, fetchTopics } from '@/services/api';
 import { NewsDetailed } from '@/types';
 import { getCategoryEmoji } from '@/lib/categoryEmoji';
+import { Card, CardContent, CardHeader } from '~/components/ui/card';
+import { Badge } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
+import { Separator } from '~/components/ui/separator';
+import { ArrowLeft, ArrowRight, Link2 } from 'lucide-react';
 
 interface ArticlePageProps {
   params: Promise<{
@@ -80,60 +85,46 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const categoryInfo = getCategoryEmoji(fullArticle.topic?.name || 'Vše');
 
   return (
-    <div className="min-h-screen flex flex-col" style={{
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
-    }}>
-      <Header 
-        categories={categories} 
-        activeCategory={activeCategory} 
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header
+        categories={categories}
+        activeCategory={activeCategory}
       />
-      
+
       <Suspense fallback={<Loading />}>
         <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Main article content */}
             <div className="lg:col-span-3">
-              <article className="bg-white rounded-3xl shadow-xl overflow-hidden">
-                {/* Gradient top border */}
-                <div className="h-1 bg-gradient-to-r from-red-500 via-orange-500 to-blue-500"></div>
-                
+              <Card className="card-elevated overflow-hidden">
+                {/* Top accent line with AI gradient */}
+                <div className="h-1.5 ai-gradient" />
+
                 {/* Article header */}
-                <div className="p-8">
+                <CardHeader className="pb-6">
                   {/* Category emoji and meta info */}
                   <div className="flex items-center gap-6 mb-6">
-                    <div 
-                      className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl border-3 shadow-lg"
-                      style={{ 
-                        borderColor: categoryInfo.color,
-                        background: categoryInfo.bgColor
-                      }}
-                    >
+                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/50 to-accent/20 flex items-center justify-center text-4xl border-2 border-border/50 shadow-md animate-pulse">
                       {categoryInfo.emoji}
                     </div>
-                    
+
                     <div className="flex-1">
-                      <div className="flex flex-wrap gap-3 mb-2">
-                        <span 
-                          className="px-4 py-2 rounded-full text-sm font-medium"
-                          style={{ 
-                            backgroundColor: `${categoryInfo.color}20`, 
-                            color: categoryInfo.color 
-                          }}
-                        >
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <Badge variant="default" className="text-sm">
                           {fullArticle.topic?.name || "Vše"}
-                        </span>
-                        <span className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm">
+                        </Badge>
+                        <Badge variant="secondary" className="text-sm">
                           {new Date(fullArticle.updated_at).toLocaleDateString('cs-CZ')}
-                        </span>
+                        </Badge>
                       </div>
-                      
+
                       {/* Tags */}
                       {fullArticle.tags && fullArticle.tags.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                           {fullArticle.tags.slice(0, 4).map(tag => (
-                            <span key={tag.id} className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600">
+                            <Badge key={tag.id} variant="outline" className="text-xs">
                               {tag.text}
-                            </span>
+                            </Badge>
                           ))}
                         </div>
                       )}
@@ -141,72 +132,78 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   </div>
 
                   {/* Article title */}
-                  <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-8 leading-tight">
+                  <h1 className="text-4xl md:text-5xl font-bold mb-6 leading-tight">
                     {fullArticle.title}
                   </h1>
 
                   {/* Article summary */}
                   {fullArticle.summary && (
-                    <div className="mb-8 p-6 bg-gray-50 rounded-2xl border-l-4" style={{ borderLeftColor: categoryInfo.color }}>
-                      <p className="text-lg text-gray-700 leading-relaxed font-medium">
+                    <div className="p-6 bg-accent/50 rounded-xl border-l-4 border-primary relative overflow-hidden shadow-sm">
+                      <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-primary via-primary/60 to-transparent" />
+                      <p className="text-lg leading-relaxed font-medium">
                         {fullArticle.summary}
                       </p>
                     </div>
                   )}
+                </CardHeader>
 
+                <CardContent className="pt-0">
                   {/* Article content */}
-                  <div className="prose prose-lg max-w-none text-gray-700">
+                  <div className="prose prose-lg max-w-none">
                     <ArticleContent content={fullArticle.content} />
                   </div>
-                </div>
+                </CardContent>
 
                 {/* Input News Section */}
                 {fullArticle.input_news && fullArticle.input_news.length > 0 && (
-                  <div className="p-8 bg-gray-50 border-t">
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-xl">
-                        🔗
+                  <>
+                    <Separator />
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                          <Link2 className="h-5 w-5 text-primary" />
+                        </div>
+                        <h2 className="text-2xl font-bold">
+                          Zdroje článku
+                        </h2>
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-800">
-                        Zdroje článku
-                      </h2>
-                    </div>
-                    <InputNewsList inputNews={fullArticle.input_news} />
-                  </div>
+                      <InputNewsList inputNews={fullArticle.input_news} />
+                    </CardContent>
+                  </>
                 )}
 
                 {/* Navigation */}
-                <div className="p-8 bg-gray-50 border-t">
+                <Separator />
+                <CardContent className="pt-6">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <Link 
-                      href="/" 
-                      className="text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-2 transition-all hover:gap-4"
-                    >
-                      ← Zpět na přehled zpráv
-                    </Link>
-                    
-                    <Link 
-                      href={`/?category=${encodeURIComponent(fullArticle.topic?.name || "Vše")}`}
-                      className="text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-2 transition-all hover:gap-4"
-                    >
-                      Zobrazit více z kategorie {fullArticle.topic?.name || "Vše"} →
-                    </Link>
+                    <Button variant="ghost" asChild className="gap-2">
+                      <Link href="/">
+                        <ArrowLeft className="h-4 w-4" />
+                        Zpět na přehled zpráv
+                      </Link>
+                    </Button>
+
+                    <Button variant="ghost" asChild className="gap-2">
+                      <Link href={`/?category=${encodeURIComponent(fullArticle.topic?.name || "Vše")}`}>
+                        Zobrazit více z kategorie {fullArticle.topic?.name || "Vše"}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
                   </div>
-                </div>
-              </article>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Sidebar */}
             <div className="lg:col-span-1">
               <PopularNewsSidebar />
-          
             </div>
           </div>
         </main>
       </Suspense>
-      
-      <Footer 
-        categories={categories} 
+
+      <Footer
+        categories={categories}
       />
     </div>
   );

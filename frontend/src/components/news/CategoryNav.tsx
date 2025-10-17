@@ -1,19 +1,15 @@
 'use client'
 
-/**
- * Navigation component for category/topic selection
- * Client component to handle user interactions
- */
-import React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Badge } from '~/components/ui/badge';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '~/components/ui/button';
+import { cn } from '~/lib/utils';
 
 interface CategoryNavProps {
-  /** List of all available categories */
   categories: string[];
-  /** Currently selected category */
   activeCategory: string;
-  /** Optional callback function when a category is selected */
   onSelectCategory?: (category: string) => void;
 }
 
@@ -22,109 +18,127 @@ export default function CategoryNav({
   activeCategory,
   onSelectCategory
 }: CategoryNavProps) {
-  const pathname = usePathname();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeftFade, setShowLeftFade] = useState(false);
+  const [showRightFade, setShowRightFade] = useState(false);
 
-  /**
-   * Get the appropriate URL for each category
-   * @param category - The category name
-   * @returns The URL path for that category
-   */
   const getCategoryUrl = (category: string): string => {
-    // Handle special "AI Feed" category
     if (category === 'AI Feed') {
       return '/feed';
     } else if (category === 'Vše') {
-      // Always navigate to home with no params for the default category
       return '/';
     } else {
-      // For other categories, include the category in the URL
       return `/?category=${encodeURIComponent(category)}`;
     }
   };
 
-  /**
-   * Handle optional callback when category is clicked
-   * @param category - The selected category
-   */
   const handleCategoryClick = (category: string) => {
-    // If callback provided, call it
     if (onSelectCategory) {
       onSelectCategory(category);
     }
   };
 
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setShowLeftFade(scrollLeft > 10);
+      setShowRightFade(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -200 : 200;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const currentRef = scrollRef.current;
+    if (currentRef) {
+      currentRef.addEventListener('scroll', checkScroll);
+      window.addEventListener('resize', checkScroll);
+    }
+    return () => {
+      if (currentRef) {
+        currentRef.removeEventListener('scroll', checkScroll);
+      }
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [categories]);
+
+  // Filter out AI Feed from the regular nav (shown in header separately)
+  const visibleCategories = categories.filter(c => c !== 'AI Feed');
+
   return (
-    <nav className="overflow-x-auto pb-2">
-      <ul className="flex items-center whitespace-nowrap">
-        {categories.map((category, index) => {
-          // Special styling for AI Feed
-          const isAIFeed = category === 'AI Feed';
-          const isFirstRegularCategory = !isAIFeed && categories[index - 1] === 'AI Feed';
+    <nav className="relative group">
+      {/* Left fade indicator */}
+      {showLeftFade && (
+        <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+      )}
 
-          if (isAIFeed) {
+      {/* Right fade indicator */}
+      {showRightFade && (
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+      )}
+
+      {/* Left scroll button */}
+      {showLeftFade && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+          onClick={() => scroll('left')}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Right scroll button */}
+      {showRightFade && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+          onClick={() => scroll('right')}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Scrollable categories */}
+      <div
+        ref={scrollRef}
+        className="overflow-x-auto scrollbar-hide scroll-smooth"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <div className="flex items-center gap-2 min-w-max px-1 py-1">
+          {visibleCategories.map((category) => {
+            const isActive = activeCategory === category;
+
             return (
-              <li key={category}>
-                <Link
-                  href={getCategoryUrl(category)}
-                  onClick={() => handleCategoryClick(category)}
-                  className={`inline-flex items-center space-x-1 text-sm font-medium transition-colors hover:cursor-pointer ${
-                    activeCategory === category
-                      ? "text-blue-400 border-b-2 border-blue-400 pb-1"
-                      : "text-blue-300 hover:text-blue-400 pb-1"
-                  }`}
-                  aria-current={activeCategory === category ? 'page' : undefined}
-                >
-                  <span className="text-sm">🧠</span>
-                  <span>{category}</span>
-                </Link>
-              </li>
-            );
-          }
-
-          // Add divider before first regular category
-          if (isFirstRegularCategory) {
-            return (
-              <React.Fragment key={category}>
-                <li className="mx-4">
-                  <div className="w-px h-4 bg-gray-500 opacity-50"></div>
-                </li>
-                <li className="mr-6">
-                  <Link
-                    href={getCategoryUrl(category)}
-                    onClick={() => handleCategoryClick(category)}
-                    className={`text-sm font-medium transition-colors hover:cursor-pointer ${
-                      activeCategory === category
-                        ? "text-red-400 border-b-2 border-red-400 pb-1"
-                        : "text-gray-300 hover:text-red-400 pb-1"
-                    }`}
-                    aria-current={activeCategory === category ? 'page' : undefined}
-                  >
-                    {category}
-                  </Link>
-                </li>
-              </React.Fragment>
-            );
-          }
-
-          // Regular category styling
-          return (
-            <li key={category} className="mr-6">
               <Link
+                key={category}
                 href={getCategoryUrl(category)}
                 onClick={() => handleCategoryClick(category)}
-                className={`text-sm font-medium transition-colors hover:cursor-pointer ${
-                  activeCategory === category
-                    ? "text-red-400 border-b-2 border-red-400 pb-1"
-                    : "text-gray-300 hover:text-red-400 pb-1"
-                }`}
-                aria-current={activeCategory === category ? 'page' : undefined}
+                aria-current={isActive ? 'page' : undefined}
+                className="flex-shrink-0"
               >
-                {category}
+                <Badge
+                  variant={isActive ? 'default' : 'outline'}
+                  className={cn(
+                    'cursor-pointer transition-all hover:scale-105',
+                    isActive && 'shadow-sm'
+                  )}
+                >
+                  {category}
+                </Badge>
               </Link>
-            </li>
-          );
-        })}
-      </ul>
+            );
+          })}
+        </div>
+      </div>
     </nav>
   );
 }

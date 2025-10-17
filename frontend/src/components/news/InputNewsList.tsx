@@ -3,6 +3,9 @@
  */
 import Link from 'next/link';
 import LogoWithFallback from '@/components/common/LogoWithFallback';
+import { Card, CardContent } from '~/components/ui/card';
+import { Badge } from '~/components/ui/badge';
+import { ExternalLink, User, Calendar, Newspaper } from 'lucide-react';
 
 // Define the interface for InputNews objects
 interface InputNewsDetailed {
@@ -80,69 +83,61 @@ const InputNewsList = ({ inputNews }: InputNewsListProps) => {
     <div className="space-y-4">
       {inputNews.map((news, index) => {
         const logoData = getSourceLogo(news.source_site);
-        
+
         return (
-          <a 
+          <a
             key={index}
-            href={news.source_url} 
-            target="_blank" 
+            href={news.source_url}
+            target="_blank"
             rel="noopener noreferrer"
-            className="block group cursor-pointer"
+            className="block group"
           >
-            <div className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border border-gray-100">
-              <div className="p-6">
+            <Card className="card-elevated border-border/50 hover:border-primary/30 transition-all relative overflow-hidden">
+              {/* Subtle gradient accent on hover */}
+              <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+              <CardContent className="pt-6">
                 <div className="flex gap-4 items-start">
                   {/* Source logo */}
-                  <div className="w-16 h-16 rounded-xl bg-blue-50 border-2 border-blue-200 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <LogoWithFallback 
+                  <div className="w-16 h-16 rounded-xl bg-accent/50 border border-border/50 flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:border-primary/20 transition-all duration-300 shadow-sm">
+                    <LogoWithFallback
                       logoUrl={logoData.url}
                       sourceSite={news.source_site}
                       fallback={logoData.fallback}
                     />
                   </div>
-                  
+
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
+                    <h3 className="text-base font-semibold mb-3 leading-tight group-hover:text-primary transition-colors">
                       {news.title}
                     </h3>
-                    
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+
+                    <div className="flex flex-wrap gap-2 mb-3">
                       {news.author && (
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                          <span className="font-medium">Autor:</span> 
-                          <span>{news.author}</span>
-                        </span>
+                        <Badge variant="secondary" className="gap-1.5 text-xs">
+                          <User className="h-3 w-3" />
+                          {news.author}
+                        </Badge>
                       )}
-                      <span className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2v8h12V6H4z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">Zdroj:</span> 
-                        <span>{news.source_site}</span>
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">Publikováno:</span> 
-                        <span>{formatDate(news.publication_date)}</span>
-                      </span>
+                      <Badge variant="secondary" className="gap-1.5 text-xs">
+                        <Newspaper className="h-3 w-3" />
+                        {news.source_site}
+                      </Badge>
+                      <Badge variant="secondary" className="gap-1.5 text-xs">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(news.publication_date)}
+                      </Badge>
                     </div>
-                    
-                    <span className="inline-flex items-center gap-2 text-blue-600 group-hover:text-blue-800 font-medium text-sm transition-all group-hover:gap-4">
+
+                    <span className="inline-flex items-center gap-1.5 text-primary font-medium text-sm transition-all group-hover:gap-2">
                       Přečíst původní článek
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                      </svg>
+                      <ExternalLink className="h-3.5 w-3.5" />
                     </span>
                   </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </a>
         );
       })}

@@ -43,27 +43,25 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
-    }}>
-      <Header 
-        categories={categories} 
-        activeCategory={activeCategory} 
+    <div className="min-h-screen flex flex-col bg-background">
+      <Header
+        categories={categories}
+        activeCategory={activeCategory}
       />
-      
+
       <Suspense fallback={<Loading />}>
         <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
-          <NewsContent 
-            news={newsData} 
+          <NewsContent
+            news={newsData}
             activeCategory={activeCategory}
             topicId={selectedTopicId}
             enableSorting={selectedTopicId === undefined}
           />
         </main>
       </Suspense>
-      
-      <Footer 
-        categories={categories} 
+
+      <Footer
+        categories={categories}
       />
     </div>
   );

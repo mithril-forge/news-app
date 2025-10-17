@@ -1,13 +1,11 @@
 'use client'
 
-/**
- * Client component for loading and displaying additional news articles
- * With state reset when category changes and support for sorting
- */
 import { useState, useEffect } from 'react';
 import { NewsArticle } from '@/types';
 import { fetchLatestNews, fetchNewsByTopic } from '@/services/api';
 import { SortOption } from '@/components/common/SortDropdown';
+import { Button } from '~/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import ArticleCard from './ArticleCard';
 
 interface LoadMoreNewsProps {
@@ -100,20 +98,23 @@ export default function LoadMoreNews({
       
       {/* Load more button or loading indicator */}
       {hasMore && (
-        <div className="mt-8 text-center">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-600"></div>
-              <span className="ml-2 text-gray-600">Načítám další články...</span>
-            </div>
-          ) : (
-            <button
-              onClick={handleLoadMore}
-              className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition-colors"
-            >
-              Načíst další články
-            </button>
-          )}
+        <div className="mt-8 flex justify-center">
+          <Button
+            onClick={handleLoadMore}
+            disabled={isLoading}
+            variant="outline"
+            size="lg"
+            className="min-w-[200px]"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Načítám články...
+              </>
+            ) : (
+              'Načíst další články'
+            )}
+          </Button>
         </div>
       )}
     </>

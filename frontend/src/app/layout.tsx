@@ -4,6 +4,7 @@
  */
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Toaster } from "~/components/ui/sonner";
 import "@/styles/globals.css";
 
 // Define site metadata
@@ -26,7 +27,10 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="cs" className={`${geist.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster richColors position="top-right" />
+      </body>
     </html>
   );
 }

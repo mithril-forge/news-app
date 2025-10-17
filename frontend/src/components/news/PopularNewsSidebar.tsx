@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { NewsArticle } from '@/types';
 import { fetchPopularNews } from '@/services/api';
 import { getCategoryEmoji } from '@/lib/categoryEmoji';
+import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
+import { Skeleton } from '~/components/ui/skeleton';
 
 export default function PopularNewsSidebar() {
   const [popularNews, setPopularNews] = useState<NewsArticle[]>([]);
@@ -32,80 +34,97 @@ export default function PopularNewsSidebar() {
 
   if (isLoading) {
     return (
-      <aside className="bg-white rounded-2xl p-6 shadow-lg">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b-2 border-gray-100">
-          Nejčtenější články za poslední týden
-        </h3>
-        <div className="space-y-4">
+      <Card className="card-elevated">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center animate-pulse">
+              <span className="text-lg">🔥</span>
+            </div>
+            Nejčtenější články
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="flex gap-4 items-center">
-                <div className="w-12 h-12 bg-gray-200 rounded-xl"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                </div>
+            <div key={i} className="flex gap-3 items-center">
+              <Skeleton className="w-12 h-12 rounded-xl shimmer" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-full shimmer" />
+                <Skeleton className="h-3 w-2/3 shimmer" />
               </div>
             </div>
           ))}
-        </div>
-      </aside>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error) {
     return (
-      <aside className="bg-white rounded-2xl p-6 shadow-lg">
-        <h3 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b-2 border-gray-100">
-          Nejčtenější články za poslední týden
-        </h3>
-        <div className="text-center py-8 text-gray-500">
-          <p>{error}</p>
-        </div>
-      </aside>
+      <Card className="card-elevated border-destructive/20">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2 text-destructive">
+            <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <span className="text-lg">⚠️</span>
+            </div>
+            Chyba načítání
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center py-8 text-muted-foreground text-sm">{error}</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <aside className="bg-white rounded-2xl p-6 shadow-lg">
-      <h3 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b-2 border-gray-100">
-        Nejčtenější články za poslední týden
-      </h3>
-      
-      <div className="space-y-4">
+    <Card className="card-elevated relative overflow-hidden">
+      {/* Subtle gradient accent */}
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary via-primary/60 to-transparent" />
+
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+            <span className="text-lg">🔥</span>
+          </div>
+          Nejčtenější články
+        </CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-2">
         {popularNews.map((article, index) => {
           const categoryInfo = getCategoryEmoji(article.topic?.name || 'Vše');
-          
+
           return (
             <Link
               key={article.id}
               href={`/article/${article.id}`}
-              className="flex gap-4 items-center p-3 rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-105 cursor-pointer group"
+              className="flex gap-3 items-center p-2.5 pl-4 rounded-xl hover:bg-accent transition-all group relative"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
-              {/* Emoji */}
-              <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 border-2 group-hover:scale-110 transition-transform"
-                style={{ 
-                  borderColor: categoryInfo.color,
-                  background: categoryInfo.bgColor
-                }}
-              >
+              {/* Emoji with enhanced styling */}
+              <div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl flex-shrink-0 border border-border/50 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-accent group-hover:border-primary/20 transition-all duration-300 relative z-10">
                 {categoryInfo.emoji}
+                {/* Number badge on emoji */}
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                  {index + 1}
+                </div>
               </div>
-              
+
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-800 text-sm leading-tight mb-1 group-hover:text-red-600 transition-colors line-clamp-2">
+                <h4 className="font-medium text-sm leading-tight mb-1.5 group-hover:text-primary transition-colors line-clamp-2">
                   {article.title}
                 </h4>
-                <div className="text-xs text-gray-500">
-                  {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')} • {article.topic?.name || "Vše"}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span>{article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}</span>
+                  <span className="w-1 h-1 rounded-full bg-border"></span>
+                  <span className="truncate">{article.topic?.name || "Vše"}</span>
                 </div>
               </div>
             </Link>
           );
         })}
-      </div>
-    </aside>
+      </CardContent>
+    </Card>
   );
 }

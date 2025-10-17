@@ -1,36 +1,34 @@
-// components/news/ArticleCard.tsx
 import Link from 'next/link';
 import { NewsArticle } from '@/types';
 import { getCategoryEmoji } from '@/lib/categoryEmoji';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '~/components/ui/card';
+import { Badge } from '~/components/ui/badge';
+import { ArrowRight } from 'lucide-react';
 
 interface ArticleCardProps {
   article: NewsArticle;
 }
 
 export default function ArticleCard({ article }: ArticleCardProps) {
-  // Safety check for undefined article
   if (!article) {
     return null;
   }
 
   const categoryInfo = getCategoryEmoji(article.topic?.name || 'Vše');
 
-  // Function to get first 100-150 characters from description
   const getDescriptionPreview = (description?: string) => {
     if (!description) return '';
 
     const trimmed = description.trim();
-    const maxLength = 120; // Adjust this number as needed
+    const maxLength = 150;
 
     if (trimmed.length <= maxLength) {
       return trimmed;
     }
 
-    // Truncate at character limit but try to end at a word boundary
     let preview = trimmed.slice(0, maxLength);
     const lastSpaceIndex = preview.lastIndexOf(' ');
 
-    // If we found a space near the end, cut there for cleaner text
     if (lastSpaceIndex > maxLength - 20) {
       preview = preview.slice(0, lastSpaceIndex);
     }
@@ -40,64 +38,65 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
   return (
     <Link href={`/article/${article.id}`} className="block group">
-      <article className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex gap-6 flex-col sm:flex-row cursor-pointer">
-        {/* Emoji icon */}
-        <div
-          className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 border-3 group-hover:scale-110 transition-transform duration-300 mx-auto sm:mx-0"
-          style={{
-            borderColor: categoryInfo.color,
-            borderWidth: '3px',
-            borderStyle: 'solid',
-            background: categoryInfo.bgColor
-          }}
-        >
-          {categoryInfo.emoji}
-        </div>
+      <Card className="card-elevated overflow-hidden border-border/50 hover:border-primary/30">
+        {/* Top accent line with gradient */}
+        <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent" />
 
-        {/* Content */}
-        <div className="flex-1 text-center sm:text-left">
-          <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
-            <span className="text-gray-500 text-sm">
-              {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}
-            </span>
-            <span
-              className="px-3 py-1 rounded-full text-xs font-medium"
-              style={{
-                backgroundColor: `${categoryInfo.color}20`,
-                color: categoryInfo.color
-              }}
-            >
-              {article.topic?.name || "Vše"}
-            </span>
-          </div>
-
-          <h2 className="text-xl font-semibold text-gray-800 mb-3 leading-tight group-hover:text-red-600 transition-colors">
-            {article.title}
-          </h2>
-
-          {/* Description Preview */}
-          {article.description && (
-            <p className="text-gray-600 text-sm mb-3 leading-relaxed">
-              {getDescriptionPreview(article.description)}
-            </p>
-          )}
-
-          {/* Tags */}
-          {article.tags && article.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3 justify-center sm:justify-start">
-              {article.tags.slice(0, 2).map(tag => (
-                <span key={tag} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                  {tag}
-                </span>
-              ))}
+        <CardHeader className="pb-3 pt-4">
+          <div className="flex items-start gap-3">
+            {/* Category icon */}
+            <div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl flex-shrink-0 border border-border/50 transition-all duration-200 group-hover:scale-110 group-hover:bg-accent group-hover:border-primary/20">
+              {categoryInfo.emoji}
             </div>
-          )}
 
-          <span className="text-red-600 group-hover:text-red-800 font-medium inline-flex items-center gap-2 transition-all group-hover:gap-4">
-            Přečíst článek →
-          </span>
-        </div>
-      </article>
+            <div className="flex-1 min-w-0 space-y-2">
+              {/* Date and category */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <time className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}
+                </time>
+                <span className="w-1 h-1 rounded-full bg-border"></span>
+                <Badge variant="secondary" className="text-xs font-medium">
+                  {article.topic?.name || "Vše"}
+                </Badge>
+              </div>
+
+              <CardTitle className="text-lg leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                {article.title}
+              </CardTitle>
+            </div>
+          </div>
+        </CardHeader>
+
+        {(article.description || (article.tags && article.tags.length > 0)) && (
+          <CardContent className="pt-0 space-y-3">
+            {/* Description */}
+            {article.description && (
+              <CardDescription className="text-sm leading-relaxed line-clamp-2">
+                {getDescriptionPreview(article.description)}
+              </CardDescription>
+            )}
+
+            {/* Tags and read more */}
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-1">
+              {article.tags && article.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {article.tags.slice(0, 2).map(tag => (
+                    <Badge key={tag} variant="outline" className="text-xs font-normal">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              <span className="text-sm font-medium text-primary inline-flex items-center gap-1.5 group-hover:gap-2 transition-all ml-auto">
+                Číst článek
+                <ArrowRight className="h-3.5 w-3.5" />
+              </span>
+            </div>
+          </CardContent>
+        )}
+      </Card>
     </Link>
   );
 }
