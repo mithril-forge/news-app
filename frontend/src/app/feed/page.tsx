@@ -349,15 +349,15 @@ export default function PersonalFeedPage() {
         )}
 
         {/* Prompt Form */}
-        {showPromptForm ? (
-          <Card>
+        {showPromptForm && (
+          <Card className="card-elevated">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                <div className="w-12 h-12 rounded-xl ai-gradient flex items-center justify-center shadow-md">
+                  <Sparkles className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <CardTitle>Co tě zajímá?</CardTitle>
+                  <CardTitle className="text-xl">Co tě zajímá?</CardTitle>
                   <CardDescription>
                     Napiš, jaké zprávy chceš dostávat. AI vybere jen relevantní články.
                   </CardDescription>
@@ -383,15 +383,44 @@ export default function PersonalFeedPage() {
                   </p>
                 </div>
 
+                {/* Quick prompt templates */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Nebo zkus šablonu:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      'Politika a ekonomika ČR',
+                      'Technologie a věda',
+                      'Sport a kultura',
+                      'Světové události'
+                    ].map((template) => (
+                      <Button
+                        key={template}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPrompt(`Chci denní přehled z oblasti: ${template}`)}
+                        className="text-xs"
+                      >
+                        {template}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button type="submit" disabled={saving || isGeneratingPick} className="flex-1">
+                  <Button type="submit" disabled={saving || isGeneratingPick} className="flex-1 ai-gradient">
                     {saving || isGeneratingPick ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Vytvářím...
                       </>
                     ) : (
-                      'Vytvořit AI Feed'
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Vytvořit AI Feed
+                      </>
                     )}
                   </Button>
                   {isLoggedIn && (
@@ -413,10 +442,8 @@ export default function PersonalFeedPage() {
                     <Button
                       type="button"
                       variant="link"
-                      onClick={() => {
-                        setShowPromptForm(false);
-                        setShowLoginDialog(true);
-                      }}
+                      onClick={() => setShowLoginDialog(true)}
+                      className="text-primary"
                     >
                       Přihlásit se
                     </Button>
@@ -425,7 +452,10 @@ export default function PersonalFeedPage() {
               </form>
             </CardContent>
           </Card>
-        ) : (
+        )}
+
+        {/* Content shown when prompt is submitted */}
+        {!showPromptForm && (
           <div className="space-y-6">
             {/* Anonymous user banner */}
             {!isLoggedIn && prompt && (
@@ -545,20 +575,47 @@ export default function PersonalFeedPage() {
 
       {/* Email Dialog */}
       <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Vytvořit účet</DialogTitle>
-            <DialogDescription>
-              Ulož si svůj prompt pro příští návštěvy. Stačí zadat email.
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg ai-gradient flex items-center justify-center">
+                <Mail className="h-5 w-5 text-white" />
+              </div>
+              <DialogTitle className="text-xl">Vytvořit účet</DialogTitle>
+            </div>
+            <DialogDescription className="text-base">
+              Ulož si svůj prompt a dostávej denně personalizované zprávy na email.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              type="email"
-              placeholder="vas@email.cz"
-              value={dialogEmail}
-              onChange={(e) => setDialogEmail(e.target.value)}
-            />
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="vas@email.cz"
+                value={dialogEmail}
+                onChange={(e) => {
+                  setDialogEmail(e.target.value);
+                  setDialogError('');
+                }}
+                className="h-11"
+              />
+            </div>
+
+            {/* Show current prompt */}
+            {prompt && (
+              <div className="rounded-lg bg-accent/50 p-3 border border-border">
+                <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">
+                  Tvůj prompt:
+                </p>
+                <p className="text-sm line-clamp-2">{prompt}</p>
+              </div>
+            )}
+
             {dialogError && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -566,27 +623,40 @@ export default function PersonalFeedPage() {
               </Alert>
             )}
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowEmailDialog(false)}>
               Možná později
             </Button>
-            <Button onClick={handleEmailSubmit} disabled={saving || !dialogEmail.trim()}>
+            <Button
+              onClick={handleEmailSubmit}
+              disabled={saving || !dialogEmail.trim()}
+              className="ai-gradient"
+            >
               {saving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Ukládám...
+                  Vytvářím účet...
                 </>
               ) : (
-                'Vytvořit účet'
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Vytvořit účet
+                </>
               )}
             </Button>
           </DialogFooter>
+
+          <Separator />
+
           <div className="text-center text-sm text-muted-foreground">
             Už máte účet?{' '}
             <Button
               variant="link"
-              className="p-0 h-auto"
+              className="p-0 h-auto text-primary"
               onClick={() => {
+                setDialogEmail('');
+                setDialogError('');
                 setShowEmailDialog(false);
                 setShowLoginDialog(true);
               }}
@@ -599,20 +669,37 @@ export default function PersonalFeedPage() {
 
       {/* Login Dialog */}
       <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Přihlásit se</DialogTitle>
-            <DialogDescription>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Mail className="h-5 w-5 text-primary" />
+              </div>
+              <DialogTitle className="text-xl">Přihlásit se</DialogTitle>
+            </div>
+            <DialogDescription className="text-base">
               Zadej email spojený s tvým účtem
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              type="email"
-              placeholder="vas@email.cz"
-              value={dialogEmail}
-              onChange={(e) => setDialogEmail(e.target.value)}
-            />
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="login-email" className="text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="login-email"
+                type="email"
+                placeholder="vas@email.cz"
+                value={dialogEmail}
+                onChange={(e) => {
+                  setDialogEmail(e.target.value);
+                  setDialogError('');
+                }}
+                className="h-11"
+              />
+            </div>
+
             {dialogError && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -620,7 +707,8 @@ export default function PersonalFeedPage() {
               </Alert>
             )}
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowLoginDialog(false)}>
               Zrušit
             </Button>
@@ -635,12 +723,17 @@ export default function PersonalFeedPage() {
               )}
             </Button>
           </DialogFooter>
+
+          <Separator />
+
           <div className="text-center text-sm text-muted-foreground">
             Nemáte účet?{' '}
             <Button
               variant="link"
-              className="p-0 h-auto"
+              className="p-0 h-auto text-primary"
               onClick={() => {
+                setDialogEmail('');
+                setDialogError('');
                 setShowLoginDialog(false);
                 setShowEmailDialog(true);
               }}
