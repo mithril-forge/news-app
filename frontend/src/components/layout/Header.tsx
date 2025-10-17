@@ -1,7 +1,7 @@
-// components/layout/Header.tsx
 'use client'
 
 import Link from 'next/link';
+import { Newspaper } from 'lucide-react';
 import CategoryNav from '../news/CategoryNav';
 
 interface HeaderProps {
@@ -11,24 +11,27 @@ interface HeaderProps {
 
 export default function Header({ categories, activeCategory }: HeaderProps) {
   return (
-    <header className="bg-gray-800 text-white shadow-lg sticky top-0 z-50">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
-          <Link href="/" className="text-3xl font-bold text-white hover:text-red-400 transition-colors">
-            Tvůj Novinář
+        <div className="flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 group">
+            <Newspaper className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
+            <span className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors">
+              Tvůj Novinář
+            </span>
           </Link>
           <nav className="hidden md:block">
-            <CategoryNav 
-              categories={categories} 
-              activeCategory={activeCategory} 
+            <CategoryNav
+              categories={categories}
+              activeCategory={activeCategory}
             />
           </nav>
         </div>
         {/* Mobile navigation */}
-        <div className="md:hidden pb-4">
-          <CategoryNav 
-            categories={categories} 
-            activeCategory={activeCategory} 
+        <div className="md:hidden pb-3">
+          <CategoryNav
+            categories={categories}
+            activeCategory={activeCategory}
           />
         </div>
       </div>

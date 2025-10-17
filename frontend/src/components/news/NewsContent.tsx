@@ -63,8 +63,8 @@ export default function NewsContent({
     return (
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3">
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-gray-500">
+          <div className="text-center py-12 bg-card rounded-lg border">
+            <p className="text-muted-foreground">
               Žádné články nebyly nalezeny v kategorii '{activeCategory}'
             </p>
           </div>
@@ -86,7 +86,7 @@ export default function NewsContent({
         {/* Header with optional sort dropdown */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold tracking-tight">
               {activeCategory === "Vše" ? "Všechny články" : activeCategory}
             </h2>
           </div>
@@ -101,9 +101,9 @@ export default function NewsContent({
 
         {/* Loading state */}
         {isLoading ? (
-          <div className="flex items-center justify-center rounded-lg bg-white py-12 shadow">
-            <div className="mr-3 h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-red-600"></div>
-            <span className="text-gray-600">
+          <div className="flex items-center justify-center rounded-lg bg-card border py-12">
+            <div className="mr-3 h-8 w-8 animate-spin rounded-full border-t-2 border-b-2 border-primary"></div>
+            <span className="text-muted-foreground">
               {isLoadingCategory ? "Načítám kategorii..." : "Načítám články..."}
             </span>
           </div>

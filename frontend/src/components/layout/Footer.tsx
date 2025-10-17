@@ -1,38 +1,34 @@
-/**
- * Minimal footer component
- */
 import Link from 'next/link';
+import { Separator } from '~/components/ui/separator';
+import { Mail } from 'lucide-react';
 
 interface FooterProps {
-  /** List of all available categories */
   categories: string[];
-  /** Optional callback for category selection */
   onSelectCategory?: (category: string) => void;
 }
 
-export default function Footer({
-  categories,
-  onSelectCategory
-}: FooterProps) {
-
+export default function Footer({ categories, onSelectCategory }: FooterProps) {
   return (
-    <footer className="bg-gray-800 text-white py-6 mt-8">
-      <div className="max-w-7xl mx-auto px-4">
+    <footer className="w-full border-t bg-background mt-12">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           {/* Links */}
-          <div className="flex items-center gap-6 text-sm">
-            <Link
-              href="/about"
-              className="text-gray-300 hover:text-white transition-colors"
-            >
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <Link href="/about" className="hover:text-foreground transition-colors">
               O nás
             </Link>
-            <span className="text-gray-500">|</span>
-            <span className="text-gray-300">info@tvujnovinar.cz</span>
+            <Separator orientation="vertical" className="h-4" />
+            <a
+              href="mailto:info@tvujnovinar.cz"
+              className="flex items-center gap-1.5 hover:text-foreground transition-colors"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              info@tvujnovinar.cz
+            </a>
           </div>
 
           {/* Copyright */}
-          <div className="text-sm text-gray-400">
+          <div className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Tvůj Novinář
           </div>
         </div>
