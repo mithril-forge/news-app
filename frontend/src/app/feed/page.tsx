@@ -314,10 +314,10 @@ export default function PersonalFeedPage() {
         {showPromptForm && !isLoggedIn && (
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Brain className="h-6 w-6 text-primary" />
+              <div className="w-16 h-16 rounded-2xl ai-gradient flex items-center justify-center shadow-lg shadow-primary/30 animate-pulse">
+                <Brain className="h-8 w-8 text-white" />
               </div>
-              <h1 className="text-4xl font-bold">Tvůj AI Feed</h1>
+              <h1 className="text-4xl md:text-5xl font-bold text-gradient">Tvůj AI Feed</h1>
             </div>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               AI vybere pouze zprávy, které tě skutečně zajímají

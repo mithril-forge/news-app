@@ -38,14 +38,14 @@ export default function ArticleCard({ article }: ArticleCardProps) {
 
   return (
     <Link href={`/article/${article.id}`} className="block group">
-      <Card className="transition-all duration-200 hover:shadow-md hover:border-primary/20 overflow-hidden">
-        {/* Top accent line */}
-        <div className="h-1 bg-gradient-to-r from-primary/80 via-primary/40 to-primary/10" />
+      <Card className="card-elevated overflow-hidden border-border/50 hover:border-primary/30">
+        {/* Top accent line with gradient */}
+        <div className="h-1 bg-gradient-to-r from-primary via-primary/60 to-transparent" />
 
         <CardHeader className="pb-3 pt-4">
           <div className="flex items-start gap-3">
             {/* Category icon */}
-            <div className="w-11 h-11 rounded-lg bg-secondary flex items-center justify-center text-xl flex-shrink-0 border border-border transition-transform duration-200 group-hover:scale-105">
+            <div className="w-12 h-12 rounded-xl bg-accent/50 flex items-center justify-center text-xl flex-shrink-0 border border-border/50 transition-all duration-200 group-hover:scale-110 group-hover:bg-accent group-hover:border-primary/20">
               {categoryInfo.emoji}
             </div>
 
@@ -55,7 +55,7 @@ export default function ArticleCard({ article }: ArticleCardProps) {
                 <time className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   {article.date || new Date(article.updated_at).toLocaleDateString('cs-CZ')}
                 </time>
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/30"></span>
+                <span className="w-1 h-1 rounded-full bg-border"></span>
                 <Badge variant="secondary" className="text-xs font-medium">
                   {article.topic?.name || "Vše"}
                 </Badge>

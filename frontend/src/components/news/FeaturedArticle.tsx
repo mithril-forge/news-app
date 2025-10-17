@@ -26,13 +26,13 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
 
   return (
     <Link href={`/article/${article.id}`} className="block group mb-8">
-      <Card className="overflow-hidden border-2 border-primary/10 transition-all duration-200 hover:shadow-lg hover:border-primary/30 bg-card">
-        <div className="absolute inset-x-0 top-0 h-1 bg-primary" />
+      <Card className="card-elevated overflow-hidden border-2 border-primary/20 hover:border-primary/40 bg-gradient-to-br from-card to-accent/20">
+        <div className="absolute inset-x-0 top-0 h-1.5 ai-gradient" />
 
         <CardHeader className="pb-4 pt-8">
           <div className="flex gap-6 items-start flex-col md:flex-row">
             {/* Category icon */}
-            <div className="w-20 h-20 rounded-xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-4xl flex-shrink-0 transition-transform duration-200 group-hover:scale-105 mx-auto md:mx-0">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center text-5xl flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 mx-auto md:mx-0 shadow-lg shadow-primary/10">
               {categoryInfo.emoji}
             </div>
 
