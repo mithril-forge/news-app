@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import structlog
 from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import and_, select
+from sqlmodel import select
 
 from core.models import InputNews, ParsedNews
 from core.repository import AsyncBaseRepositoryWithID
@@ -38,31 +38,27 @@ class AsyncInputNewsRepositoryWithID(AsyncBaseRepositoryWithID[InputNews]):
     ) -> Sequence[InputNews]:
         """
         Get input news published within a time delta from now.
-
         Args:
             delta: Time delta to look back from current time
             has_parsed_news: If True, only return news with parsed_news link.
                             If False, only return news without parsed_news link.
                             If None, return all news regardless of parsed_news status.
             newer: if True than newer than timedelta, else older
-
         Returns:
             List of InputNews within the time delta
         """
         logger.debug(f"Getting input news by time delta: {delta}, has_parsed_news: {has_parsed_news}, newer: {newer}")
-        from_date = datetime.utcnow() - delta
-        conditions = [
-            InputNews.publication_date >= from_date  # type: ignore[operator]
-            if newer
-            else InputNews.publication_date <= from_date  # type: ignore[operator]
-        ]
+        threshold_date = datetime.utcnow() - delta
+        if newer:
+            statement = select(InputNews).where(InputNews.publication_date >= threshold_date)  # type: ignore[operator]
+        else:
+            statement = select(InputNews).where(InputNews.publication_date <= threshold_date)  # type: ignore[operator]
 
-        if has_parsed_news:
-            conditions.append(InputNews.parsed_news is not None)
+        if has_parsed_news is True:
+            statement = statement.where(InputNews.parsed_news.isnot(None))  # type: ignore[union-attr]
         elif has_parsed_news is False:
-            conditions.append(InputNews.parsed_news is None)
+            statement = statement.where(InputNews.parsed_news.is_(None))  # type: ignore[union-attr]
 
-        statement = select(InputNews).where(and_(*conditions))
         result = await self.session.execute(statement)
         input_news_list = result.scalars().all()
         logger.info(f"Retrieved {len(input_news_list)} input news items by time delta")
