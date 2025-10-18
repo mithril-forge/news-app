@@ -62,10 +62,10 @@ class GeminiAIModel(AbstractAIModel):
         after=after_log(logger, logging.INFO),
     )
     async def prompt_model(
-            self,
-            files: dict[str, pathlib.Path],
-            response_model: type[ResponseT],
-            prompt: str,
+        self,
+        files: dict[str, pathlib.Path],
+        response_model: type[ResponseT],
+        prompt: str,
     ) -> ResponseT:
         """Prompt model with the query and files, with rate limiting applied.
 
@@ -123,10 +123,6 @@ class GeminiAIModel(AbstractAIModel):
         """Prepares model encapsulated by instructor library for structured output."""
         logger.info("Preparing Gemini model SDK with instructor")
 
-        instructor_client = instructor.from_provider(
-            f"google/{self.model_name}",
-            api_key=self.api_key,
-            use_async=True
-        )
+        instructor_client = instructor.from_provider(f"google/{self.model_name}", api_key=self.api_key, use_async=True)
         logger.info("Gemini model SDK prepared successfully")
         return cast(AsyncInstructor, instructor_client)
