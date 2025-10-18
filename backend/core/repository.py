@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator, Sequence
 from contextlib import asynccontextmanager
 from typing import (
     Any,
+    TypedDict,
     TypeVar,
     cast,
 )
@@ -15,8 +16,17 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.expression import update
 from sqlmodel import SQLModel, and_, select
 
+from core.domain.token_generator import TokenGenerator
+from core.exceptions import (
+    AccountDeletionFailedException,
+    AccountNotFoundException,
+    TokenAlreadyUsedException,
+    TokenExpiredException,
+    TokenNotFoundException,
+)
 from core.models import (
     Account,
+    AccountDeletionToken,
     BaseModel,
     BaseModelWithID,
     InputNews,
@@ -33,6 +43,11 @@ G = TypeVar("G", bound=BaseModel)
 T = TypeVar("T", bound=BaseModelWithID)
 
 logger = structlog.get_logger()
+
+
+class TokenGenerationResponse(TypedDict):
+    plain_token: str
+    token_record: AccountDeletionToken
 
 
 class AsyncBaseRepository[G: BaseModel]:
@@ -594,3 +609,108 @@ class AsyncAccountRepositoryWithID(AsyncBaseRepositoryWithID[Account]):
             logger.info(f"Deleted account with email: {account_email}")
         else:
             logger.warn(f"Account with email {account_email} not found")
+
+    async def create_deletion_token(
+        self,
+        email: str,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+        expiry_hours: int = 24,
+    ) -> TokenGenerationResponse:
+        """
+        Create a deletion token for an account.
+
+        Args:
+            email: Email of the account to delete
+            ip_address: IP address of the requester
+            user_agent: User agent string of the requester
+            expiry_hours: Hours until token expires (default 24)
+
+        Returns:
+            Tuple of (plain_token, token_record)
+
+        Raises:
+            AccountNotFoundException: If account with email doesn't exist
+        """
+        logger.debug(f"Creating deletion token for email: {email}")
+
+        # Find account
+        account = await self.get_by_email(email)
+        if not account:
+            logger.warn(f"Account with email {email} not found for deletion token creation")
+            raise AccountNotFoundException(email=email)
+
+        # Generate token
+        tokens = TokenGenerator.generate_and_hash()
+        token_hash = tokens["hash_token"]
+        plain_token = tokens["plain_token"]
+        expires_at = TokenGenerator.get_expiration_time(hours=expiry_hours)
+
+        token_record = AccountDeletionToken(
+            account_id=account.id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+            ip_address=ip_address,
+            user_agent=user_agent[:500] if user_agent else None,  # Truncate to 500 chars
+        )
+
+        self.session.add(token_record)
+        await self.session.flush()
+        await self.session.refresh(token_record)
+
+        logger.info(f"Created deletion token for account ID: {account.id}, expires at: {expires_at.isoformat()}")
+
+        return {"token_record": token_record, "plain_token": plain_token}
+
+    async def verify_and_delete_account(
+        self,
+        plain_token: str,
+    ) -> None:
+        """
+        Verify deletion token and delete account if valid.
+
+        Args:
+            plain_token: The plain text token from the email link
+
+        Raises:
+            TokenNotFoundException: If token doesn't exist
+            TokenAlreadyUsedException: If token was already used
+            TokenExpiredException: If token has expired
+            AccountNotFoundException: If account doesn't exist
+            AccountDeletionFailedException: If deletion fails for any reason
+        """
+        logger.debug("Verifying deletion token and attempting account deletion")
+
+        # Hash the token to find it in database
+        token_hash = TokenGenerator.hash_token(plain_token)
+
+        # Find token
+        statement = select(AccountDeletionToken).where(AccountDeletionToken.token_hash == token_hash)
+        result = await self.session.execute(statement)
+        token_record = result.scalars().first()
+        if token_record is None:
+            raise TokenNotFoundException()
+        try:
+            TokenGenerator.validate_token(token_record)
+            account = await self.session.get(Account, token_record.account_id)
+            if not account:
+                logger.error(f"Account with ID {token_record.account_id} not found")
+                raise AccountNotFoundException()
+
+            logger.info(f"Starting deletion process for account ID: {account.id}, email: {account.email}")
+
+            # Mark token as used
+            token_record.used_at = datetime.datetime.utcnow()
+            # Finally delete the Account
+            await self.delete_by_email(account_email=account.email)
+            # Flush changes to database
+            await self.session.flush()
+
+            logger.info(f"Successfully deleted account ID: {account.id}, email: {account.email}")
+
+        except (TokenNotFoundException, TokenAlreadyUsedException, TokenExpiredException, AccountNotFoundException):
+            # Re-raise our custom exceptions as-is
+            raise
+        except Exception as e:
+            logger.error(f"Failed to delete account: {str(e)}", exc_info=True)
+            raise AccountDeletionFailedException(reason=str(e)) from e
