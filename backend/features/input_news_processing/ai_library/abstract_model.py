@@ -2,7 +2,7 @@ import abc
 import pathlib
 from typing import TypeVar
 
-from instructor import AsyncInstructor
+from instructor import AsyncInstructor  # type: ignore
 
 ResponseT = TypeVar("ResponseT")
 

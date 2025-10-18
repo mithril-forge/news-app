@@ -2,7 +2,7 @@ import os
 import pathlib
 from typing import cast
 
-import instructor
+import instructor  # type: ignore[import-untyped]
 from instructor import AsyncInstructor
 from openai import AsyncOpenAI
 
@@ -51,7 +51,7 @@ class OpenAIModel(AbstractAIModel):
             await client.files.create(file=value, purpose="user_data")
 
         # Use instructor to get structured output
-        result = await client.chat.completions.create(  # type: ignore[type-var]
+        result = await client.chat.completions.create(
             response_model=response_model,
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
