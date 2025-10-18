@@ -12,9 +12,9 @@ import {
   getPickNews,
 } from "@/services/api";
 import {
+  requestAccountDelete,
   generatePick,
   linkAnonymousPickToUser,
-  requestAccountDelete
 } from "@/services/api/feed";
 import { NewsArticle, Topic } from "@/types";
 
@@ -54,13 +54,13 @@ const EmailModal = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Check terms acceptance only for registration, not login
     if (!isLoginMode && !termsAccepted) {
       setModalFeedback("Musíte souhlasit se zásadami ochrany osobních údajů");
       return;
     }
-    
+
     if (email.trim()) {
       setModalFeedback(null);
       const result = isLoginMode
@@ -83,7 +83,7 @@ const EmailModal = ({
         </button>
 
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 tfdeo-blue-600">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-blue-600">
             <span className="text-2xl text-white">
               {isLoginMode ? "🔐" : "🎉"}
             </span>
@@ -555,37 +555,30 @@ export default function PersonalFeedPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!confirm("Opravdu chcete smazat svůj účet? Tato akce je nevratná.")) {
+    if (
+      !confirm(
+        "Opravdu chcete smazat svůj účet? Na váš email bude odeslán potvrzovací odkaz."
+      )
+    ) {
       return;
     }
 
     setSaving(true);
     try {
-      // Call the API to delete the account
+      // Call the API to request account deletion (sends email)
       await requestAccountDelete(email);
-
-      // Clear local storage
-      localStorage.removeItem(EMAIL_KEY);
-      localStorage.removeItem(PROMPT_KEY);
-      localStorage.removeItem(ANONYMOUS_PICK_HASH_KEY);
-      localStorage.removeItem(ANONYMOUS_PICK_DATE_KEY);
-
-      // Reset state
-      setEmail("");
-      setPrompt("");
-      setNews([]);
-      setIsLoggedIn(false);
-      setShowPromptForm(true);
 
       setFeedback({
         type: "success",
-        message: "✅ Tvůj účet byl úspěšně smazán.",
+        message:
+          "✅ Na váš email byl odeslán potvrzovací odkaz pro smazání účtu. Zkontrolujte prosím svou schránku.",
       });
     } catch (error) {
-      console.error("Error deleting account:", error);
+      console.error("Error requesting account deletion:", error);
       setFeedback({
         type: "error",
-        message: "❌ Nastala chyba při mazání účtu. Zkus to prosím znovu.",
+        message:
+          "❌ Nastala chyba při odesílání emailu. Zkus to prosím znovu.",
       });
     } finally {
       setSaving(false);
@@ -816,14 +809,15 @@ export default function PersonalFeedPage() {
                     onChange={(e) => setPrompt(e.target.value)}
                     rows={5}
                     className="w-full resize-none rounded-xl border-2 border-gray-200 px-4 py-4 text-lg focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                    placeholder="Například: Chci mít přehled o politických událostech v ČR a jenom ty nejdůležitější celosvětové zprávy z oblasti technologií a byznysu."
-
+                    placeholder="Například: Chci mít přehled o všech kulturních akcích v Praze a jenom ty nejdůležitější celosvětové zprávy z oblasti technologií a byznysu."
                     required
                   />
                   <div className="mt-3 flex items-start space-x-2">
                     <span className="text-blue-500">💡</span>
                     <p className="text-sm text-gray-600">
-                      <strong>Tip:</strong> Buďte konkrétní! Můžete zadat témata, regiony, typy zpráv nebo dokonce tón článků, který preferujete. Měj ale na paměti, že naše články pokrývají hlavně ty nejdůležitější události z ČR a světa. Na naší stránce tak například nenajdeš různé lokální události z tvého okolí.
+                      <strong>Tip:</strong> Buďte konkrétní! Můžete zadat
+                      témata, regiony, typy zpráv nebo dokonce tón článků, který
+                      preferujete.
                     </p>
                   </div>
                 </div>
