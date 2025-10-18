@@ -1,11 +1,6 @@
-import json
-import tempfile
 from datetime import timedelta
-from pathlib import Path
-from typing import Any
 
 import structlog
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.converters import orm_list_to_pydantic
@@ -18,7 +13,7 @@ from core.domain.schemas import (
 )
 from core.domain.topic_service import TopicService
 from core.repository import AsyncTagRepositoryWithID
-from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
+from features.input_news_processing.ai_library.model_factory import get_ai_model
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import input_news_list_to_schema
 from features.input_news_processing.domain.ai_prompts import (
@@ -38,53 +33,16 @@ from features.input_news_processing.domain.schemas import (
 logger = structlog.get_logger()
 
 
-class TempFileStorage(BaseModel):
-    recent_parsed_news: Path
-    topics: Path
-    tags: Path
-    recent_input_news: Path
-
-
 class ArticleGenerationService:
-    def __init__(self, session: AsyncSession, archive: AbstractArchive, ai_model: AbstractAIModel) -> None:
+    def __init__(self, session: AsyncSession, archive: AbstractArchive) -> None:
         self.session = session
         self.topic_service = TopicService(session=session)
         self.input_news_service = InputNewsService(session=session, archive=archive)
         self.tag_repository = AsyncTagRepositoryWithID(session=session)
         self.parsed_news_service = NewsService(session=session)
-        self.ai_model = ai_model
+        self.ai_model = get_ai_model()
         logger.info("ArticleGenerationService initialized")
 
-    @staticmethod
-    def save_pydantic_lists_as_files(**kwargs: list[Any]) -> dict[str, Path]:
-        """
-        Dumps data to files and returns their paths. This is a step to convert data from Pydantic models
-        to files that are supported by Gemini and other AI models.
-
-        Args:
-            **kwargs: Named arguments where each value is a list of Pydantic BaseModel objects
-
-        Returns:
-            Dictionary mapping argument names to file paths where the data is stored
-        """
-        logger.debug(f"Saving {len(kwargs)} pydantic lists as files")
-        paths_mapping: dict[str, Path] = {}
-        for list_name, model_list in kwargs.items():
-            logger.debug(f"Processing list: {list_name} with {len(model_list)} items")
-            # Convert each model to a dict first, then the whole list will be properly serialized
-            # TODO: model_dump is better, but problems with datetime
-            data = [model.model_dump_json() for model in model_list]
-
-            temp_file = tempfile.NamedTemporaryFile(suffix=".json", mode="w+", delete=False)
-
-            json.dump(data, temp_file, indent=2)
-            temp_file.close()
-
-            paths_mapping[list_name] = Path(temp_file.name)
-            logger.info(f"Saved {list_name} to file: {temp_file.name} ({len(model_list)} items)")
-
-        logger.info(f"Successfully saved {len(kwargs)} lists to temporary files")
-        return paths_mapping
 
     async def generate_and_attach_image_to_news(self, news_id: int) -> None:
         """
@@ -98,20 +56,16 @@ class ArticleGenerationService:
         """
         logger.info(f"Generating picture for news ID: {news_id}")
         news = await self.parsed_news_service.get_news_by_id(news_id=news_id)
-        # TODO: Add support also for noniterable params
-        news_as_file = self.save_pydantic_lists_as_files(news_detail=[news])
         # TODO: Fix search, somehow it doesn't work with the ChatGPT model here,
         #  but in the web UI it searches good for the query
         # TODO: I guess the issue can be that in UI AI works with multiple models
         #  and we query only one, please research and fix
         logger.debug(f"Requesting image search for news: {news.title}")
-        image_result = await self.ai_model.prompt_model(
-            files=news_as_file,
+        image_result = await self.ai_model.prompt(
             prompt=PICTURE_SEARCH_PROMPT,
             response_model=list[ImageDetail],
+            news_detail=[news],
         )
-        if image_result is None:
-            raise ValueError(f"There is None result when generating new image for id {news_id}")
         result_list: list[ImageDetail] = list(image_result)
         if len(result_list) == 0:
             logger.warn(f"No image results found for news ID: {news_id}")
@@ -154,16 +108,12 @@ class ArticleGenerationService:
             f"parsed news for connection analysis"
         )
 
-        files = self.save_pydantic_lists_as_files(parsed_news=recent_parsed_news, input_news=recent_input_news)
-        logger.debug("Prepared data files for AI connection analysis")
-
-        result = await self.ai_model.prompt_model(
-            files=files,
+        result = await self.ai_model.prompt(
             prompt=INITIAL_CONNECTION_PROMPT,
             response_model=list[InitConnectionResult],
+            parsed_news=recent_parsed_news,
+            input_news=recent_input_news,
         )
-        if result is None:
-            raise ValueError(f"AI model returned empty result when connecting new articles from ids {input_news_ids}")
         logger.debug(f"AI model returned {len(result)} connection suggestions")
 
         parsed_news_ids_set = set(news.id for news in recent_parsed_news)
@@ -210,14 +160,11 @@ class ArticleGenerationService:
         recent_input_news = await self.input_news_service.get_input_news_by_ids_lite(
             input_news_ids=input_news_ids, has_parsed_news=False
         )
-        files = self.save_pydantic_lists_as_files(recent_input_news=recent_input_news)
-        result = await self.ai_model.prompt_model(
-            files=files,
+        result = await self.ai_model.prompt(
             prompt=INITIAL_GENERATION_PROMPT,
             response_model=list[InitGenerationResult],
+            recent_input_news=recent_input_news,
         )
-        if result is None:
-            raise ValueError(f"AI model returned empty result when creating new articles from ids {input_news_ids}")
         input_news_ids = [news.id for news in recent_input_news]
         result = [
             res
@@ -252,18 +199,13 @@ class ArticleGenerationService:
         existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
         logger.debug(f"Prepared context data - topics: {len(existing_topics)}, tags: {len(existing_tags)}")
 
-        files = self.save_pydantic_lists_as_files(
+        result = await self.ai_model.prompt(
+            prompt=NEW_GENERATION_PROMPT,
+            response_model=ParsedNewsCreate,
             input_news_list=input_news_pydantic,
             existing_tags=existing_tags,
             existing_topics=existing_topics,
         )
-        logger.debug("Generated data files for AI article creation")
-
-        result = await self.ai_model.prompt_model(
-            files=files, prompt=NEW_GENERATION_PROMPT, response_model=ParsedNewsCreate
-        )
-        if result is None:
-            raise ValueError(f"AI model didn't return proper result when creating new article from {input_news_ids}")
         logger.debug(f"AI model generated article: '{result.title}' with {len(result.content)} characters")
 
         saved_news = await self.parsed_news_service.create_news(news_data=result, importancy=importancy)
@@ -294,19 +236,14 @@ class ArticleGenerationService:
         existing_tags = orm_list_to_pydantic(await self.tag_repository.get_all(), TagResponse)
         logger.debug(f"Loaded context data - topics: {len(existing_topics)}, tags: {len(existing_tags)}")
 
-        files = self.save_pydantic_lists_as_files(
+        result = await self.ai_model.prompt(
+            prompt=NEW_CONNECTION_PROMPT,
+            response_model=ParsedNewsUpdate,
             parsed_news=[parsed_news],
             existing_topics=existing_topics,
             existing_tags=existing_tags,
         )
-        logger.debug("Prepared data files for AI article enrichment")
-
-        result = await self.ai_model.prompt_model(
-            files=files, prompt=NEW_CONNECTION_PROMPT, response_model=ParsedNewsUpdate
-        )
         logger.debug(f"AI model generated enrichment updates for article ID: {parsed_news_id}")
-        if result is None:
-            raise ValueError(f"AI model didn't return proper result when enriching article {parsed_news_id}")
         saved_news = await self.parsed_news_service.update_news(news_data=result)
         logger.info(f"Successfully enriched article: '{saved_news.title}' (ID: {saved_news.id})")
 

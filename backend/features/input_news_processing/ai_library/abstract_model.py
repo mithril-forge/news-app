@@ -1,10 +1,10 @@
 import abc
-import pathlib
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from instructor import AsyncInstructor
+from pydantic import BaseModel
 
-ResponseT = TypeVar("ResponseT")
+ResponseT = TypeVar("ResponseT", bound=BaseModel)
 
 
 class AbstractAIModel(abc.ABC):
@@ -13,16 +13,36 @@ class AbstractAIModel(abc.ABC):
         self.api_key = api_key
 
     @abc.abstractmethod
-    async def prompt_model(
+    async def prompt(
         self,
-        files: dict[str, pathlib.Path],
-        response_model: type[ResponseT],
         prompt: str,
-    ) -> ResponseT | None:
-        """Prompt model with files and prompt, returns result as the passed type, this is ensured by AsyncInstructor"""
+        response_model: type[ResponseT],
+        **context: list[BaseModel] | BaseModel,
+    ) -> ResponseT:
+        """
+        Prompt the AI model with structured context data.
+
+        Args:
+            prompt: The text prompt to send to the model
+            response_model: Pydantic model defining the expected response structure
+            **context: Named arguments of Pydantic models or lists to include as context
+
+        Returns:
+            Structured response as defined by response_model
+
+        Example:
+            ```python
+            result = await model.prompt(
+                prompt="Analyze these articles",
+                response_model=AnalysisResult,
+                articles=article_list,
+                tags=tag_list,
+            )
+            ```
+        """
         pass
 
     @abc.abstractmethod
     def prepare_model_sdk(self) -> AsyncInstructor:
-        """Prepares model that can be work with"""
+        """Prepares the underlying model SDK for use with instructor"""
         pass

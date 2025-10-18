@@ -14,7 +14,6 @@ from core.domain.email_service import EmailNewsletterService
 from core.domain.news_service import NewsService
 from core.domain.schemas import AccountDetails
 from core.engine import get_session_context
-from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.domain.article_generation_service import (
     ArticleGenerationService,
@@ -79,16 +78,11 @@ def choose_connected_articles_task(input_news_ids: list[int]) -> None:
 
 async def async_choose_connected_articles_task(input_news_ids: list[int]) -> None:
     """Async wrapper"""
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        logger.error("GEMINI_API_KEY environment variable not set")
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
     async with get_session_context() as db_session:
         archive = LocalArchive(target_location=pathlib.Path("/tmp"))
         article_generation_service = ArticleGenerationService(
             session=db_session,
             archive=archive,
-            ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
         parsed_news_ids = await article_generation_service.connect_input_news_to_existing_articles(
             input_news_ids=input_news_ids,
@@ -133,16 +127,11 @@ def choose_new_articles_task(
 async def async_choose_new_articles_task(input_news_ids: list[int], input_news_hours: int, news_limit: int) -> None:
     """Async wrapper"""
     input_news_delta = timedelta(hours=input_news_hours)
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        logger.error("GEMINI_API_KEY environment variable not set")
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
     async with get_session_context() as db_session:
         archive = LocalArchive(target_location=pathlib.Path("/tmp"))
         article_generation_service = ArticleGenerationService(
             session=db_session,
             archive=archive,
-            ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
         input_news_service = InputNewsService(session=db_session, archive=archive)
         input_news_older = await input_news_service.get_input_news_by_delta(
@@ -173,16 +162,11 @@ def generate_article_task(input_news_ids: list[int], importancy: int) -> None:
 
 async def async_generate_article_task(input_news_ids: list[int], importancy: int) -> None:
     """Async wrapper"""
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        logger.error("GEMINI_API_KEY environment variable not set")
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
     async with get_session_context() as db_session:
         archive = LocalArchive(target_location=pathlib.Path("/tmp"))
         article_generation_service = ArticleGenerationService(
             session=db_session,
             archive=archive,
-            ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
         saved_news = await article_generation_service.create_new_article_from_input_news(
             input_news_ids=input_news_ids, importancy=importancy
@@ -204,16 +188,11 @@ def enrich_parsed_article_task(parsed_news_id: int) -> None:
 
 async def async_enrich_parsed_article_task(parsed_news_id: int) -> None:
     """Aync wrapper"""
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        logger.error("GEMINI_API_KEY environment variable not set")
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
     async with get_session_context() as db_session:
         archive = LocalArchive(target_location=pathlib.Path("/tmp"))
         article_generation_service = ArticleGenerationService(
             session=db_session,
             archive=archive,
-            ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
         await article_generation_service.enrich_existing_article(parsed_news_id=parsed_news_id)
 

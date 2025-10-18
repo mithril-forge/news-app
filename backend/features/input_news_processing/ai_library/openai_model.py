@@ -5,6 +5,7 @@ from typing import cast
 import instructor
 from instructor import AsyncInstructor
 from openai import AsyncOpenAI
+from pydantic import BaseModel
 
 from features.input_news_processing.ai_library.abstract_model import (
     AbstractAIModel,
@@ -71,3 +72,16 @@ class OpenAIModel(AbstractAIModel):
         instructor_client = instructor.from_openai(client=client, mode=instructor.Mode.JSON)
 
         return instructor_client
+
+    async def prompt(
+        self,
+        prompt: str,
+        response_model: type[ResponseT],
+        **context: list[BaseModel] | BaseModel,
+    ) -> ResponseT:
+        """
+        New interface - not implemented for OpenAI (deprecated, use DeepInfra instead).
+        """
+        raise NotImplementedError(
+            "OpenAI model is deprecated. Please use DeepInfraModel instead via get_ai_model() factory."
+        )

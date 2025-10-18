@@ -17,6 +17,8 @@ from tenacity import (
     wait_exponential,
 )
 
+from pydantic import BaseModel
+
 from core.redis_client import redis_client
 from features.input_news_processing.ai_library.abstract_model import (
     AbstractAIModel,
@@ -116,3 +118,16 @@ class GeminiAIModel(AbstractAIModel):
         )
         logger.info("Gemini model SDK prepared successfully")
         return cast(AsyncInstructor, client)
+
+    async def prompt(
+        self,
+        prompt: str,
+        response_model: type[ResponseT],
+        **context: list[BaseModel] | BaseModel,
+    ) -> ResponseT:
+        """
+        New interface - not implemented for Gemini (deprecated, use DeepInfra instead).
+        """
+        raise NotImplementedError(
+            "Gemini model is deprecated. Please use DeepInfraModel instead via get_ai_model() factory."
+        )
