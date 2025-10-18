@@ -7,7 +7,7 @@ import { Geist } from "next/font/google";
 import "@/styles/globals.css";
 
 // Define site metadata
-export const metadata: Metadata = {
+ const metadata: Metadata = {
   title: "Tvůj Novinář | Tvoje denní dávka novinek",
   description: "Tvůj spolehlivý zdroj nejnovějších zpráv z České republiky i ze světa.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
@@ -26,7 +26,7 @@ interface RootLayoutProps {
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="cs" className={`${geist.variable}`}>
-      <body>{children}</body>
+          <body>{children}</body>
     </html>
   );
 }

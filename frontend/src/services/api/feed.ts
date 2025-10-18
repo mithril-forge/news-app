@@ -126,3 +126,21 @@ export const linkAnonymousPickToUser = async (userEmail: string, pickHash: strin
     body: params.toString(),
   });
 };
+
+
+/**
+ * Deletes a user account
+ * @param userEmail - User's email address
+ */
+export const deleteAccount = async (userEmail: string): Promise<void> => {
+  const params = new URLSearchParams();
+  params.append('user_email', userEmail);
+
+  return fetchApi<void>('/delete_account', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+};

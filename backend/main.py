@@ -257,3 +257,13 @@ async def link_anonymous_pick_to_user(
     """Links an anonymous pick (by hash) to a user account."""
     service = NewsService(session)
     await service.link_anonymous_pick_to_user(user_email=user_email, pick_hash=pick_hash)
+
+
+@app.delete("/delete_account")
+async def delete_account(
+    user_email: Annotated[str, Form()],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> None:
+    """Deletes record for the user"""
+    account_service = AccountService(session=session)
+    await account_service.delete_account(account_email=user_email)
