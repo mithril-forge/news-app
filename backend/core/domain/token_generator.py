@@ -3,7 +3,7 @@ import secrets
 from datetime import datetime, timedelta
 from typing import TypedDict
 
-from core.exceptions import TokenAlreadyUsedException, TokenExpiredException, TokenNotFoundException
+from core.exceptions import TokenAlreadyUsedException, TokenExpiredException
 from core.models import AccountDeletionToken
 
 

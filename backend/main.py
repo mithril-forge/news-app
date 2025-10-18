@@ -17,7 +17,6 @@ from core.domain.account_service import AccountService
 from core.domain.email_service import EmailNewsletterService
 from core.domain.news_service import NewsService
 from core.domain.schemas import (
-    AccountDeletionResponse,
     AccountDetails,
     NewsPickResponse,
     ParsedNewsBasic,
@@ -26,7 +25,6 @@ from core.domain.schemas import (
 )
 from core.domain.topic_service import TopicService
 from core.engine import get_session
-from core.presentation.schemas import PickGenerationResponse
 from core.exceptions import (
     AccountDeletionException,
     AccountDeletionFailedException,
@@ -35,6 +33,7 @@ from core.exceptions import (
     TokenExpiredException,
     TokenNotFoundException,
 )
+from core.presentation.schemas import AccountDeletionResponse, PickGenerationResponse
 from features.input_news_processing.domain.pick_generation_service import PickGenerationService
 from logger import init_logging
 
