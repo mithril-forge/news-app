@@ -9,8 +9,6 @@ from datetime import timedelta
 import structlog
 
 from core.engine import get_session_context
-from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
-from features.input_news_processing.ai_library.openai_model import OpenAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.domain.article_generation_service import (
     ArticleGenerationService,
@@ -41,16 +39,11 @@ async def generate_and_connect_news(delta: timedelta) -> None:
     if local_archive_folder is None:
         logger.error("LOCAL_ARCHIVE_FOLDER environment variable not set")
         raise ValueError("You need to provide LOCAL_ARCHIVE_FOLDER")
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        logger.error("GEMINI_API_KEY environment variable not set")
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
     local_archive = LocalArchive(target_location=pathlib.Path(local_archive_folder))
     async with get_session_context() as session:
         article_generation_service = ArticleGenerationService(
             session=session,
             archive=local_archive,
-            ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
         input_news_service = InputNewsService(session=session, archive=local_archive)
         await session.flush()
