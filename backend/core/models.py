@@ -136,6 +136,25 @@ class Account(BaseModelWithID, table=True):
     news_picks: Mapped[list["NewsPick"]] = Relationship(
         back_populates="account", sa_relationship_kwargs={"lazy": "selectin"}
     )
+    account_deletion_tokens: Mapped[list["AccountDeletionToken"]] = Relationship(back_populates="account")
+
+
+class AccountDeletionToken(BaseModelWithID, table=True):
+    __tablename__ = "account_deletion_tokens"
+
+    account_id: int = Field(foreign_key="accounts.id", index=True)
+    token_hash: str = Field(max_length=64, unique=True, index=True, nullable=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    expires_at: datetime = Field(nullable=False, index=True)
+    used_at: datetime | None = Field(default=None, nullable=True)
+    ip_address: str | None = Field(default=None, max_length=45)
+    user_agent: str | None = Field(default=None, max_length=500)
+
+    account: Mapped["Account"] = Relationship(
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+        }
+    )
 
 
 class NewsPick(BaseModelWithID, table=True):

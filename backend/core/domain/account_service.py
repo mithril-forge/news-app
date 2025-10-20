@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.converters import orm_list_to_pydantic, orm_to_pydantic
 from core.domain.schemas import AccountDetails
-from core.repository import AsyncAccountRepositoryWithID
+from core.repository import AsyncAccountRepositoryWithID, TokenGenerationResponse
 
 
 class AccountService:
@@ -32,3 +32,45 @@ class AccountService:
     async def delete_account(self, account_email: str) -> None:
         """Deletes the account"""
         await self.account_repo.delete_by_email(account_email=account_email)
+
+    async def create_deletion_token(
+        self,
+        email: str,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> TokenGenerationResponse:
+        """
+        Create a deletion token for an account.
+
+        Args:
+            email: Email of the account to delete
+            ip_address: IP address of the requester
+            user_agent: User agent string of the requester
+
+        Returns:
+            Tuple of (plain_token, token_record)
+
+        Raises:
+            AccountNotFoundException: If account with email doesn't exist
+        """
+        return await self.account_repo.create_deletion_token(
+            email=email,
+            ip_address=ip_address,
+            user_agent=user_agent,
+        )
+
+    async def verify_and_delete_account(self, plain_token: str) -> None:
+        """
+        Verify deletion token and delete account if valid.
+
+        Args:
+            plain_token: The plain text token from the email link
+
+        Raises:
+            TokenNotFoundException: If token doesn't exist
+            TokenAlreadyUsedException: If token was already used
+            TokenExpiredException: If token has expired
+            AccountNotFoundException: If account doesn't exist
+            AccountDeletionFailedException: If deletion fails
+        """
+        await self.account_repo.verify_and_delete_account(plain_token=plain_token)

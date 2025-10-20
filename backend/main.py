@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import Environment
 from core.domain.account_service import AccountService
+from core.domain.email_service import EmailNewsletterService
 from core.domain.news_service import NewsService
 from core.domain.schemas import (
     AccountDetails,
@@ -24,7 +25,15 @@ from core.domain.schemas import (
 )
 from core.domain.topic_service import TopicService
 from core.engine import get_session
-from core.presentation.schemas import PickGenerationResponse
+from core.exceptions import (
+    AccountDeletionException,
+    AccountDeletionFailedException,
+    AccountNotFoundException,
+    TokenAlreadyUsedException,
+    TokenExpiredException,
+    TokenNotFoundException,
+)
+from core.presentation.schemas import AccountDeletionResponse, PickGenerationResponse
 from features.input_news_processing.domain.pick_generation_service import PickGenerationService
 from logger import init_logging
 
@@ -48,6 +57,8 @@ if environment == Environment.DEVELOPMENT.value:
     origins = [
         "*",
     ]
+
+FRONTEND_ACCOUNT_DELETION_URL = "https://tvujnovinar.cz/delete?token={plain_token}"
 
 
 class NewsSortBy(str, Enum):
@@ -259,11 +270,78 @@ async def link_anonymous_pick_to_user(
     await service.link_anonymous_pick_to_user(user_email=user_email, pick_hash=pick_hash)
 
 
-@app.delete("/delete_account")
-async def delete_account(
-    user_email: Annotated[str, Form()],
+@app.exception_handler(AccountDeletionException)
+async def account_deletion_exception_handler(request: Request, exc: AccountDeletionException) -> JSONResponse:
+    """Global handler for account deletion exceptions"""
+
+    status_code_map = {
+        TokenNotFoundException: 404,
+        AccountNotFoundException: 404,
+        TokenAlreadyUsedException: 400,
+        TokenExpiredException: 400,
+        AccountDeletionFailedException: 500,
+    }
+
+    status_code = status_code_map.get(type(exc), 400)
+
+    logger.error(f"Account deletion error: {exc.error_code} - {exc.message}")
+
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "success": False,
+            "error": exc.error_code,
+            "message": exc.message,
+        },
+    )
+
+
+@app.post("/account/request-deletion")
+async def request_account_deletion(
+    email: Annotated[str, Form()],
     session: Annotated[AsyncSession, Depends(get_session)],
-) -> None:
-    """Deletes record for the user"""
+) -> AccountDeletionResponse:
+    """
+    Generate deletion token and send email with link.
+    Always returns success to prevent email enumeration.
+    """
+    logger.info(f"Deletion requested for: {email}")
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    if brevo_api_key is None:
+        logger.error("BREVO_API_KEY environment variable not set")
+        raise ValueError("You need to provide BREVO_API_KEY to use the model.")
+    try:
+        account_service = AccountService(session=session)
+        email_service = EmailNewsletterService(brevo_api_key=brevo_api_key)
+        token_response = await account_service.create_deletion_token(email=email)
+
+        deletion_url = FRONTEND_ACCOUNT_DELETION_URL.format(plain_token=token_response["plain_token"])
+        await email_service.send_deletion_email(email, deletion_url)
+        await session.commit()
+
+    except AccountNotFoundException:
+        pass
+
+    return AccountDeletionResponse(message="Instrukce pro smazání byly odeslány na email.")
+
+
+@app.delete("/account/execute-deletion")
+async def execute_account_deletion(
+    token: Annotated[str, Form()],  # Changed this line only
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> AccountDeletionResponse:
+    """
+    Verify token and delete account.
+    Exceptions handled by global exception handler.
+    """
+    logger.info("Executing account deletion")
+
     account_service = AccountService(session=session)
-    await account_service.delete_account(account_email=user_email)
+
+    await account_service.verify_and_delete_account(plain_token=token)  # Changed this
+
+    await session.commit()
+
+    logger.info("Account successfully deleted")
+
+    return AccountDeletionResponse(message="Váš účet byl úspěšně smazán.")

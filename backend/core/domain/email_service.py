@@ -262,3 +262,59 @@ class EmailNewsletterService:
         except ApiException as e:
             logger.error(f"Failed to send email to {recipient_email}: {e}")
             raise
+
+    def generate_deletion_email(self, deletion_url: str) -> str:
+        """Generate HTML email for account deletion confirmation."""
+        return f"""
+        <!DOCTYPE html>
+        <html lang="cs">
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;
+        padding: 20px;">
+            <h2 style="color: #dc2626;">Potvrzení smazání účtu</h2>
+
+            <p>Obdrželi jste tento email, protože bylo požadováno smazání vašeho účtu.</p>
+
+            <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0;">
+                <strong>⚠️ Varování:</strong> Tato akce je nevratná. Budou smazána všechna vaše data.
+            </div>
+
+            <p>
+                <a href="{deletion_url}"
+                   style="display: inline-block; background: #dc2626; color: white; padding: 12px 24px;
+                   text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    Smazat můj účet
+                </a>
+            </p>
+
+            <p style="font-size: 12px; color: #666;">
+                Odkaz: <a href="{deletion_url}">{deletion_url}</a><br>
+            </p>
+
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+            <p style="font-size: 14px;">
+                <strong>Pokud jste o smazání nežádali,</strong> ignorujte tento email.
+            </p>
+        </body>
+        </html>
+        """
+
+    async def send_deletion_email(self, recipient_email: str, deletion_url: str) -> None:
+        """Send account deletion confirmation email via Brevo."""
+        logger.info(f"Sending deletion email to {recipient_email}")
+
+        html_content = self.generate_deletion_email(deletion_url)
+
+        send_smtp_email = SendSmtpEmail(
+            to=[{"email": recipient_email}],
+            sender={"email": self.sender_email, "name": self.sender_name},
+            subject="Potvrzení smazání účtu - Tvůj Novinář",
+            html_content=html_content,
+        )
+
+        try:
+            api_response = self.api_instance.send_transac_email(send_smtp_email)
+            logger.info(f"Deletion email sent. Message ID: {api_response.message_id}")
+        except ApiException as e:
+            logger.error(f"Failed to send deletion email: {e}")
+            raise
