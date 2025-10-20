@@ -1,13 +1,9 @@
 import React from 'react';
 import Footer from '~/components/layout/Footer';
 import Header from '~/components/layout/Header';
-import { fetchTopics } from '~/services/api';
 
-export default async function CookiePolicyPage() {
-    
-    // Fetch data on the server
-    const topicsData = await fetchTopics();
-    const categories = ["AI Feed", "Vše", ...topicsData.map(topic => topic.name)];
+export default function CookiePolicyPage() {
+    const categories = ["AI Feed", "Vše"];
     
   return (
         <div className="min-h-screen flex flex-col" style={{

@@ -1,11 +1,9 @@
 import React from 'react';
 import Header from '~/components/layout/Header';
 import Footer from '~/components/layout/Footer';
-import { fetchTopics } from '~/services/api';
 
-export default async function PrivacyPolicyPage() {
-    const topicsData = await fetchTopics();
-    const categories = ["AI Feed", "Vše", ...topicsData.map(topic => topic.name)];
+export default function PrivacyPolicyPage() {
+    const categories = ["AI Feed", "Vše"];
   return (
     <div className="min-h-screen flex flex-col" style={{
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'

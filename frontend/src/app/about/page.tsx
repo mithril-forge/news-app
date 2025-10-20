@@ -2,7 +2,6 @@
  * About page (O nás) - explains the mission and value proposition
  */
 import { Suspense } from 'react';
-import { fetchTopics } from '@/services/api';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Loading from '@/components/common/Loading';
@@ -16,23 +15,8 @@ export const metadata: Metadata = {
   description: 'Proč jsme vytvořili Tvůj Novinář - náš přístup k překonání informačního přetížení pomocí AI.',
 };
 
-export default async function AboutPage() {
-  // Fetch data for header with fallback during build
-  let topicsData = [];
-  try {
-    topicsData = await fetchTopics();
-  } catch (error) {
-    console.warn('Failed to fetch topics for about page (likely during build), using fallback:', error);
-    // Fallback topics for build time
-    topicsData = [
-      { name: 'Politika', id: 1 },
-      { name: 'Sport', id: 2 },
-      { name: 'Kultura', id: 3 },
-      { name: 'Ekonomika', id: 4 },
-      { name: 'Věda', id: 5 }
-    ];
-  }
-  const categories = ["AI Feed", "Vše", ...topicsData.map(topic => topic.name)];
+export default function AboutPage() {
+  const categories = ["AI Feed", "Vše"];
 
   return (
     <div className="min-h-screen flex flex-col" style={{
