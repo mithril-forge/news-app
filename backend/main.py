@@ -313,10 +313,10 @@ async def request_account_deletion(
     try:
         account_service = AccountService(session=session)
         email_service = EmailNewsletterService(brevo_api_key=brevo_api_key)
-        token_response = await account_service.create_deletion_token(email=email)  # Changed this
+        token_response = await account_service.create_deletion_token(email=email)
 
         deletion_url = FRONTEND_ACCOUNT_DELETION_URL.format(plain_token=token_response["plain_token"])
-        await email_service.send_deletion_email(email, deletion_url)  # Changed this
+        await email_service.send_deletion_email(email, deletion_url)
         await session.commit()
 
     except AccountNotFoundException:

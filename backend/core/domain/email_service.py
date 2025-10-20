@@ -263,10 +263,8 @@ class EmailNewsletterService:
             logger.error(f"Failed to send email to {recipient_email}: {e}")
             raise
 
-    def generate_deletion_email(self, deletion_token: str) -> str:
+    def generate_deletion_email(self, deletion_url: str) -> str:
         """Generate HTML email for account deletion confirmation."""
-        deletion_url = f"https://tvujnovinar.cz/account/delete?token={deletion_token}"
-
         return f"""
         <!DOCTYPE html>
         <html lang="cs">
@@ -301,11 +299,11 @@ class EmailNewsletterService:
         </html>
         """
 
-    async def send_deletion_email(self, recipient_email: str, deletion_token: str) -> None:
+    async def send_deletion_email(self, recipient_email: str, deletion_url: str) -> None:
         """Send account deletion confirmation email via Brevo."""
         logger.info(f"Sending deletion email to {recipient_email}")
 
-        html_content = self.generate_deletion_email(deletion_token)
+        html_content = self.generate_deletion_email(deletion_url)
 
         send_smtp_email = SendSmtpEmail(
             to=[{"email": recipient_email}],
