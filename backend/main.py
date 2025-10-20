@@ -58,7 +58,7 @@ if environment == Environment.DEVELOPMENT.value:
         "*",
     ]
 
-FRONTEND_ACCOUNT_DELETION_URL = "https://tvujnovinar.cz/delete?token={plain_token}"
+FRONTEND_ACCOUNT_DELETION_URL = "https://tvujnovinar.cz/account/delete?token={plain_token}"
 
 
 class NewsSortBy(str, Enum):

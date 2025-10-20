@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -10,10 +10,11 @@ const EMAIL_KEY = "news_app_user_email";
 const PROMPT_KEY = "news_app_user_prompt";
 const ANONYMOUS_PICK_HASH_KEY = "news_app_anonymous_pick_hash";
 const ANONYMOUS_PICK_DATE_KEY = "news_app_anonymous_pick_date";
-export default function DeleteAccountPage() {
+
+function DeleteAccountContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  
+
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
   const categories = ["AI Feed", "Vše"];
@@ -25,11 +26,11 @@ export default function DeleteAccountPage() {
         setMessage("Neplatný odkaz - chybí token.");
         return;
       }
-      
+
       try {
         const params = new URLSearchParams();
         params.append("token", token);
-        
+
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/account/execute-deletion`, {
           method: "DELETE",
           headers: {
@@ -37,20 +38,20 @@ export default function DeleteAccountPage() {
           },
           body: params.toString(),
         });
-        
+
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || "Něco se pokazilo");
         }
-        
+
         localStorage.removeItem(EMAIL_KEY);
         localStorage.removeItem(PROMPT_KEY);
         localStorage.removeItem(ANONYMOUS_PICK_HASH_KEY);
         localStorage.removeItem(ANONYMOUS_PICK_DATE_KEY);
-        
+
         setStatus("success");
         setMessage("Váš účet byl úspěšně smazán.");
-        
+
       } catch (error) {
         setStatus("error");
         setMessage(error instanceof Error ? error.message : "Chyba při mazání účtu");
@@ -101,5 +102,15 @@ export default function DeleteAccountPage() {
 
       <Footer categories={categories} />
     </div>
+  );
+}
+
+export default function DeleteAccountPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+    </div>}>
+      <DeleteAccountContent />
+    </Suspense>
   );
 }

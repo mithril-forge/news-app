@@ -19,15 +19,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // Get the category from URL query params with a default of "Vše"
   const resolvedSearchParams = await searchParams;
   const activeCategory = resolvedSearchParams.category || "Vše";
-  
+
   // Fetch data on the server
   const topicsData = await fetchTopics();
   const categories = ["AI Feed", "Vše", ...topicsData.map(topic => topic.name)];
-  
+
   // Fetch the appropriate news data based on selected category
   let newsData;
   let selectedTopicId;
-  
+
   if (activeCategory === "Vše") {
     // For "All" category, fetch latest news
     newsData = await fetchLatestNews(10);
@@ -46,24 +46,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <div className="min-h-screen flex flex-col" style={{
       background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
     }}>
-      <Header 
-        categories={categories} 
-        activeCategory={activeCategory} 
+      <Header
+        categories={categories}
+        activeCategory={activeCategory}
       />
-      
+
       <Suspense fallback={<Loading />}>
         <main className="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
-          <NewsContent 
-            news={newsData} 
+          <NewsContent
+            news={newsData}
             activeCategory={activeCategory}
             topicId={selectedTopicId}
             enableSorting={selectedTopicId === undefined}
           />
         </main>
       </Suspense>
-      
-      <Footer 
-        categories={categories} 
+
+      <Footer
+        categories={categories}
       />
     </div>
   );
