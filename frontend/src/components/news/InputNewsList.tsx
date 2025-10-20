@@ -3,6 +3,7 @@
  */
 import Link from 'next/link';
 import LogoWithFallback from '@/components/common/LogoWithFallback';
+import { sources } from 'next/dist/compiled/webpack/webpack';
 
 // Define the interface for InputNews objects
 interface InputNewsDetailed {
@@ -18,6 +19,8 @@ interface InputNewsListProps {
 }
 
 const InputNewsList = ({ inputNews }: InputNewsListProps) => {
+  console.log("InputNewsList props:", inputNews);
+
   // Format the date to display in Czech format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -26,52 +29,55 @@ const InputNewsList = ({ inputNews }: InputNewsListProps) => {
 
   // Get logo URL for source site
   const getSourceLogo = (sourceSite: string): { url: string; fallback: string } => {
-    const lowerSite = sourceSite.toLowerCase();
-    
-    // Czech news sites logo mapping
-    const logoMap: { [key: string]: { url: string; fallback: string } } = {
-      'aktuálně': { 
-        url: 'https://cdn.xsd.cz/resize/ff7fdd7fdb1b3318adbdac55719cdf70_resize=2000,1125_.png?hash=0406a7ceea87f79c626d33bd3d5a4a9b',
-        fallback: 'AK'
-      },
-      'aktualne': { 
-        url: 'https://cdn.xsd.cz/resize/ff7fdd7fdb1b3318adbdac55719cdf70_resize=2000,1125_.png?hash=0406a7ceea87f79c626d33bd3d5a4a9b',
-        fallback: 'AK'
-      },
-      'novinky': { 
-        url: 'https://upload.wikimedia.org/wikipedia/commons/2/20/Novinky_logo.png',
-        fallback: 'NO'
-      },
-      'deník': { 
-        url: 'https://images.seeklogo.com/logo-png/38/3/denik-cz-logo-png_seeklogo-385009.png',
-        fallback: 'DE'
-      },
-      'denik': { 
-        url: 'https://images.seeklogo.com/logo-png/38/3/denik-cz-logo-png_seeklogo-385009.png',
-        fallback: 'DE'
-      },
-      'rozhlas': { 
-        url: 'https://www.irozhlas.cz/sites/all/themes/custom/irozhlas/img/logo-mail.png',
-        fallback: 'IR'
-      },
-      'ceskenoviny' : {
-        url: 'https://i3.cn.cz/15/1706796525_CTK_logo.jpg',
-        fallback: 'CN'
-      }
+    // Remove www. prefix and convert to lowercase for matching
+    const normalizedSite = sourceSite.toLowerCase().replace(/^www\./, '');
+
+    // Map domains to logo filenames and fallback text
+    const logoMap: { [key: string]: { logo: string; fallback: string } } = {
+      'zpravy.aktualne.cz': { logo: 'aktualne.png', fallback: 'AK' },
+      'magazin.aktualne.cz': { logo: 'aktualne.png', fallback: 'AK' },
+      'novinky.cz': { logo: 'novinky.png', fallback: 'NO' },
+      'denik.cz': { logo: 'denik.png', fallback: 'DE' },
+      'ct24.ceskatelevize.cz': { logo: 'ct24.png', fallback: 'CT' },
+      'ceskenoviny.cz': { logo: 'ceskenoviny.png', fallback: 'ČN' },
+      'blesk.cz': { logo: 'blesk.png', fallback: 'BL' },
+      'parlamentnilisty.cz': { logo: 'parlamentnilisty.jpg', fallback: 'PL' },
+      'info.cz': { logo: 'info.png', fallback: 'IN' },
+      'isport.blesk.cz': { logo: 'isport.png', fallback: 'IS' },
+      'denikn.cz': { logo: 'denikn.png', fallback: 'DN' },
+      'denikalarm.cz': { logo: 'denikalarm.png', fallback: 'DA' },
+      'cnn.iprima.cz': { logo: 'cnn.iprima.png', fallback: 'CN' },
+      'e15.cz': { logo: 'e15.png', fallback: 'E1' },
+      'eurozpravy.cz': { logo: 'eurozpravy.jpg', fallback: 'EU' },
+      'finmag.cz': { logo: 'finmag.png', fallback: 'FM' },
+      'hlidacipes.org': { logo: 'hlidacipes.png', fallback: 'HP' },
+      'lupa.cz': { logo: 'lupa.png', fallback: 'LU' },
+      'reflex.cz': { logo: 'reflex.png', fallback: 'RF' },
+      'denikreferendum.cz': { logo: 'denikreferendum.jpeg', fallback: 'DR' },
+      'forum24.cz': { logo: 'forum24.jpeg', fallback: 'F2' },
+      'pozitivni-zpravy.cz': { logo: 'pozitivni-zpravy.png', fallback: 'PZ' },
+      'tn.nova.cz': { logo: 'tn.png', fallback: 'TN' },
+      'tyden.cz': { logo: 'tyden.png', fallback: 'TY' },
+      'udalosti247.cz': { logo: 'udalosti247.jpeg', fallback: 'U2' },
+      'voxpot.cz': { logo: 'voxpot.png', fallback: 'VX' },
+      'vtm.zive.cz': { logo: 'vtmzive.png', fallback: 'VT' },
+      'zive.cz': { logo: 'zive.png', fallback: 'ZI' },
+      'zivotvcesku.cz': { logo: 'zivotvcesku.png', fallback: 'ZV' },
     };
 
-    // Check for exact matches first
-    for (const [key, value] of Object.entries(logoMap)) {
-      if (lowerSite.includes(key)) {
-        return value;
-      }
+    // Check for exact domain match
+    if (logoMap[normalizedSite]) {
+      return {
+        url: `/logos/${logoMap[normalizedSite].logo}`,
+        fallback: logoMap[normalizedSite].fallback
+      };
     }
 
-    // Default fallback - try to extract domain and use first letters
-    const firstTwoLetters = sourceSite.replace(/[^a-zA-ZčšžýáíéěůúóťďňĚŠČŘŽÝÁÍÉŮÚÓŤĎŇ]/g, '').substring(0, 2).toUpperCase();
-    
+    // Default fallback - use first two letters
+    const firstTwoLetters = normalizedSite.replace(/[^a-zA-ZčšžýáíéěůúóťďňĚŠČŘŽÝÁÍÉŮÚÓŤĎŇ]/g, '').substring(0, 2).toUpperCase();
+
     return {
-      url: `https://logo.clearbit.com/${lowerSite.replace(/\s+/g, '')}.cz`,
+      url: '',
       fallback: firstTwoLetters || 'WEB'
     };
   };
@@ -79,13 +85,14 @@ const InputNewsList = ({ inputNews }: InputNewsListProps) => {
   return (
     <div className="space-y-4">
       {inputNews.map((news, index) => {
+        console.log("source site:", news.source_site, "logo data:", getSourceLogo(news.source_site));
         const logoData = getSourceLogo(news.source_site);
-        
+
         return (
-          <a 
+          <a
             key={index}
-            href={news.source_url} 
-            target="_blank" 
+            href={news.source_url}
+            target="_blank"
             rel="noopener noreferrer"
             className="block group cursor-pointer"
           >
@@ -94,26 +101,26 @@ const InputNewsList = ({ inputNews }: InputNewsListProps) => {
                 <div className="flex gap-4 items-start">
                   {/* Source logo */}
                   <div className="w-16 h-16 rounded-xl bg-blue-50 border-2 border-blue-200 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                    <LogoWithFallback 
+                    <LogoWithFallback
                       logoUrl={logoData.url}
                       sourceSite={news.source_site}
                       fallback={logoData.fallback}
                     />
                   </div>
-                  
+
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3 leading-tight group-hover:text-blue-600 transition-colors">
                       {news.title}
                     </h3>
-                    
+
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
                       {news.author && (
                         <span className="flex items-center gap-2">
                           <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                           </svg>
-                          <span className="font-medium">Autor:</span> 
+                          <span className="font-medium">Autor:</span>
                           <span>{news.author}</span>
                         </span>
                       )}
@@ -121,18 +128,18 @@ const InputNewsList = ({ inputNews }: InputNewsListProps) => {
                         <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2v8h12V6H4z" clipRule="evenodd" />
                         </svg>
-                        <span className="font-medium">Zdroj:</span> 
+                        <span className="font-medium">Zdroj:</span>
                         <span>{news.source_site}</span>
                       </span>
                       <span className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                         </svg>
-                        <span className="font-medium">Publikováno:</span> 
+                        <span className="font-medium">Publikováno:</span>
                         <span>{formatDate(news.publication_date)}</span>
                       </span>
                     </div>
-                    
+
                     <span className="inline-flex items-center gap-2 text-blue-600 group-hover:text-blue-800 font-medium text-sm transition-all group-hover:gap-4">
                       Přečíst původní článek
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
