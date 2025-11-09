@@ -257,6 +257,42 @@ class AsyncParsedNewsRepositoryWithID(AsyncBaseRepositoryWithID[ParsedNews]):
         super().__init__(session, ParsedNews)
         logger.info("AsyncParsedNewsRepository initialized")
 
+    async def search_news(self, q: str, limit: int, offset: int) -> list[ParsedNews]:
+        """
+        Search news articles by query string with pagination.
+
+        Args:
+            q: Search query string
+            limit: Maximum number of records to return
+            offset: Number of records to skip for pagination
+
+        Returns:
+            List of ParsedNews articles matching the query
+        """
+        logger.debug(f"Searching news with query: '{q}', limit: {limit}, offset: {offset}")
+
+        search_filter = func.to_tsvector(
+            "simple",
+            func.unaccent(
+                func.coalesce(ParsedNews.title, "")
+                + " "
+                + func.coalesce(ParsedNews.description, "")
+                + " "
+                + func.coalesce(ParsedNews.content, "")
+            ),
+        ).op("@@")(func.plainto_tsquery("simple", func.unaccent(q)))
+
+        stmt = (
+            select(ParsedNews).where(search_filter).order_by(ParsedNews.updated_at.desc()).offset(offset).limit(limit)  # type: ignore[attr-defined]
+        )
+
+        result = await self.session.execute(stmt)
+        articles = list(result.scalars().all())
+
+        logger.info(f"Found {len(articles)} articles matching query '{q}'")
+
+        return articles
+
     async def refresh_materialized_view(self) -> None:
         """Refresh the news relevance materialized view"""
         await self.session.execute(text("REFRESH MATERIALIZED VIEW news_relevance"))

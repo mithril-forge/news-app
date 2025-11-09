@@ -274,3 +274,8 @@ class NewsService:
         await self.session.commit()
 
         logger.info(f"Successfully linked anonymous pick {pick_hash} to user {user_email}")
+
+    async def search_news(self, q: str, offset: int, limit: int) -> list[ParsedNewsBasic]:
+        """Search news by the query"""
+        news = await self.news_repo.search_news(q=q, offset=offset, limit=limit)
+        return news_list_to_response(news)
