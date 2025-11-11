@@ -54,7 +54,8 @@ export default function CategoryNav({
   };
 
   return (
-    <nav className="overflow-x-auto pb-2">
+    <nav className="overflow-x-auto">
+
       <ul className="flex items-center whitespace-nowrap">
         {categories.map((category, index) => {
           // Special styling for AI Feed
@@ -67,11 +68,10 @@ export default function CategoryNav({
                 <Link
                   href={getCategoryUrl(category)}
                   onClick={() => handleCategoryClick(category)}
-                  className={`inline-flex items-center space-x-1 text-sm font-medium transition-colors hover:cursor-pointer ${
-                    activeCategory === category
-                      ? "text-blue-400 border-b-2 border-blue-400 pb-1"
-                      : "text-blue-300 hover:text-blue-400 pb-1"
-                  }`}
+                  className={`inline-flex items-center space-x-1 text-sm font-medium transition-colors hover:cursor-pointer ${activeCategory === category
+                      ? "text-blue-400 border-b-2 border-blue-400"
+                      : "text-blue-300 hover:text-blue-400"
+                    }`}
                   aria-current={activeCategory === category ? 'page' : undefined}
                 >
                   <span className="text-sm">🧠</span>
@@ -86,17 +86,16 @@ export default function CategoryNav({
             return (
               <React.Fragment key={category}>
                 <li className="mx-4">
-                  <div className="w-px h-4 bg-gray-500 opacity-50"></div>
+                  <div className="w-px h-6 bg-gray-500 opacity-50"></div>
                 </li>
                 <li className="mr-6">
                   <Link
                     href={getCategoryUrl(category)}
                     onClick={() => handleCategoryClick(category)}
-                    className={`text-sm font-medium transition-colors hover:cursor-pointer ${
-                      activeCategory === category
-                        ? "text-red-400 border-b-2 border-red-400 pb-1"
-                        : "text-gray-300 hover:text-red-400 pb-1"
-                    }`}
+                    className={`text-sm font-medium transition-colors hover:cursor-pointer ${activeCategory === category
+                        ? "text-red-400 border-b-2 border-red-400"
+                        : "text-gray-300 hover:text-red-400"
+                      }`}
                     aria-current={activeCategory === category ? 'page' : undefined}
                   >
                     {category}
@@ -112,11 +111,10 @@ export default function CategoryNav({
               <Link
                 href={getCategoryUrl(category)}
                 onClick={() => handleCategoryClick(category)}
-                className={`text-sm font-medium transition-colors hover:cursor-pointer ${
-                  activeCategory === category
-                    ? "text-red-400 border-b-2 border-red-400 pb-1"
-                    : "text-gray-300 hover:text-red-400 pb-1"
-                }`}
+                className={`text-sm font-medium transition-colors hover:cursor-pointer ${activeCategory === category
+                    ? "text-red-400 border-b-2 border-red-400"
+                    : "text-gray-300 hover:text-red-400"
+                  }`}
                 aria-current={activeCategory === category ? 'page' : undefined}
               >
                 {category}

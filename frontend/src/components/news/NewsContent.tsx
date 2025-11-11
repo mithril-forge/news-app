@@ -13,13 +13,15 @@ interface NewsContentProps {
   activeCategory: string;
   topicId?: string;
   enableSorting?: boolean; // New prop to control sorting
+  loadMoreNews?: boolean;
 }
 
 export default function NewsContent({
   news: initialNews,
   activeCategory,
   topicId,
-  enableSorting = false // Default to false, only enable for main page
+  enableSorting = false, // Default to false, only enable for main page
+  loadMoreNews = true
 }: NewsContentProps) {
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [news, setNews] = useState<NewsArticle[]>(initialNews);
@@ -65,7 +67,7 @@ export default function NewsContent({
         <div className="lg:col-span-3">
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <p className="text-gray-500">
-              Žádné články nebyly nalezeny v kategorii '{activeCategory}'
+              Žádné články nebyly nalezeny
             </p>
           </div>
         </div>
@@ -87,7 +89,7 @@ export default function NewsContent({
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
-              {activeCategory === "Vše" ? "Všechny články" : activeCategory}
+              {loadMoreNews === false ? "Vyhledané články" : activeCategory === "Vše" ? "Všechny články" : activeCategory}
             </h2>
           </div>
           {enableSorting && (
@@ -122,12 +124,12 @@ export default function NewsContent({
             )}
 
             {/* Load more articles */}
-            <LoadMoreNews
+            {loadMoreNews && <LoadMoreNews
               activeCategory={activeCategory}
               topicId={topicId}
               initialCount={news.length}
               sortBy={enableSorting ? sortBy : undefined}
-            />
+            />}
           </>
         )}
       </div>
