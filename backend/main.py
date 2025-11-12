@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Annotated, Any
 
 import structlog
-from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -181,6 +181,25 @@ async def popular_news(
     service = NewsService(session=session)
     period = datetime.timedelta(days=days)
     return await service.get_most_popular_news(period=period, limit=limit)
+
+
+@app.get("/news/search")
+async def search_articles(
+    q: str,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    limit: Annotated[int, Query(ge=1, le=100, description="Max number of records to return")] = 20,
+    offset: Annotated[int, Query(ge=0, le=100, description="Offset of records")] = 0,
+) -> list[ParsedNewsBasic]:
+    """Searches by the query and returns the results"""
+    news_service = NewsService(session=session)
+    news = await news_service.search_news(q=q, offset=offset, limit=limit)
+
+    if len(news) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No articles found matching your search query"
+        )
+
+    return news
 
 
 @app.get("/news/{news_id}")

@@ -71,3 +71,20 @@ export const fetchNewsById = async (newsId: string): Promise<NewsArticle | null>
     throw error;
   }
 };
+
+/**
+ * Fetches a specific news article by search
+ * @param q - Query for the search
+ * @returns Promise with the news article or null if not found
+ */
+export const searchNews = async (q: string): Promise<NewsArticle[] | null> => {
+  try {
+    return await fetchApi<NewsArticle[]>(`/news/search?q=${q}`);
+  } catch (error) {
+    // Return null instead of throwing for 404 handling
+    if (error instanceof Error && error.message.includes('404')) {
+      return null;
+    }
+    throw error;
+  }
+};
