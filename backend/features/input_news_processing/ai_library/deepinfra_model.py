@@ -7,7 +7,8 @@ from typing import cast
 import instructor  # type: ignore[import-untyped]
 import structlog
 from fastapi import HTTPException
-from instructor import AsyncInstructor
+from instructor import Instructor
+from openai import OpenAI
 from tenacity import (
     after_log,
     before_log,
@@ -25,14 +26,14 @@ from features.input_news_processing.ai_library.abstract_model import (
 logger = structlog.get_logger()
 
 
-class GeminiAIModel(AbstractAIModel):
+class DeepInfraAIModel(AbstractAIModel):
     def __init__(self) -> None:
-        self.model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        self.model_name = os.getenv("DEEPINFRA_MODEL_NAME", "deepseek-ai/DeepSeek-V3.2-Exp")
+        self.api_key = os.getenv("DEEPINFRA_API_KEY")
         if self.api_key is None:
-            logger.error("GEMINI_API_KEY environment variable not set")
-            raise ValueError("You need to provide GEMINI_API_KEY to use the model.")
-        logger.info(f"GeminiAIModel initialized with model: {self.model_name}")
+            logger.error("DEEPINFRA_API_KEY environment variable not set")
+            raise ValueError("You need to provide DEEPINFRA_API_KEY to use the model.")
+        logger.info(f"DeepInfraAIModel initialized with model: {self.model_name}")
 
     @staticmethod
     def read_files_as_content(files: dict[str, pathlib.Path]) -> dict[str, str]:
@@ -73,17 +74,17 @@ class GeminiAIModel(AbstractAIModel):
 
         File contents are read and passed directly as text.
         """
-        logger.info(f"Prompting Gemini model with {len(files)} files and response model: {response_model.__name__}")
+        logger.info(f"Prompting DeepInfra model with {len(files)} files and response model: {response_model.__name__}")
 
         # Apply rate limiting before making any API calls
         today_str = datetime.date.today().strftime("%Y-%m-%d")
-        global_limit_key = f"gemini_global_limit_{today_str}"
+        global_limit_key = f"deepinfra_global_limit_{today_str}"
 
         # Check global limit (configurable per day app-wide)
-        global_limit = int(os.getenv("GEMINI_GLOBAL_DAILY_LIMIT", "100"))
+        global_limit = int(os.getenv("DEEPINFRA_GLOBAL_DAILY_LIMIT", "100"))
         global_count = redis_client.get_counter(global_limit_key)
         if global_count >= global_limit:
-            logger.warning(f"Global Gemini API daily limit reached: {global_count}/{global_limit}")
+            logger.warning(f"Global DeepInfra API daily limit reached: {global_count}/{global_limit}")
             raise HTTPException(
                 status_code=429, detail="Daily AI API limit reached app-wide. Please try again tomorrow."
             )
@@ -91,9 +92,9 @@ class GeminiAIModel(AbstractAIModel):
         # Increment counter before making the API call
         redis_client.increment_counter(global_limit_key)
 
-        logger.info(f"Gemini API usage - Global: {global_count + 1}/{global_limit}")
+        logger.info(f"DeepInfra API usage - Global: {global_count + 1}/{global_limit}")
 
-        gemini_client = self.prepare_model_sdk()
+        deepinfra_client = self.prepare_model_sdk()
 
         # Read file contents directly instead of uploading
         file_contents = self.read_files_as_content(files=files)
@@ -109,22 +110,31 @@ class GeminiAIModel(AbstractAIModel):
         # Combine all parts into a single string
         combined_content = "".join(content_parts)
 
-        logger.info("Sending request to Gemini model")
+        logger.info("Sending request to DeepInfra model")
         logger.debug(f"Combined content length: {len(combined_content)} chars")
         messages = [{"role": "user", "content": combined_content}]
 
-        result = await gemini_client.chat.completions.create(
+        result = deepinfra_client.chat.completions.create(
+            model=self.model_name,
             response_model=response_model,
             messages=messages,
         )
         typed_result: ResponseT = cast(ResponseT, result)
-        logger.info("Successfully received response from Gemini model")
+        logger.info("Successfully received response from DeepInfra model")
         return typed_result
 
-    def prepare_model_sdk(self) -> AsyncInstructor:
+    def prepare_model_sdk(self) -> Instructor:
         """Prepares model encapsulated by instructor library for structured output."""
-        logger.info("Preparing Gemini model SDK with instructor")
+        # FIXME: Async Instructor was not working properly with DeepInfra API, so using sync version for now
+        logger.info("Preparing DeepInfra model SDK with instructor")
 
-        instructor_client = instructor.from_provider(f"google/{self.model_name}", api_key=self.api_key, use_async=True)
-        logger.info("Gemini model SDK prepared successfully")
-        return cast(AsyncInstructor, instructor_client)
+        # Create OpenAI client with DeepInfra base URL
+        client = OpenAI(
+            api_key=self.api_key,
+            base_url="https://api.deepinfra.com/v1/openai",
+        )
+
+        # Wrap with instructor for structured outputs
+        instructor_client = instructor.from_openai(client=client)
+        logger.info("DeepInfra model SDK prepared successfully")
+        return instructor_client
