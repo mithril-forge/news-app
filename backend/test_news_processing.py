@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import asyncio
-import os
 import pathlib
 import tempfile
 from datetime import timedelta
@@ -10,7 +9,6 @@ import structlog
 
 from core.domain.schemas import ParsedNewsResponseDetailed
 from core.engine import get_session_context
-from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
 from features.input_news_processing.archive.local_archive import LocalArchive
 from features.input_news_processing.domain.article_generation_service import (
     ArticleGenerationService,
@@ -40,10 +38,6 @@ def verify_generated_news(generated_news: list[ParsedNewsResponseDetailed]) -> N
 
 async def test_parse_news(commit_transaction: bool = False) -> None:
     """Testing workflow for news parsing and generation"""
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    if gemini_api_key is None:
-        raise ValueError("You need to provide GEMINI_API_KEY to use the model")
-
     tmp_dir = tempfile.mkdtemp()
     local_archive = LocalArchive(target_location=pathlib.Path(tmp_dir))
 
@@ -52,7 +46,6 @@ async def test_parse_news(commit_transaction: bool = False) -> None:
         article_generation_service = ArticleGenerationService(
             session=session,
             archive=local_archive,
-            ai_model=GeminiAIModel(api_key=gemini_api_key),
         )
 
         logger.info("Loading initial data")

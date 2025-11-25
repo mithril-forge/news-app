@@ -11,7 +11,7 @@ from core.domain.news_service import NewsService
 from core.models import NewsPick, NewsPickItem
 from core.redis_client import redis_client
 from core.repository import AsyncBaseRepository, AsyncBaseRepositoryWithID
-from features.input_news_processing.ai_library.gemini_model import GeminiAIModel
+from features.input_news_processing.ai_library.get_model import get_ai_model
 from features.input_news_processing.domain.ai_prompts import CUSTOM_ARTICLES_PROMPT
 from features.input_news_processing.domain.article_generation_service import ArticleGenerationService
 
@@ -137,17 +137,11 @@ class PickGenerationService:
                 logger.info(f"Mocked pick generation using first {len(news_ids)} articles: {news_ids}")
             else:
                 # Real AI-based generation
-                gemini_api_key = os.getenv("GEMINI_API_KEY")
-                if gemini_api_key is None:
-                    raise HTTPException(status_code=500, detail="GEMINI_API_KEY environment variable not set")
-
-                gemini_ai_model = GeminiAIModel(api_key=gemini_api_key)
+                ai_model = get_ai_model()
                 prompt_formatted = CUSTOM_ARTICLES_PROMPT.format(prompt=user_prompt)
 
                 files = ArticleGenerationService.save_pydantic_lists_as_files(parsed_news=parsed_news)
-                result = await gemini_ai_model.prompt_model(
-                    files=files, prompt=prompt_formatted, response_model=list[int]
-                )
+                result = await ai_model.prompt_model(files=files, prompt=prompt_formatted, response_model=list[int])
                 logger.info(f"Successfully generated pick with news ids: {result}")
                 news_ids = result or []  # Use empty list if no results
 

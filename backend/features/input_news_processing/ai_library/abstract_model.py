@@ -8,9 +8,9 @@ ResponseT = TypeVar("ResponseT")
 
 
 class AbstractAIModel(abc.ABC):
-    def __init__(self, model_name: str, api_key: str):
-        self.model_name = model_name
-        self.api_key = api_key
+    @abc.abstractmethod
+    def __init__(self) -> None:
+        pass
 
     @abc.abstractmethod
     async def prompt_model(

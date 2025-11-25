@@ -18,7 +18,7 @@ from core.domain.schemas import (
 )
 from core.domain.topic_service import TopicService
 from core.repository import AsyncTagRepositoryWithID
-from features.input_news_processing.ai_library.abstract_model import AbstractAIModel
+from features.input_news_processing.ai_library.get_model import get_ai_model
 from features.input_news_processing.archive.abstract_archive import AbstractArchive
 from features.input_news_processing.converters import input_news_list_to_schema
 from features.input_news_processing.domain.ai_prompts import (
@@ -46,13 +46,13 @@ class TempFileStorage(BaseModel):
 
 
 class ArticleGenerationService:
-    def __init__(self, session: AsyncSession, archive: AbstractArchive, ai_model: AbstractAIModel) -> None:
+    def __init__(self, session: AsyncSession, archive: AbstractArchive) -> None:
         self.session = session
         self.topic_service = TopicService(session=session)
         self.input_news_service = InputNewsService(session=session, archive=archive)
         self.tag_repository = AsyncTagRepositoryWithID(session=session)
         self.parsed_news_service = NewsService(session=session)
-        self.ai_model = ai_model
+        self.ai_model = get_ai_model()
         logger.info("ArticleGenerationService initialized")
 
     @staticmethod
