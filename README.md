@@ -1,4 +1,4 @@
-# Tvuj Novinář — AI-Powered Czech News Platform
+# Tvůj Novinář — AI-Powered Czech News Platform
 
 A full-stack news aggregation platform that uses AI to curate personalized news collections from Czech sources. Users can generate a custom "news pick" — a ranked selection of articles chosen by an AI based on their own prompt — without needing an account.
 
