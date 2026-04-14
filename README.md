@@ -124,3 +124,13 @@ GitHub Actions runs on every push to `main`/`develop` and on all pull requests:
 - MyPy strict type checking
 
 Config: `.github/workflows/backend.yml`
+
+---
+
+## Contributions
+
+Built by two developers.
+
+**Simon Foucek** — designed the overall system architecture and tech stack, led backend development (FastAPI, PostgreSQL, Redis, Dramatiq, AI pipeline), and drove the majority of feature work.
+
+**Marek Filip** — focused on the Next.js frontend, developed the news scraping tool (separate repository) responsible for ingesting articles into the platform, and handled OPS and deployment.
